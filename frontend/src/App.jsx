@@ -7,6 +7,9 @@ import ContactDetailsPage from "./pages/profile/ContactDetails.jsx";
 import EducationPage from "./pages/profile/EducationPage.jsx";
 import JobDetailsPage from "./pages/profile/JobDetails.jsx";
 
+// Dashboard
+import DashboardOverview from "./pages/dashboard/DashBoardOverview.jsx";
+
 // Components
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
@@ -50,8 +53,20 @@ function App() {
         }
       />
 
+      
+
       {/* Redirect /profile -> /profile/personal */}
       <Route path="/profile" element={<Navigate to="/profile/personal" replace />} />
+
+      {/* Dashboard route */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardOverview />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }

@@ -1,10 +1,18 @@
 import React, { useState } from "react";
 import { useGoogleLogin } from '@react-oauth/google';
 import { FcGoogle } from "react-icons/fc";
-import { Link } from "react-router-dom";
-// import { useNavigate } from "react-router-dom"; // ← use later for redirect
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 const Login = () => {
+
+  const MOCK_USERS = [
+    { email: "ceo@gamage.com", role: "CEO", password: "Password123" },
+    { email: "owner@gamage.com", role: "SYSTEM_OWNER", password: "Password123" },
+    { email: "tl@gamage.com", role: "TL", password: "Password123" },
+    { email: "dev@gamage.com", role: "DEVELOPER", password: "Password123" },
+  ];
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -14,7 +22,8 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // const navigate = useNavigate(); // use when backend is ready
+  const { login } = useAuth();
+  const navigate = useNavigate(); // use when backend is ready
 
   const googleLogin = useGoogleLogin({
     flow: "implicit", // frontend-only access token flow
@@ -22,7 +31,7 @@ const Login = () => {
       console.log("Google login success:", tokenResponse);
 
       // tokenResponse contains access_token, etc.
-      // 🔗 TODO: BACKEND INTEGRATION
+      // TODO: BACKEND INTEGRATION
       // 1. Send tokenResponse.access_token (or ID token if you use code flow)
       //    to your backend:
       //
@@ -100,32 +109,45 @@ const Login = () => {
     try {
       console.log("Login form data ready to send:", formData);
 
-      // TODO: BACKEND LOGIN API INTEGRATION
-      // When your backend is ready, replace the console.log above
-      // with a real API call, for example:
-      //
-      // const response = await fetch("http://localhost:5000/api/auth/login", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({
-      //     email: formData.email,
-      //     password: formData.password,
-      //   }),
-      // });
-      //
-      // const data = await response.json();
-      //
-      // if (!response.ok) {
-      //   // Show backend error (e.g., invalid credentials)
-      //   setErrors({ api: data.message || "Login failed" });
-      //   return;
-      // }
-      //
-      // // On success: store token & redirect to dashboard
-      // // localStorage.setItem("token", data.token);
-      // // navigate("/dashboard");
+      // FRONTEND-ONLY MOCK AUTH (no backend yet)
+      const foundUser = MOCK_USERS.find(
+        (u) =>
+          u.email.toLowerCase() === formData.email.toLowerCase() &&
+          u.password === formData.password
+      );
 
-      alert("Login validation passed. Ready to integrate with backend API.");
+      if (!foundUser) {
+        setErrors({ api: "Invalid email or password" });
+        return;
+      }
+
+      const userData = {
+        email: foundUser.email,
+        role: foundUser.role,
+        token: "dummy-jwt-token", // later from backend
+      };
+
+      // Save in context + localStorage
+      login(userData);
+
+      // Redirect based on role (RBAC)
+      switch (foundUser.role) {
+        case "CEO":
+          navigate("/dashboard/ceo");
+          break;
+        case "SYSTEM_OWNER":
+          // create this dashboard route later
+          navigate("/dashboard/system-owner");
+          break;
+        case "TL":
+          // create TL dashboard route later
+          navigate("/dashboard/tl");
+          break;
+        case "DEVELOPER":
+        default:
+          navigate("/dashboard/dev");
+          break;
+      }
     } catch (err) {
       console.error("Error during login:", err);
       setErrors({ api: "Something went wrong. Please try again." });

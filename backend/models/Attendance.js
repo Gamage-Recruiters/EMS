@@ -13,7 +13,8 @@ const attendanceSchema = new mongoose.Schema({
     type: String, 
     enum: ['Present', 'Absent', 'Late'], 
     default: 'Absent' 
-  }
+  },
+  workingHours: { type: Number, default: 0 }
 }, { timestamps: true });
 
 export default mongoose.model('Attendance', attendanceSchema);

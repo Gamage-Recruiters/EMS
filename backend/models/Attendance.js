@@ -14,7 +14,8 @@ const attendanceSchema = new mongoose.Schema({
     enum: ['Present', 'Absent', 'Late'], 
     default: 'Absent' 
   },
-  workingHours: { type: Number, default: 0 }
+  workingHours: { type: Number, default: 0 },
+  isLeaveDay: { type: Boolean, default: false }
 }, { timestamps: true });
 
 export default mongoose.model('Attendance', attendanceSchema);

@@ -6,8 +6,8 @@ const taskSchema = new mongoose.Schema({
     ref: 'Project', 
     required: true 
   },
-  assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
-  assignedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
+  assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  assignedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   title: { type: String, required: true },
   description: { type: String },
   status: { 

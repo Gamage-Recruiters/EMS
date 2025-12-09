@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const meetingSchema = new mongoose.Schema({
-  scheduledBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
+  scheduledBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   team: { type: mongoose.Schema.Types.ObjectId, ref: 'Team' },
   date: { type: Date, required: true },
   time: { type: String },

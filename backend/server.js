@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 //import testRoutes from './routes/testRoutes.js';
 import errorHandler from './middlewares/errorMiddleware.js';
 
@@ -42,6 +43,8 @@ app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
 // Routes
 app.use('/api/auth', authRoutes);
 //app.use('/test', testRoutes);
+
+app.use('/api/user', userRoutes);
 
 // Global Error Handler
 app.use(errorHandler);

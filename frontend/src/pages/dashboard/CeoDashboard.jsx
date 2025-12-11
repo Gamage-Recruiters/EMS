@@ -2,6 +2,7 @@
 import React from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import Sidebar from "../../components/Sidebar.jsx";
+import { Link } from "react-router-dom";
 
 const CeoDashboard = () => {
   const { user } = useAuth() || {};
@@ -49,9 +50,12 @@ const CeoDashboard = () => {
               <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500" />
             </button>
             {/* Avatar placeholder */}
-            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-xs font-semibold text-white">
+            <Link
+              to="/profile/personal"
+              className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-xs font-semibold text-white hover:opacity-90"
+            >
               {user?.email ? user.email[0].toUpperCase() : "C"}
-            </div>
+            </Link>
           </div>
         </header>
 

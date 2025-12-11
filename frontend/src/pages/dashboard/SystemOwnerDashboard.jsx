@@ -2,6 +2,7 @@
 import React from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import Sidebar from "../../components/Sidebar.jsx";
+import { Link } from "react-router-dom";
 
 const SystemOwnerDashboard = () => {
   const { user } = useAuth() || {};
@@ -56,9 +57,12 @@ const SystemOwnerDashboard = () => {
               <span className="text-lg">🔔</span>
             </button>
             <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-xs font-semibold text-white">
-                {user?.email ? user.email[0].toUpperCase() : "SO"}
-              </div>
+              <Link
+                to="/profile/personal"
+                className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-xs font-semibold text-white hover:opacity-90"
+              >
+                {user?.email ? user.email[0].toUpperCase() : "C"}
+              </Link>
               <div className="hidden md:block text-xs">
                 <p className="font-medium text-slate-800">
                   {user?.email || "John"}

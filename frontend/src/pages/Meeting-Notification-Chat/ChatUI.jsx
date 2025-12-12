@@ -1,61 +1,81 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
-export default function Chat() {
-  const [messages, setMessages] = useState([
-    { id: 1, from: "bot", text: "Hello! How can I help?" },
-  ]);
+import ChatSidebar from "../../components/chat/ChatSidebar";
+import ChatHeader from "../../components/chat/ChatHeader";
+import ChatMessages from "../../components/chat/ChatMessages";
+import ChatInput from "../../components/chat/ChatInput";
+
+import { dummyChats } from "../../data/dummyChats";
+import { dummyMessages } from "../../data/dummyMessages";
+
+export default function ChatPage() {
+  const [activeChat, setActiveChat] = useState(dummyChats[0]);
+  const [messages, setMessages] = useState(dummyMessages);
   const [input, setInput] = useState("");
-  const chatEnd = useRef(null);
+  const [typing, setTyping] = useState(false);
+  const chatEndRef = useRef(null);
 
   useEffect(() => {
-    chatEnd.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, activeChat]);
 
   const sendMessage = () => {
-    if (!input) return;
+    if (!input.trim()) return;
 
-    setMessages([...messages, { id: Date.now(), from: "me", text: input }]);
+    const myMsg = {
+      id: Date.now(),
+      from: "me",
+      text: input,
+      time: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      read: true,
+    };
+
+    setMessages((prev) => [...prev, myMsg]);
     setInput("");
+    setTyping(true);
 
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
-        { id: Date.now(), from: "bot", text: "Got it 👍" },
+        {
+          id: Date.now() + 1,
+          from: activeChat.name,
+          text: "Okay, noted 👍",
+          time: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          read: true,
+        },
       ]);
-    }, 800);
+      setTyping(false);
+    }, 1200);
   };
 
+  // Update message list when activeChat changes (optional)
+  useEffect(() => {
+    // You can load chat-specific messages here. For now we keep same messages.
+  }, [activeChat]);
+
   return (
-    <div className="bg-white shadow rounded-xl p-4 max-w-lg mx-auto flex flex-col h-[80vh]">
-      <h2 className="font-bold text-lg mb-3">💬 Chat</h2>
+    <div className="h-[85vh] max-w-6xl mx-auto bg-white shadow-xl border rounded-xl flex overflow-hidden">
+      <ChatSidebar
+        chats={dummyChats}
+        activeChat={activeChat}
+        setActiveChat={setActiveChat}
+      />
 
-      <div className="flex-1 overflow-y-auto mb-3 space-y-2">
-        {messages.map((m) => (
-          <div
-            key={m.id}
-            className={`p-2 rounded max-w-xs ${
-              m.from === "me" ? "ml-auto bg-blue-200" : "bg-gray-200"
-            }`}
-          >
-            {m.text}
-          </div>
-        ))}
-        <div ref={chatEnd}></div>
-      </div>
-
-      <div className="flex gap-2">
-        <input
-          className="border flex-1 p-2 rounded"
-          placeholder="Type message..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
+      <div className="flex-1 flex flex-col">
+        <ChatHeader activeChat={activeChat} typing={typing} />
+        <ChatMessages messages={messages} chatEndRef={chatEndRef} />
+        <ChatInput
+          input={input}
+          setInput={setInput}
+          sendMessage={sendMessage}
         />
-        <button
-          onClick={sendMessage}
-          className="bg-green-500 text-white px-4 py-2 rounded"
-        >
-          Send
-        </button>
       </div>
     </div>
   );

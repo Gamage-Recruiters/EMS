@@ -1,5 +1,7 @@
+import TeamManagementPage from './features/management/pages/TeamManagementPage'
+
 function App() {
-  return <div className="text-red-500">App</div>;
+  return <TeamManagementPage />
 }
 
-export default App;
+export default App

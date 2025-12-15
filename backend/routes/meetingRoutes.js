@@ -2,6 +2,7 @@ import express from "express";
 import {
   createMeeting,
   getUsersForParticipants,
+  getAllMeetings,
 } from "../controllers/meetingController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 
@@ -12,5 +13,7 @@ const router = express.Router();
 // Create meeting
 router.post("/", protect, createMeeting);
 router.get("/participants", protect, getUsersForParticipants);
+// Get all meetings with participants
+router.get("/", protect, getAllMeetings);
 
 export default router;

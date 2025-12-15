@@ -120,3 +120,35 @@ export const getUsersForParticipants = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Get all meetings with participants
+ * @route   GET /api/meetings
+ * @access  Private
+ */
+export const getAllMeetings = async (req, res) => {
+  try {
+    const meetings = await Meeting.find()
+      .populate({
+        path: "createdBy",
+        select: "firstName lastName email role profileImage",
+      })
+      .populate({
+        path: "participants.user",
+        select: "firstName lastName email role profileImage",
+      })
+      .sort({ date: 1, time: 1 });
+
+    res.status(200).json({
+      success: true,
+      count: meetings.length,
+      data: meetings,
+    });
+  } catch (error) {
+    console.error("Get meetings error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve meetings",
+    });
+  }
+};

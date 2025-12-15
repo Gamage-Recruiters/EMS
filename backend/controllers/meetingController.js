@@ -88,3 +88,35 @@ export const createMeeting = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Get users for meeting participant selection
+ * @route   GET /api/users/participants
+ * @access  Private
+ */
+export const getUsersForParticipants = async (req, res) => {
+  try {
+    const users = await User.find(
+      { status: "Active" }, // only active users
+      {
+        firstName: 1,
+        lastName: 1,
+        email: 1,
+        role: 1,
+        profileImage: 1,
+      }
+    ).sort({ firstName: 1 });
+
+    res.status(200).json({
+      success: true,
+      count: users.length,
+      data: users,
+    });
+  } catch (error) {
+    console.error("Get users error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to load users",
+    });
+  }
+};

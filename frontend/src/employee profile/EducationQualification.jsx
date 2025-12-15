@@ -1,11 +1,14 @@
 import React, {useState} from "react";
+import { useSearchParams  } from "react-router-dom";
 
 export default function EducationQualification() {
   const today = new Date().toISOString().split("T")[0];
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-
+  const [searchParams] = useSearchParams();
+  const isEdit = searchParams.get("mode") === "edit";
+  
   const handleStartDate = (e) => {
     const value = e.target.value;
     setStartDate(value);
@@ -116,8 +119,8 @@ export default function EducationQualification() {
 
       {/* Button */}
       <button className="mt-10 px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-        Update
-      </button>
+      {isEdit ? "Update" : "Add"}
+    </button>
     </div>
   );
 }

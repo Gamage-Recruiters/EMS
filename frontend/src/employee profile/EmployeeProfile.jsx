@@ -1,11 +1,18 @@
-import React from "react";
-import { Link,Outlet } from "react-router-dom";
-import PersonalDetails from "./PersonaDetails";
-import ContactDetails from "./ContactDetails";
-import EducationQualification from "./EducationQualification";
-import JobDetails from "./JobDetails";
+import React,{useState} from "react";
+import { Link,Outlet, useSearchParams } from "react-router-dom";
+
 
 export default function EmployeeProfile() {
+
+  const [jobData, setJobData] = useState({
+    jobTitle: "",
+    department: "",
+    jobCategory: "",
+  });
+  const [searchParams] = useSearchParams();
+  const qs = searchParams.toString() ? `?${searchParams.toString()}` : "";
+  const isEdit = searchParams.get("mode") === "edit";
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* header part  */}
@@ -18,7 +25,7 @@ export default function EmployeeProfile() {
 
       {/* ------- BREADCRUMB ------- */}
       <div className="px-6 py-3 text-gray-600 text-sm">
-        Dashboard &gt; <span className="font-semibold">Update Profile</span>
+        Dashboard &gt; <span className="font-semibold">{isEdit ? "Edit Profile" : "Add Profile"}</span>
       </div>
 
       {/* this is side navigatin bar */}
@@ -26,25 +33,17 @@ export default function EmployeeProfile() {
         {/* ------- SIDEBAR ------- */}
         <div className="w-60 bg-white p-4 rounded-lg shadow">
           <nav className="flex flex-col gap-3">
-            <Link
-              className="hover:bg-gray-200 p-2 rounded"
-              to="personal-details"
-            >
+            {/* Preserve any existing search params (e.g. ?mode=edit) when switching tabs */}
+            <Link className="hover:bg-gray-200 p-2 rounded" to={`personal-details${qs}`}>
               Personal Details
             </Link>
-            <Link
-              className="hover:bg-gray-200 p-2 rounded"
-              to="contact-details"
-            >
+            <Link className="hover:bg-gray-200 p-2 rounded" to={`contact-details${qs}`}>
               Contact Details
             </Link>
-            <Link
-              className="hover:bg-gray-200 p-2 rounded"
-              to="education-qualification"
-            >
+            <Link className="hover:bg-gray-200 p-2 rounded" to={`education-qualification${qs}`}>
               Education Qualification
             </Link>
-            <Link className="hover:bg-gray-200 p-2 rounded" to="job-details">
+            <Link className="hover:bg-gray-200 p-2 rounded" to={`job-details${qs}`}>
               Job Details
             </Link>
           </nav>
@@ -52,7 +51,7 @@ export default function EmployeeProfile() {
         
         {/* CONTENT AREA */}
         <div className="flex-1 bg-white p-6 rounded-lg shadow">
-          <Outlet /> {/* 👈 This shows the selected page */}
+          <Outlet context={{ jobData, setJobData }} /> {/* 👈 This shows the selected page */}
         </div>
 
       </div>

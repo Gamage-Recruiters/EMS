@@ -1,6 +1,10 @@
 import React from "react";
+import { useSearchParams  } from "react-router-dom";
 
 export default function ContactDetails() {
+
+  const [searchParams] = useSearchParams();
+  const isEdit = searchParams.get("mode") === "edit";
   return (
     <div className="w-full max-w-4xl p-4 mx-auto">
 
@@ -60,7 +64,7 @@ export default function ContactDetails() {
 
       {/* Button */}
       <button className="mt-10 px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-        Update
+        {isEdit ? "Update" : "Add"}
       </button>
     </div>
   );

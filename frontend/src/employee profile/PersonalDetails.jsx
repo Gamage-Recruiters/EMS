@@ -1,8 +1,13 @@
 import React, { useState } from "react";
 import { FiCamera } from "react-icons/fi";
+import { useOutletContext,useSearchParams   } from "react-router-dom";
+
 
 export default function PersonalDetails() {
   const [image, setImage] = useState(null);
+  const { jobData, setJobData } = useOutletContext();
+  const [searchParams] = useSearchParams();
+  const isEdit = searchParams.get("mode") === "edit";
 
   // Handle image upload preview
   const handleImageUpload = (e) => {
@@ -55,8 +60,12 @@ export default function PersonalDetails() {
         <label className="text-sm text-gray-500">Department</label>
         <input
           type="text"
-          placeholder="Enter department"
-          className="w-full mt-1 px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300"
+          value={jobData.department}
+          onChange={(e) =>
+            setJobData({ ...jobData, department: e.target.value })
+          }
+          placeholder="Design & Marketing"
+          className="w-full mt-1 px-4 py-2 border rounded-lg"
         />
       </div>
 
@@ -65,28 +74,35 @@ export default function PersonalDetails() {
         <div className="w-full max-w-xs">
           <label className="text-sm text-gray-500">Job Title</label>
           <input
-            type="text"
-            placeholder="UI / UX Designer"
-            className="w-full mt-1 px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300"
-          />
+          type="text"
+          value={jobData.jobRole}
+          onChange={(e) =>
+            setJobData({ ...jobData, jobRole: e.target.value })
+          }
+          placeholder="UI / UX Designer"
+          className="w-full mt-1 px-4 py-2 border rounded-lg"
+        />
         </div>
         <div className="w-full max-w-xs">
           <label className="text-sm text-gray-500">Job Category</label>
-          <select className="w-full mt-1 px-4 py-2 border rounded-lg bg-white focus:ring focus:ring-blue-300">
-            <option className="text-gray-700 bg-white" value="full-time">
-              Full Time
-            </option>
-            <option className="text-gray-700 bg-white" value="part-time">
-              Part Time
-            </option>
-          </select>
+          <select
+          value={jobData.jobCategory}
+          onChange={(e) =>
+            setJobData({ ...jobData, jobCategory: e.target.value })
+          }
+          className="w-full mt-1 px-4 py-2 border rounded-lg"
+        >
+          <option value="">Select</option>
+          <option value="Full Time">Full Time</option>
+          <option value="Part Time">Part Time</option>
+        </select>
         </div>
       </div>
 
-      {/* Update Button */}
+      {/*  Button */}
       <button className="mt-10 px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-        Update
-      </button>
+      {isEdit ? "Update" : "Add"}
+    </button>
     </div>
   );
 }

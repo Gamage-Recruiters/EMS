@@ -12,9 +12,17 @@ const CreateMeetings = () => {
     meetingType: "",
     locationType: "",
     meetingLink: "",
+    location: "",
   });
 
   const [participants, setParticipants] = useState([]);
+
+   const handleMeetingChange = (field, value) => {
+    setMeetingData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
 
   const handleAddParticipant = (email) => {
     setParticipants([
@@ -52,7 +60,7 @@ const CreateMeetings = () => {
           <div className="lg:col-span-2">
             <MeetingForm
               meetingData={meetingData}
-              onMeetingDataChange={setMeetingData}
+              onChange={handleMeetingChange}
             />
           </div>
 

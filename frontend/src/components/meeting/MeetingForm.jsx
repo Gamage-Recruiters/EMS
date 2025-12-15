@@ -90,10 +90,10 @@ const MeetingForm = ({ meetingData, onMeetingDataChange }) => {
           <label className="flex items-center gap-2">
             <input
               type="radio"
-              checked={meetingData.locationType === "in-person"}
-              onChange={() => handleChange("locationType", "in-person")}
+              checked={meetingData.locationType === "physical"}
+              onChange={() => handleChange("locationType", "physical")}
             />
-            In-Person
+            Physical Meeting
           </label>
         </div>
 
@@ -105,6 +105,18 @@ const MeetingForm = ({ meetingData, onMeetingDataChange }) => {
             onChange={(e) => handleChange("meetingLink", e.target.value)}
           />
         )}
+
+                
+        {meetingData.locationType === "physical" && (
+            <input
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-white shadow-sm text-gray-700 focus:ring-2 focus:ring-blue-500"
+            placeholder="Add meeting location..."
+            value={meetingData.location}
+            onChange={(e) => handleChange("location", e.target.value)}
+            />
+        )}
+
+
       </div>
     </div>
   );

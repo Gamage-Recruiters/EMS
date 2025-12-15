@@ -1,5 +1,7 @@
+import LeaveForm from "./pages/LeaveForm";
+
 function App() {
-  return <div className="text-red-500">App</div>;
+  return <LeaveForm />;
 }
 
 export default App;

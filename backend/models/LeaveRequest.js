@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const leaveRequestSchema = new mongoose.Schema({
   employee: { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Employee', 
+    ref: 'User', 
     required: true 
   },
   startDate: { type: Date, required: true },
@@ -15,7 +15,7 @@ const leaveRequestSchema = new mongoose.Schema({
     enum: ['Pending', 'Approved', 'Rejected'], 
     default: 'Pending' 
   },
-  approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' }
+  approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 
 export default mongoose.model('LeaveRequest', leaveRequestSchema);

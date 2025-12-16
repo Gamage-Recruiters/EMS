@@ -1,164 +1,279 @@
-import Sidebar from "../components/Sidebar";
-import TopHeader from "../components/TopHeader";
+import React, { useState } from 'react';
+import { Calendar, Clock, FileText, User, Mail, Phone, Users, AlertCircle } from 'lucide-react';
+
+// Mock components - replace with your actual components
+const Sidebar = () => <div className="w-64 bg-slate-900 min-h-screen" />;
+const TopHeader = () => (
+  <div className="flex items-center justify-between mb-8">
+    <div>
+      <h1 className="text-2xl font-bold text-slate-900">Leave Request</h1>
+      <p className="text-sm text-slate-600 mt-1">Submit your leave application</p>
+    </div>
+  </div>
+);
 
 export default function LeaveForm() {
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [days, setDays] = useState('');
+
+  const calculateDays = (from, to) => {
+    if (from && to) {
+      const start = new Date(from);
+      const end = new Date(to);
+      const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+      setDays(diff > 0 ? `${diff} ${diff === 1 ? 'Day' : 'Days'}` : '');
+    }
+  };
+
+  const handleFromDateChange = (e) => {
+    setFromDate(e.target.value);
+    calculateDays(e.target.value, toDate);
+  };
+
+  const handleToDateChange = (e) => {
+    setToDate(e.target.value);
+    calculateDays(fromDate, e.target.value);
+  };
+
   return (
-    <div className="min-h-screen bg-slate-100 flex">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex">
       <Sidebar />
 
-      <main className="flex-1 p-6 md:p-8">
+      <main className="flex-1 p-6 md:p-8 lg:p-10">
         <TopHeader />
 
-        {/* Form card */}
-        <div className="mt-6 grid place-items-center">
-          <div className="w-full max-w-3xl bg-white border border-slate-200 rounded-2xl shadow-[0_18px_45px_rgba(15,23,42,0.08)] p-6 md:p-8">
-            {/* Name */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-800">
-                Full Name
-              </label>
-              <input
-                type="text"
-                placeholder="Enter your full name"
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-              />
-            </div>
-
-            {/* Phone Number */}
-            <div className="space-y-2 mt-5">
-              <label className="text-sm font-semibold text-slate-800">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                placeholder="Enter your phone number"
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-              />
-            </div>
-
-            {/* Email */}
-            <div className="space-y-2 mt-5">
-              <label className="text-sm font-semibold text-slate-800">
-                Email Address
-              </label>
-              <input
-                type="email"
-                placeholder="Enter your email address"
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-              />
-            </div>
-
-            {/* Team */}
-            <div className="space-y-2 mt-5">
-              <label className="text-sm font-semibold text-slate-800">
-                Team
-              </label>
-              <select
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-              >
-                <option value="" disabled selected>
-                  Select your team
-                </option>
-                <option>Frontend Team</option>
-                <option>Backend Team</option>
-                <option>Mobile App Team</option>
-                <option>QA Team</option>
-                <option>DevOps Team</option>
-                <option>UI / UX Team</option>
-                <option>Other</option>
-              </select>
-            </div>
-
-            {/* Leave Type */}
-            <div className="mt-5 space-y-2">
-              <label className="text-sm font-semibold text-slate-800">
-                Leave Type
-              </label>
-              <select className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200">
-               
-                <option value="" disabled selected>
-                  Select your team
-                </option>
-
-                <option>Sick leave (Illness or Injury)</option>
-                <option>Bereavement leave (Immediate Family)</option>
-                <option>Bereavement leave (Other)</option>
-                <option>Personal leave</option>
-                <option>Jury duty or legal leave</option>
-                <option>Emergency leave</option>
-                <option>Temporary leave</option>
-                <option>Leave without pay</option>
-                <option>Study Leave</option>
-                <option>Other:</option>
-              </select>
-            </div>
-            
-
-            {/* From / To */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-800">
-                  From
-                </label>
-                <input
-                  type="date"
-                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-800">
-                  To
-                </label>
-                <input
-                  type="date"
-                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                />
+        {/* Form Container */}
+        <div className="max-w-5xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200/60 overflow-hidden">
+            {/* Header Section */}
+            <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-8 py-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Leave Application Form</h2>
+                  <p className="text-blue-100 text-sm mt-0.5">Please fill in all required fields</p>
+                </div>
               </div>
             </div>
 
-            {/* Days */}
-            <div className="mt-5 space-y-2">
-              <label className="text-sm font-semibold text-slate-800">Days</label>
-              <input
-                type="text"
-                placeholder="1 Day"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none"
-              />
-            </div>
+            {/* Form Content */}
+            <div className="p-8">
+              {/* Personal Information Section */}
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-5">
+                  <User className="w-5 h-5 text-indigo-600" />
+                  <h3 className="text-lg font-semibold text-slate-900">Personal Information</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Full Name */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700 flex items-center gap-1">
+                      Full Name <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="John Doe"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all"
+                      />
+                    </div>
+                  </div>
 
-            {/* Reason */}
-            <div className="mt-5 space-y-2">
-              <label className="text-sm font-semibold text-slate-800">
-                Reason for Leave
-              </label>
-              <textarea
-                placeholder="Write reason..."
-                className="w-full h-28 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200 resize-none"
-              />
-            </div>
+                  {/* Email */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700 flex items-center gap-1">
+                      Email Address <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type="email"
+                        placeholder="john.doe@company.com"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all"
+                      />
+                    </div>
+                  </div>
 
-            {/* Additional Notes */}
-            <div className="mt-5 space-y-2">
-              <label className="text-sm font-semibold text-slate-800">
-                Additional Notes
-              </label>
-              <input
-                type="text"
-                placeholder="Write notes..."
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-              />
-            </div>
+                  {/* Phone */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700 flex items-center gap-1">
+                      Phone Number <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type="tel"
+                        placeholder="+1 (555) 000-0000"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all"
+                      />
+                    </div>
+                  </div>
 
-            {/* Buttons */}
-            <div className="mt-7 flex items-center justify-end gap-3">
-              <button className="px-5 py-3 rounded-xl border border-slate-200 bg-white font-semibold text-slate-700 hover:bg-slate-50">
-                Clear
-              </button>
+                  {/* Team */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700 flex items-center gap-1">
+                      Team / Department <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Users className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <select className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all appearance-none cursor-pointer">
+                        <option value="" disabled selected>Select your team</option>
+                        <option>Frontend Team</option>
+                        <option>Backend Team</option>
+                        <option>Mobile App Team</option>
+                        <option>QA Team</option>
+                        <option>DevOps Team</option>
+                        <option>UI/UX Design Team</option>
+                        <option>Product Management</option>
+                        <option>Other</option>
+                      </select>
+                      <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-              <button className="px-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-700 hover:opacity-95">
-                Submit
-              </button>
+              <div className="border-t border-slate-200 my-8"></div>
+
+              {/* Leave Details Section */}
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-5">
+                  <Calendar className="w-5 h-5 text-indigo-600" />
+                  <h3 className="text-lg font-semibold text-slate-900">Leave Details</h3>
+                </div>
+
+                <div className="grid grid-cols-1 gap-5">
+                  {/* Leave Type */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700 flex items-center gap-1">
+                      Leave Type <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <select className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all appearance-none cursor-pointer">
+                        <option value="" disabled selected>Select leave type</option>
+                        <option>Sick Leave (Illness or Injury)</option>
+                        <option>Annual Leave / Vacation</option>
+                        <option>Personal Leave</option>
+                        <option>Bereavement Leave (Immediate Family)</option>
+                        <option>Bereavement Leave (Other)</option>
+                        <option>Emergency Leave</option>
+                        <option>Jury Duty / Legal Leave</option>
+                        <option>Study Leave</option>
+                        <option>Leave Without Pay</option>
+                        <option>Other</option>
+                      </select>
+                      <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Date Range */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-700 flex items-center gap-1">
+                        From Date <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input
+                          type="date"
+                          value={fromDate}
+                          onChange={handleFromDateChange}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-700 flex items-center gap-1">
+                        To Date <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input
+                          type="date"
+                          value={toDate}
+                          onChange={handleToDateChange}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-700">
+                        Total Days
+                      </label>
+                      <div className="relative">
+                        <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input
+                          type="text"
+                          value={days}
+                          readOnly
+                          placeholder="Auto-calculated"
+                          className="w-full bg-slate-100 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-700 font-medium cursor-not-allowed"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Reason */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700 flex items-center gap-1">
+                      Reason for Leave <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      placeholder="Please provide a detailed reason for your leave request..."
+                      rows={4}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all resize-none"
+                    />
+                  </div>
+
+                  {/* Additional Notes */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">
+                      Additional Notes <span className="text-slate-400 text-xs">(Optional)</span>
+                    </label>
+                    <textarea
+                      placeholder="Any additional information or special circumstances..."
+                      rows={3}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all resize-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Info Box */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-3 mb-8">
+                <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-blue-900">
+                  <p className="font-medium mb-1">Important Information</p>
+                  <p className="text-blue-700">Please ensure all information is accurate. Your leave request will be reviewed by your manager within 24-48 hours.</p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-6 border-t border-slate-200">
+                <button className="w-full sm:w-auto px-6 py-3 rounded-xl border-2 border-slate-300 bg-white font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 order-2 sm:order-1">
+                  Clear Form
+                </button>
+
+                <button className="w-full sm:w-auto px-8 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-200 order-1 sm:order-2">
+                  Submit Request
+                </button>
+              </div>
             </div>
           </div>
         </div>

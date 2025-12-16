@@ -152,3 +152,47 @@ export const getAllMeetings = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Cancel a meeting
+ * @route   PUT /api/meetings/:id/cancel
+ * @access  Private
+ */
+export const cancelMeeting = async (req, res) => {
+  try {
+    const meeting = await Meeting.findById(req.params.id);
+
+    if (!meeting) {
+      return res.status(404).json({
+        success: false,
+        message: "Meeting not found",
+      });
+    }
+
+    // Permission check
+    if (
+      meeting.createdBy.toString() !== req.user.id &&
+      !["CEO", "PM", "TL"].includes(req.user.role)
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not allowed to cancel this meeting",
+      });
+    }
+
+    meeting.status = "Cancelled";
+    await meeting.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Meeting cancelled successfully",
+      data: meeting,
+    });
+  } catch (error) {
+    console.error("Cancel meeting error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to cancel meeting",
+    });
+  }
+};

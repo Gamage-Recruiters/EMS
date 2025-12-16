@@ -12,18 +12,87 @@ export default function LeaveForm() {
         {/* Form card */}
         <div className="mt-6 grid place-items-center">
           <div className="w-full max-w-3xl bg-white border border-slate-200 rounded-2xl shadow-[0_18px_45px_rgba(15,23,42,0.08)] p-6 md:p-8">
-            {/* Leave Type */}
+            {/* Name */}
             <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-800">
+                Full Name
+              </label>
+              <input
+                type="text"
+                placeholder="Enter your full name"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+              />
+            </div>
+
+            {/* Phone Number */}
+            <div className="space-y-2 mt-5">
+              <label className="text-sm font-semibold text-slate-800">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                placeholder="Enter your phone number"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+              />
+            </div>
+
+            {/* Email */}
+            <div className="space-y-2 mt-5">
+              <label className="text-sm font-semibold text-slate-800">
+                Email Address
+              </label>
+              <input
+                type="email"
+                placeholder="Enter your email address"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+              />
+            </div>
+
+            {/* Team */}
+            <div className="space-y-2 mt-5">
+              <label className="text-sm font-semibold text-slate-800">
+                Team
+              </label>
+              <select
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+              >
+                <option value="" disabled selected>
+                  Select your team
+                </option>
+                <option>Frontend Team</option>
+                <option>Backend Team</option>
+                <option>Mobile App Team</option>
+                <option>QA Team</option>
+                <option>DevOps Team</option>
+                <option>UI / UX Team</option>
+                <option>Other</option>
+              </select>
+            </div>
+
+            {/* Leave Type */}
+            <div className="mt-5 space-y-2">
               <label className="text-sm font-semibold text-slate-800">
                 Leave Type
               </label>
               <select className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200">
-                <option>Vacation</option>
-                <option>Casual</option>
-                <option>Medical</option>
-                <option>Emergency</option>
+               
+                <option value="" disabled selected>
+                  Select your team
+                </option>
+
+                <option>Sick leave (Illness or Injury)</option>
+                <option>Bereavement leave (Immediate Family)</option>
+                <option>Bereavement leave (Other)</option>
+                <option>Personal leave</option>
+                <option>Jury duty or legal leave</option>
+                <option>Emergency leave</option>
+                <option>Temporary leave</option>
+                <option>Leave without pay</option>
+                <option>Study Leave</option>
+                <option>Other:</option>
               </select>
             </div>
+            
 
             {/* From / To */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">

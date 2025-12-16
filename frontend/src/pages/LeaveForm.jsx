@@ -1,16 +1,9 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, FileText, User, Mail, Phone, Users, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, FileText, User, Mail, Phone, Users, AlertCircle, Menu, Bell, Search } from 'lucide-react';
 
-// Mock components - replace with your actual components
-const Sidebar = () => <div className="w-64 bg-slate-900 min-h-screen" />;
-const TopHeader = () => (
-  <div className="flex items-center justify-between mb-8">
-    <div>
-      <h1 className="text-2xl font-bold text-slate-900">Leave Request</h1>
-      <p className="text-sm text-slate-600 mt-1">Submit your leave application</p>
-    </div>
-  </div>
-);
+import Sidebar from '../components/Sidebar';
+import TopHeader from '../components/TopHeader';
+
 
 export default function LeaveForm() {
   const [fromDate, setFromDate] = useState('');

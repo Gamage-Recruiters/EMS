@@ -196,3 +196,56 @@ export const cancelMeeting = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Reschedule a meeting
+ * @route   PUT /api/meetings/:id/reschedule
+ * @access  Private
+ */
+export const rescheduleMeeting = async (req, res) => {
+  try {
+    const { title, date, time, duration, meetingLink } = req.body;
+
+    const meeting = await Meeting.findById(req.params.id);
+
+    if (!meeting) {
+      return res.status(404).json({
+        success: false,
+        message: "Meeting not found",
+      });
+    }
+
+    // Permission check
+    if (
+      meeting.createdBy.toString() !== req.user.id &&
+      !["CEO", "PM", "TL"].includes(req.user.role)
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not allowed to reschedule this meeting",
+      });
+    }
+    if (title) meeting.title = title;
+    if (date) meeting.date = date;
+    if (time) meeting.time = time;
+    if (duration) meeting.duration = duration;
+    if (meeting.locationType === "online" && meetingLink) {
+      meeting.meetingLink = meetingLink;
+    }
+
+    meeting.status = "Scheduled";
+    await meeting.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Meeting rescheduled successfully",
+      data: meeting,
+    });
+  } catch (error) {
+    console.error("Reschedule meeting error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to reschedule meeting",
+    });
+  }
+};

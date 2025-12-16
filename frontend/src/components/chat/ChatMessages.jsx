@@ -1,33 +1,24 @@
-import React from "react";
-import { CheckCheck } from "lucide-react";
-
-export default function ChatMessages({ messages, chatEndRef }) {
+export default function ChatMessages({ messages }) {
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-gray-100">
-      {messages.map((m) => (
-        <div
-          key={m.id}
-          className={`flex ${
-            m.from === "me" ? "justify-end" : "justify-start"
-          }`}
-        >
-          <div
-            className={`max-w-xs px-3 py-2 rounded-xl shadow text-sm 
-              ${
-                m.from === "me"
-                  ? "bg-green-600 text-white rounded-br-sm"
-                  : "bg-white rounded-bl-sm"
-              }`}
-          >
-            <p>{m.text}</p>
-            <div className="text-[10px] opacity-70 flex items-center gap-1 mt-1">
-              {m.time} {m.from === "me" && <CheckCheck size={14} />}
+    <div className="flex-1 overflow-y-auto px-6 py-5 bg-[#F7FAFC] space-y-5">
+      {messages.map((msg) => (
+        <div key={msg.id} className="flex gap-3">
+          <div className="w-9 h-9 rounded-full bg-[#3676E0] text-white flex items-center justify-center font-semibold">
+            {msg.user[0]}
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-[#1F1F1F]">{msg.user}</span>
+              <span className="text-xs text-[#7A7A7A]">{msg.time}</span>
+            </div>
+
+            <div className="bg-[#FFFFFF] border border-[#E0E0E0] rounded-lg px-4 py-2 mt-1">
+              <p className="text-sm text-[#1F1F1F]">{msg.text}</p>
             </div>
           </div>
         </div>
       ))}
-
-      <div ref={chatEndRef} />
     </div>
   );
 }

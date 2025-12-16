@@ -1,20 +1,10 @@
-import React from "react";
-import { UserCircle, EllipsisVertical } from "lucide-react";
+import { Hash } from "lucide-react";
 
-export default function ChatHeader({ activeChat, typing }) {
+export default function ChatHeader({ channel }) {
   return (
-    <div className="p-3 border-b bg-gray-100 flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <UserCircle size={40} className="text-gray-600" />
-        <div>
-          <p className="font-semibold">{activeChat?.name ?? "Select a chat"}</p>
-          <p className="text-xs text-green-600">
-            {typing ? "Typing..." : activeChat?.online ? "Online" : "Offline"}
-          </p>
-        </div>
-      </div>
-
-      <EllipsisVertical />
+    <div className="h-14 bg-[#FFFFFF] border-b border-[#E0E0E0] flex items-center px-5">
+      <Hash size={16} className="text-[#7A7A7A] mr-2" />
+      <span className="font-semibold text-[#1F1F1F]">{channel.name}</span>
     </div>
   );
 }

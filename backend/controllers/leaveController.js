@@ -1,6 +1,7 @@
 import LeaveRequest from '../models/LeaveRequest.js';
 import User from '../models/User.js';
 import AppError from '../utils/AppError.js';
+import Attendance from '../models/Attendance.js';
 
 // @desc    Create a new leave request
 // @route   POST /api/leaves

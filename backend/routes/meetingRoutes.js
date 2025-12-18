@@ -3,6 +3,8 @@ import {
   createMeeting,
   getUsersForParticipants,
   getAllMeetings,
+  cancelMeeting,
+  rescheduleMeeting,
 } from "../controllers/meetingController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 
@@ -15,5 +17,6 @@ router.post("/", protect, createMeeting);
 router.get("/participants", protect, getUsersForParticipants);
 // Get all meetings with participants
 router.get("/", protect, getAllMeetings);
-
+router.delete("/:id", protect, cancelMeeting);
+router.put("/:id", protect, rescheduleMeeting);
 export default router;

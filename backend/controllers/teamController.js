@@ -4,7 +4,7 @@ import AppError from '../utils/AppError.js';
 
 // @desc    Create a new team
 // @route   POST /api/team
-// @access  Private (CEO, TL)
+// @access  Private (CEO, SystemAdmin, TL)
 export const createTeam = async (req, res, next) => {
   try {
     const { teamName, description, teamLead, members } = req.body;
@@ -21,8 +21,8 @@ export const createTeam = async (req, res, next) => {
       return next(new AppError('Team lead user not found', 404));
     }
 
-    if (!['CEO', 'TL', 'ATL'].includes(teamLeadUser.role)) {
-      return next(new AppError('Team lead must have CEO, TL, or ATL role', 400));
+    if (!['CEO', 'SystemAdmin', 'TL', 'ATL'].includes(teamLeadUser.role)) {
+      return next(new AppError('Team lead must have CEO, SystemAdmin, TL, or ATL role', 400));
     }
 
     // Verify all members exist if members array is provided
@@ -56,7 +56,7 @@ export const createTeam = async (req, res, next) => {
 
 // @desc    Add a new member to a team
 // @route   PUT /api/team/:id/add-member
-// @access  Private (CEO, TL)
+// @access  Private (CEO, SystemAdmin, TL)
 export const addMemberToTeam = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -102,7 +102,7 @@ export const addMemberToTeam = async (req, res, next) => {
 
 // @desc    Edit team details
 // @route   PUT /api/team/:id
-// @access  Private (CEO, TL)
+// @access  Private (CEO, SystemAdmin, TL)
 export const editTeamDetails = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -134,8 +134,8 @@ export const editTeamDetails = async (req, res, next) => {
       if (!teamLeadUser) {
         return next(new AppError('Team lead user not found', 404));
       }
-      if (!['CEO', 'TL', 'ATL'].includes(teamLeadUser.role)) {
-        return next(new AppError('Team lead must have CEO, TL, or ATL role', 400));
+      if (!['CEO', 'SystemAdmin', 'TL', 'ATL'].includes(teamLeadUser.role)) {
+        return next(new AppError('Team lead must have CEO, SystemAdmin, TL, or ATL role', 400));
       }
       team.teamLead = teamLead;
     }
@@ -167,7 +167,7 @@ export const editTeamDetails = async (req, res, next) => {
 
 // @desc    Delete a team
 // @route   DELETE /api/team/:id
-// @access  Private (CEO, TL)
+// @access  Private (CEO, SystemAdmin, TL)
 export const deleteTeam = async (req, res, next) => {
   try {
     const { id } = req.params;

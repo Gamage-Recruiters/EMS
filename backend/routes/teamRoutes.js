@@ -21,16 +21,16 @@ router.get('/name/:teamName', protect, getTeamByName);
 // Get team by ID (accessible to all authenticated users)
 router.get('/:id', protect, getTeamById);
 
-// Create a new team (CEO and TL only)
-router.post('/', protect, authorize('CEO', 'TL'), createTeam);
+// Create a new team (CEO, SystemAdmin and TL only)
+router.post('/', protect, authorize('CEO', 'SystemAdmin', 'TL'), createTeam);
 
-// Add a member to a team (CEO and TL only)
-router.put('/:id/add-member', protect, authorize('CEO', 'TL'), addMemberToTeam);
+// Add a member to a team (CEO, SystemAdmin and TL only)
+router.put('/:id/add-member', protect, authorize('CEO', 'SystemAdmin', 'TL'), addMemberToTeam);
 
-// Edit team details (CEO and TL only)
-router.put('/:id', protect, authorize('CEO', 'TL'), editTeamDetails);
+// Edit team details (CEO, SystemAdmin and TL only)
+router.put('/:id', protect, authorize('CEO', 'SystemAdmin', 'TL'), editTeamDetails);
 
-// Delete a team (CEO and TL only)
-router.delete('/:id', protect, authorize('CEO', 'TL'), deleteTeam);
+// Delete a team (CEO, SystemAdmin and TL only)
+router.delete('/:id', protect, authorize('CEO', 'SystemAdmin', 'TL'), deleteTeam);
 
 export default router;

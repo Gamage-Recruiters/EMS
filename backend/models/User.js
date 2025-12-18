@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
   // Role and permissions
   role: {
     type: String,
-    enum: ['CEO', 'TL', 'ATL', 'PM', 'Developer', 'Unassigned'],
+    enum: ['CEO', 'SystemAdmin', 'TL', 'ATL', 'PM', 'Developer', 'Unassigned'],
     default: 'Unassigned',
   },
 

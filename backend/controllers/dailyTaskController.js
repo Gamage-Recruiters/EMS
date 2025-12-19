@@ -54,3 +54,28 @@ export const createDailyTask = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Get logged-in developer's daily tasks (full details)
+ * @route   GET /api/daily-tasks/my
+ * @access  Private
+ */
+export const getMyDailyTasks = async (req, res) => {
+  try {
+    const tasks = await DailyTask.find({ developer: req.user.id })
+      .populate("developer", "firstName lastName email role profileImage")
+      .sort({ date: -1, createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: tasks.length,
+      data: tasks,
+    });
+  } catch (error) {
+    console.error("Get my daily tasks error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve your daily tasks",
+    });
+  }
+};

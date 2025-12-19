@@ -13,9 +13,6 @@ function DailyTaskSheet() {
     workingHours: "",
     facedIssues: "",
     learnings: "",
-    pmCheck: "Pending",
-    teamLeadCheck: "Pending",
-    date: "",
   });
 
   const update = (key) => (e) => setForm({ ...form, [key]: e.target.value });
@@ -109,15 +106,7 @@ function DailyTaskSheet() {
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
               />
             </label>
-            <label className="space-y-1 text-sm font-medium text-slate-700">
-              Date
-              <input
-                type="date"
-                value={form.date}
-                onChange={update("date")}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-              />
-            </label>
+
           </div>
 
 
@@ -141,32 +130,6 @@ function DailyTaskSheet() {
                 placeholder="What did you learn?"
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
               />
-            </label>
-            <label className="space-y-1 text-sm font-medium text-slate-700">
-              PM Check
-              <select
-                value={form.pmCheck}
-                onChange={update("pmCheck")}
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-              >
-                <option value="Pending">Pending</option>
-                <option value="Done">Done</option>
-                <option value="Issue">Issue</option>
-                <option value="Not Completed">Not Completed</option>
-              </select>
-            </label>
-            <label className="space-y-1 text-sm font-medium text-slate-700">
-              Team Lead Check
-              <select
-                value={form.teamLeadCheck}
-                onChange={update("teamLeadCheck")}
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-              >
-                <option value="Pending">Pending</option>
-                <option value="Done">Done</option>
-                <option value="Issue">Issue</option>
-                <option value="Not Completed">Not Completed</option>
-              </select>
             </label>
           </div>
 

@@ -81,6 +81,7 @@ function WeeklyWorkSummary() {
                   <th className="px-3 py-2 font-semibold">Learnings</th>
                   <th className="px-3 py-2 font-semibold">PM Check</th>
                   <th className="px-3 py-2 font-semibold">Team Lead Check</th>
+                  <th className="px-3 py-2 font-semibold">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -100,6 +101,20 @@ function WeeklyWorkSummary() {
                     <td className="px-3 py-3 text-slate-700 text-xs max-w-xs truncate" title={task.learnings}>{task.learnings}</td>
                     <td className="px-3 py-3 text-slate-700 text-sm">{task.pmCheck}</td>
                     <td className="px-3 py-3 text-slate-700 text-sm">{task.teamLeadCheck}</td>
+                    <td className="px-3 py-3 text-slate-700 text-sm">
+                      <button
+                        className="text-red-600 hover:underline text-xs font-medium"
+                        onClick={() => {
+                          // Remove from dailyTasks (mock only)
+                          const idxToRemove = dailyTasks.findIndex(t => t._id === task._id);
+                          if (idxToRemove !== -1) {
+                            dailyTasks.splice(idxToRemove, 1);
+                          }
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -143,21 +143,21 @@ const ProgressTracking = ({
                       <th className="text-left py-3">Status</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  {/* <tbody>
                     {teamStats.map((team) => (
-                      <tr key={team.name} className="border-b">
-                        <td className="py-3">{team.name}</td>
-                        <td className="py-3">{team.completion}%</td>
-                        <td className="py-3">{team.pending}</td>
-                        <td className="py-3">
-                          <span className={`inline-flex items-center gap-2 ${team.status === "Good" ? "text-emerald-600" : team.status === "Average" ? "text-amber-600" : "text-red-600"}`}>
-                            <span className={`w-2 h-2 rounded-full ${team.status === "Good" ? "bg-emerald-600" : team.status === "Average" ? "bg-amber-600" : "bg-red-600"}`} />
-                            {team.status}
-                          </span>
-                        </td>
-                      </tr>
+                      // <tr key={team.name} className="border-b">
+                      //   <td className="py-3">{team.name}</td>
+                      //   <td className="py-3">{team.completion}%</td>
+                      //   <td className="py-3">{team.pending}</td>
+                      //   <td className="py-3">
+                      //     <span className={`inline-flex items-center gap-2 ${team.status === "Good" ? "text-emerald-600" : team.status === "Average" ? "text-amber-600" : "text-red-600"}`}>
+                      //       <span className={`w-2 h-2 rounded-full ${team.status === "Good" ? "bg-emerald-600" : team.status === "Average" ? "bg-amber-600" : "bg-red-600"}`} />
+                      //       {team.status}
+                      //     </span>
+                      //   </td>
+                      // </tr>
                     ))}
-                  </tbody>
+                  </tbody> */}
                 </table>
               </div>
             </div>
@@ -237,8 +237,38 @@ const ProgressTracking = ({
                   <td className="px-3 py-3 text-slate-700 text-sm">{task.workingHours}</td>
                   <td className="px-3 py-3 text-slate-700 text-xs max-w-xs truncate" title={task.facedIssues}>{task.facedIssues}</td>
                   <td className="px-3 py-3 text-slate-700 text-xs max-w-xs truncate" title={task.learnings}>{task.learnings}</td>
-                  <td className="px-3 py-3 text-slate-700 text-sm">{task.pmCheck}</td>
-                  <td className="px-3 py-3 text-slate-700 text-sm">{task.teamLeadCheck}</td>
+                  <td className="px-3 py-3 text-slate-700 text-sm">
+                    {role === "PM" ? (
+                      <select
+                        value={task.pmCheck}
+                        onChange={e => {/* TODO: handle PM check update */}}
+                        className="rounded border border-slate-300 px-2 py-1 text-xs"
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Done">Done</option>
+                        <option value="Issue">Issue</option>
+                        <option value="Not Completed">Not Completed</option>
+                      </select>
+                    ) : (
+                      task.pmCheck
+                    )}
+                  </td>
+                  <td className="px-3 py-3 text-slate-700 text-sm">
+                    {role === "TL" ? (
+                      <select
+                        value={task.teamLeadCheck}
+                        onChange={e => {/* TODO: handle TL check update */}}
+                        className="rounded border border-slate-300 px-2 py-1 text-xs"
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Done">Done</option>
+                        <option value="Issue">Issue</option>
+                        <option value="Not Completed">Not Completed</option>
+                      </select>
+                    ) : (
+                      task.teamLeadCheck
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

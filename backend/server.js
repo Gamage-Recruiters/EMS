@@ -45,6 +45,7 @@ app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/attendance', AttendanceRoutes);
 app.use('/api/leaves', leaveRoutes);
+app.use('/api/availability', availabilityRoutes);
 // app.use('/test', testRoutes);
 
 // Global Error Handler

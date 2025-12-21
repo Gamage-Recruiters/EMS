@@ -10,6 +10,7 @@ import authRoutes from './routes/authRoutes.js';
 import errorHandler from './middlewares/errorMiddleware.js';
 import leaveRoutes from './routes/leaveRoutes.js';
 import AttendanceRoutes from "./routes/AttendanceRoutes.js";
+import availabilityRoutes from './routes/availabilityRoutes.js';
 
 dotenv.config();
 

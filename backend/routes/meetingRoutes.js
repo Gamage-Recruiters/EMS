@@ -5,6 +5,7 @@ import {
   getAllMeetings,
   cancelMeeting,
   rescheduleMeeting,
+  getMyAssignedMeetings,
 } from "../controllers/meetingController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 
@@ -19,4 +20,7 @@ router.get("/participants", protect, getUsersForParticipants);
 router.get("/", protect, getAllMeetings);
 router.delete("/:id", protect, cancelMeeting);
 router.put("/:id", protect, rescheduleMeeting);
+
+// Get meetings assigned to logged-in user
+router.get("/my", protect, getMyAssignedMeetings);
 export default router;

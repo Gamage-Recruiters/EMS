@@ -50,6 +50,7 @@ app.use('/api/team', teamRoutes);
 //app.use('/test', testRoutes);
 
 app.use('/api/user', userRoutes);
+app.use('/api/admin', teamRoutes);
 
 // Global Error Handler
 app.use(errorHandler);

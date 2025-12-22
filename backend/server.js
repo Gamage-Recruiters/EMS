@@ -6,8 +6,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import authRoutes from './routes/authRoutes.js';
-import testRoutes from './routes/testRoutes.js';
+
 import errorHandler from './middlewares/errorMiddleware.js';
+import leaveRoutes from './routes/leaveRoutes.js';
+import AttendanceRoutes from "./routes/AttendanceRoutes.js";
+import availabilityRoutes from './routes/availabilityRoutes.js';
 
 dotenv.config();
 
@@ -41,7 +44,10 @@ app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/test', testRoutes);
+app.use('/api/attendance', AttendanceRoutes);
+app.use('/api/leaves', leaveRoutes);
+app.use('/api/availability', availabilityRoutes);
+// app.use('/test', testRoutes);
 
 // Global Error Handler
 app.use(errorHandler);

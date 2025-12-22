@@ -6,10 +6,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import authRoutes from './routes/authRoutes.js';
-import userRoutes from './routes/userRoutes.js';
+
 //import testRoutes from './routes/testRoutes.js';
 import errorHandler from './middlewares/errorMiddleware.js';
-
+import userRoutes from './routes/userRoutes.js';
 dotenv.config();
 
 // Connect Database

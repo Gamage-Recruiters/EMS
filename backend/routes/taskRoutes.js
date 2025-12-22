@@ -1,9 +1,10 @@
-const express = require("express");
+import express from 'express';
+import { createTask } from '../controllers/taskController.js';
+import { protect } from '../middlewares/authMiddleware.js';
+
 const router = express.Router();
-const { createTask } = require("../controllers/taskController");
-const authMiddleware = require("../middleware/authMiddleware");
 
 // Only PM / TL should access
-router.post("/create", authMiddleware, createTask);
+router.post('/create', protect, createTask);
 
-module.exports = router;
+export default router;

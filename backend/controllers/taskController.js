@@ -1,6 +1,6 @@
-const Task = require("../models/Task");
+import Task from '../models/Task.js';
 
-exports.createTask = async (req, res) => {
+export const createTask = async (req, res) => {
   try {
     const {
       title,

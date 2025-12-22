@@ -9,6 +9,7 @@ export default function LeaveForm() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [days, setDays] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const calculateDays = (from, to) => {
     if (from && to) {
@@ -27,6 +28,17 @@ export default function LeaveForm() {
   const handleToDateChange = (e) => {
     setToDate(e.target.value);
     calculateDays(fromDate, e.target.value);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
   };
 
   return (
@@ -244,6 +256,65 @@ export default function LeaveForm() {
                       rows={3}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all resize-none"
                     />
+                  </div>
+
+                  {/* File Upload */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">
+                      Attach Supporting Document <span className="text-slate-400 text-xs">(Optional - PDF, JPG, PNG)</span>
+                    </label>
+                    <div className="flex flex-col gap-3">
+                      <input
+                        type="file"
+                        id="file-upload"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                      <label
+                        htmlFor="file-upload"
+                        className="w-full bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl px-4 py-6 text-center cursor-pointer hover:bg-slate-100 hover:border-indigo-300 transition-all group"
+                      >
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+                            <FileText className="w-6 h-6 text-indigo-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-slate-700 group-hover:text-indigo-600 transition-colors">
+                              Click to upload file
+                            </p>
+                            <p className="text-xs text-slate-500 mt-1">
+                              PDF, JPG, PNG (Max 10MB)
+                            </p>
+                          </div>
+                        </div>
+                      </label>
+
+                      {/* Selected File Display */}
+                      {selectedFile && (
+                        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                              <FileText className="w-5 h-5 text-indigo-600" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-slate-900">{selectedFile.name}</p>
+                              <p className="text-xs text-slate-500">
+                                {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={handleRemoveFile}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg p-2 transition-all"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

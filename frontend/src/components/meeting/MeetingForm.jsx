@@ -1,10 +1,10 @@
 import React from "react";
 
-const MeetingForm = ({ meetingData, onMeetingDataChange }) => {
+const MeetingForm = ({ meetingData, onChange }) => {
   const handleChange = (field, value) => {
-    onMeetingDataChange({ ...meetingData, [field]: value });
+    onChange(field, value);
   };
-
+  
   return (
     <div className="bg-white p-6 rounded-2xl shadow-md">
       <h2 className="text-lg font-semibold mb-4">Meeting Details</h2>

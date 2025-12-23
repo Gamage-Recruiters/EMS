@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import AppError from "../utils/AppError.js";
-import { updateUserProfile as authUpdateUserProfile } from "./authController.js";
+import { updateUserProfile as authUpdateUserProfile, deleteUserProfile as authDeleteUserProfile } from "./authController.js";
 
 
 /**
@@ -107,4 +107,15 @@ export const getUserById = async (req, res, next) => {
 export const updateUserProfile = (req, res, next) => {
   // simply call the existing function
   return authUpdateUserProfile(req, res, next);
+};
+
+
+/**
+ * @desc   Delete own user profile
+ * @route  DELETE /api/user/me
+ * @access Private
+ */
+export const deleteUserProfile = (req, res, next) => {
+  // Delegate to auth controller
+  return authDeleteUserProfile(req, res, next);
 };

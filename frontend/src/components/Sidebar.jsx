@@ -1,4 +1,18 @@
+
+import { Link, useLocation } from "react-router-dom";
+
+const navItems = [
+  { name: "Dashboard", path: "/dashboard", icon: "🏠" },
+  { name: "Attendance", path: "/attendance", icon: "📅" },
+  { name: "Leave Form", path: "/leave-form", icon: "📝" },
+  { name: "Leave Approval", path: "/leave-approval", icon: "✅" },
+  { name: "Reports", path: "/reports", icon: "📊" },
+  { name: "Settings", path: "/settings", icon: "⚙️" },
+];
+
 export default function Sidebar() {
+  const { pathname } = useLocation();
+
   return (
     <aside className="w-72 bg-gradient-to-b from-slate-900 to-slate-800 min-h-screen flex flex-col">
       {/* Brand */}
@@ -16,12 +30,15 @@ export default function Sidebar() {
 
       {/* Menu */}
       <nav className="flex-1 px-4 py-6 space-y-1">
-        <MenuItem label="Attendance" />
-        <MenuItem label="Calendar" />
-        <MenuItem label="Leave Request" active />
-        <MenuItem label="Leave Status" />
-        <MenuItem label="Reports" />
-        <MenuItem label="Settings" />
+        {navItems.map((item) => (
+          <MenuItem
+            key={item.path}
+            to={item.path}
+            icon={item.icon}
+            label={item.name}
+            active={pathname === item.path || (pathname === "/" && item.path === "/dashboard")}
+          />
+        ))}
       </nav>
 
       {/* Profile */}
@@ -40,16 +57,18 @@ export default function Sidebar() {
   );
 }
 
-function MenuItem({ label, active }) {
+function MenuItem({ to, icon, label, active }) {
   return (
-    <div
-      className={`px-4 py-2.5 rounded-xl text-sm font-medium cursor-pointer transition-all ${
+    <Link
+      to={to}
+      className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
         active
           ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white"
           : "text-slate-300 hover:bg-slate-700"
       }`}
     >
+      <span className="text-base">{icon}</span>
       {label}
-    </div>
+    </Link>
   );
 }

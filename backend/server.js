@@ -10,6 +10,12 @@ import userRoutes from './routes/userRoutes.js';
 import teamRoutes from './routes/teamRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import errorHandler from './middlewares/errorMiddleware.js';
+
+import errorHandler from './middlewares/errorMiddleware.js';
+import leaveRoutes from './routes/leaveRoutes.js';
+import AttendanceRoutes from "./routes/AttendanceRoutes.js";
+import availabilityRoutes from './routes/availabilityRoutes.js';
+
 dotenv.config();
 
 // Connect Database
@@ -45,6 +51,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/attendance', AttendanceRoutes);
+app.use('/api/leaves', leaveRoutes);
+app.use('/api/availability', availabilityRoutes);
+// app.use('/test', testRoutes);
 
 // Global Error Handler
 app.use(errorHandler);

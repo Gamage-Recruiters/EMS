@@ -9,7 +9,6 @@ import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import teamRoutes from './routes/teamRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
-import errorHandler from './middlewares/errorMiddleware.js';
 
 import errorHandler from './middlewares/errorMiddleware.js';
 import leaveRoutes from './routes/leaveRoutes.js';

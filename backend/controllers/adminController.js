@@ -1,5 +1,6 @@
 import User from "../models/User.js";
 import AppError from "../utils/AppError.js";
+import bcrypt from "bcryptjs";
 
 //System owner or CEO add a developer
 export const addUserByAdmin = async (req, res, next) => {

@@ -249,3 +249,40 @@ export const rescheduleMeeting = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Get meetings assigned to logged-in developer
+ * @route   GET /api/meetings/my
+ * @access  Private (Developer)
+ */
+export const getMyAssignedMeetings = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const meetings = await Meeting.find({
+      "participants.user": userId,
+      status: { $ne: "Cancelled" }, // optional: hide cancelled
+    })
+      .populate({
+        path: "createdBy",
+        select: "firstName lastName email role profileImage",
+      })
+      .populate({
+        path: "participants.user",
+        select: "firstName lastName email role profileImage",
+      })
+      .sort({ date: 1, time: 1 });
+
+    res.status(200).json({
+      success: true,
+      count: meetings.length,
+      data: meetings,
+    });
+  } catch (error) {
+    console.error("Get assigned meetings error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve assigned meetings",
+    });
+  }
+};

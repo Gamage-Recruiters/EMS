@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import DashboardPage from "./pages/DashboardPage";
 import AttendancePage from "./pages/AttendancePage";
@@ -20,7 +20,7 @@ function App() {
   };
 
   return (
-    <BrowserRouter>
+    <>
       {isCheckedIn && <AttendancePrompt onCheckIn={handleCheckIn} />}
 
       <div className="flex h-screen bg-gray-50">
@@ -54,7 +54,7 @@ function App() {
           </div>
         </div>
       </div>
-    </BrowserRouter>
+    </>
   );
 }
 

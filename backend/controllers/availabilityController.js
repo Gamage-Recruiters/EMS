@@ -1,5 +1,5 @@
-import AvailabilityCache from '../models/AvailabilityCache.js';
-import Attendance from '../models/Attendance.js';
+import AvailabilityCache from "../models/AvailabilityCache.js";
+import Attendance from "../models/Attendance.js";
 
 const TTL_HOURS = 12;
 
@@ -11,8 +11,15 @@ export const setAvailability = async (req, res) => {
   try {
     const { status, reason } = req.body;
 
-    if (!['AVAILABLE', 'UNAVAILABLE'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid availability status' });
+    const allowed = [
+      "AVAILABLE",
+      "BUSY",
+      "BE_RIGHT_BACK",
+      "APPEAR_AWAY",
+      "UNAVAILABLE",
+    ];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({ message: "Invalid availability status" });
     }
 
     // Check if employee is checked in and NOT checked out
@@ -24,19 +31,17 @@ export const setAvailability = async (req, res) => {
 
     if (!attendance) {
       return res.status(403).json({
-        message: 'You must be checked in to update availability',
+        message: "You must be checked in to update availability",
       });
     }
 
-    const expiresAt = new Date(
-      Date.now() + TTL_HOURS * 60 * 60 * 1000
-    );
+    const expiresAt = new Date(Date.now() + TTL_HOURS * 60 * 60 * 1000);
 
     const availability = await AvailabilityCache.findOneAndUpdate(
       { user: req.user._id },
       {
         status,
-        reason: reason || '',
+        reason: reason || "",
         lastUpdatedAt: new Date(),
         expiresAt,
       },
@@ -44,7 +49,7 @@ export const setAvailability = async (req, res) => {
     );
 
     res.status(200).json({
-      message: 'Availability updated successfully',
+      message: "Availability updated successfully",
       availability,
     });
   } catch (error) {
@@ -61,9 +66,7 @@ export const getMyAvailability = async (req, res) => {
       user: req.user._id,
     });
 
-    res.status(200).json(
-      availability || { status: 'UNAVAILABLE' }
-    );
+    res.status(200).json(availability || { status: "UNAVAILABLE" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -75,10 +78,7 @@ export const getMyAvailability = async (req, res) => {
 export const getTeamAvailability = async (req, res) => {
   try {
     const availabilityList = await AvailabilityCache.find()
-      .populate(
-        'user',
-        'firstName lastName role department designation'
-      )
+      .populate("user", "firstName lastName role department designation")
       .sort({ lastUpdatedAt: -1 });
 
     res.status(200).json(availabilityList);

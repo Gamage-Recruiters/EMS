@@ -1,10 +1,10 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const availabilityCacheSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
       unique: true,
       index: true,
@@ -12,13 +12,13 @@ const availabilityCacheSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ['AVAILABLE', 'UNAVAILABLE'],
+      enum: ["AVAILABLE", "UNAVAILABLE"],
       required: true,
     },
 
     reason: {
       type: String,
-      default: '',
+      default: "",
       trim: true,
     },
 
@@ -37,7 +37,4 @@ const availabilityCacheSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model(
-  'AvailabilityCache',
-  availabilityCacheSchema
-);
+export default mongoose.model("AvailabilityCache", availabilityCacheSchema);

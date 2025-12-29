@@ -196,3 +196,42 @@ export const updateTLCheck = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Delete a daily task (ONLY owner developer)
+ * @route   DELETE /api/daily-tasks/:id
+ * @access  Private
+ */
+export const deleteDailyTask = async (req, res) => {
+  try {
+    const task = await DailyTask.findById(req.params.id);
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Daily task not found",
+      });
+    }
+
+    // Only the developer who created it can delete
+    if (task.developer.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not allowed to delete this task",
+      });
+    }
+
+    await DailyTask.deleteOne({ _id: req.params.id });
+
+    return res.status(200).json({
+      success: true,
+      message: "Daily task deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete daily task error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete daily task",
+    });
+  }
+};

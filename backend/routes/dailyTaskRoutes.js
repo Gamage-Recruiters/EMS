@@ -5,6 +5,7 @@ import {
   getAllDailyTasks,
   updatePMCheck,
   updateTLCheck,
+  deleteDailyTask,
 } from "../controllers/dailyTaskController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 
@@ -14,6 +15,8 @@ const router = express.Router();
 router.post("/", protect, createDailyTask);
 // Developer gets their task list (full details)
 router.get("/my", protect, getMyDailyTasks);
+// delete daily task (owner only)
+router.delete("/:id", protect, deleteDailyTask);
 
 // PM / TL / CEO
 router.get("/", protect, getAllDailyTasks);

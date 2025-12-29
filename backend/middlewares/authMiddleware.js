@@ -25,8 +25,8 @@ export const protect = async (req, res, next) => {
 // RBAC Middleware
 export const authorize = (...roles) => {
   return (req, res, next) => {
-    // CEO always has access
-    if (req.user.role === 'CEO') return next();
+    // CEO and SystemAdmin always have access
+    if (req.user.role === 'CEO' || req.user.role === 'SystemAdmin') return next();
 
     if (!roles.includes(req.user.role)) {
       return next(new AppError(`User role '${req.user.role}' is not authorized to access this route`, 403));

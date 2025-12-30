@@ -1,5 +1,5 @@
 import express from 'express';
-import { createTask, getMyTasks } from '../controllers/taskController.js';
+import { createTask, getMyTasks, updateTaskStatus } from '../controllers/taskController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -7,5 +7,6 @@ const router = express.Router();
 // Only TL/ATL should access
 router.post('/create', protect, createTask);
 router.get("/my", protect, getMyTasks);
+router.patch("/:id/status", protect, updateTaskStatus); // Drag & drop status update
 
 export default router;

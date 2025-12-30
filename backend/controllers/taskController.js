@@ -58,3 +58,24 @@ export const getMyTasks = async (req, res) => {
     });
   }
 };
+
+// Controller to update task status
+export const updateTaskStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    const updatedTask = await Task.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true, runValidators: false } 
+    );
+
+    if (!updatedTask) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    res.status(200).json(updatedTask);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

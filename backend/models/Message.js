@@ -34,6 +34,8 @@ const messageSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
@@ -45,14 +47,9 @@ messageSchema.virtual('time').get(function () {
   });
 });
 
-// Populate user data when querying
-messageSchema.pre('find', function (next) {
-  this.populate({
-    path: 'userId',
-    select: 'username avatarColor',
-  });
-  next();
-});
+// Index for faster queries
+messageSchema.index({ channelId: 1, createdAt: -1 });
+messageSchema.index({ userId: 1 });
 
 const Message = mongoose.model('Message', messageSchema);
 export default Message;

@@ -4,7 +4,7 @@ import { protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-// Only PM / TL should access
+// Only TL/ATL should access
 router.post('/create', protect, createTask);
 router.get("/my", protect, getMyTasks);
 

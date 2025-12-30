@@ -7,6 +7,7 @@ export const createTask = async (req, res) => {
       title,
       description,
       assignedTo,
+      startDate,
       dueDate,
       priority,
     } = req.body;
@@ -19,6 +20,7 @@ export const createTask = async (req, res) => {
       description,
       assignedBy,
       assignedTo,
+      startDate,
       dueDate,
       priority,
     });

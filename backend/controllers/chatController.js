@@ -6,7 +6,7 @@ import AppError from '../utils/AppError.js';
 
 // ==================== CHANNEL CONTROLLERS ====================
 
-// @desc    Get all channels user has access to
+//Get all channels user has access to
 export const getChannels = async (req, res, next) => {
   try {
     let channels;
@@ -44,7 +44,7 @@ export const getChannels = async (req, res, next) => {
   }
 };
 
-// @desc    Create a new channel
+//Create a new channel
 export const createChannel = async (req, res, next) => {
   try {
     if (!['CEO', 'TL', 'PM'].includes(req.user.role)) {
@@ -84,7 +84,7 @@ export const createChannel = async (req, res, next) => {
   }
 };
 
-// @desc    Get channel by ID
+//Get channel by ID
 export const getChannelById = async (req, res, next) => {
   try {
     const { channelId } = req.params;
@@ -121,7 +121,7 @@ export const getChannelById = async (req, res, next) => {
   }
 };
 
-// @desc    Add member to channel
+//Add member to channel
 export const addMemberToChannel = async (req, res, next) => {
   try {
     if (!['CEO', 'TL', 'PM'].includes(req.user.role)) {
@@ -167,7 +167,7 @@ export const addMemberToChannel = async (req, res, next) => {
   }
 };
 
-// @desc    Remove member from channel
+//Remove member from channel
 export const removeMemberFromChannel = async (req, res, next) => {
   try {
     if (!['CEO', 'TL', 'PM'].includes(req.user.role)) {
@@ -203,7 +203,7 @@ export const removeMemberFromChannel = async (req, res, next) => {
   }
 };
 
-// @desc    Delete channel
+//Delete channel
 export const deleteChannel = async (req, res, next) => {
   try {
     if (req.user.role !== 'CEO') {
@@ -233,7 +233,7 @@ export const deleteChannel = async (req, res, next) => {
 
 // ==================== MESSAGE CONTROLLERS ====================
 
-// @desc    Get messages for a channel
+// Get messages for a channel
 export const getMessages = async (req, res, next) => {
   try {
     const { channelId } = req.params;
@@ -276,7 +276,7 @@ export const getMessages = async (req, res, next) => {
   }
 };
 
-// @desc    Send a message to channel
+// Send a message to channel
 export const sendMessage = async (req, res, next) => {
   try {
     const { channelId } = req.params;
@@ -336,7 +336,7 @@ export const sendMessage = async (req, res, next) => {
   }
 };
 
-// @desc    Edit a message
+// Edit a message
 export const editMessage = async (req, res, next) => {
   try {
     const { messageId } = req.params;
@@ -374,7 +374,7 @@ export const editMessage = async (req, res, next) => {
   }
 };
 
-// @desc    Delete a message
+// Delete a message
 export const deleteMessage = async (req, res, next) => {
   try {
     const { messageId } = req.params;
@@ -407,7 +407,7 @@ export const deleteMessage = async (req, res, next) => {
 
 // ==================== NOTICE CONTROLLERS (CEO) ====================
 
-// @desc    Send a notice
+// Send a notice
 export const sendNotice = async (req, res, next) => {
   try {
     if (req.user.role !== 'CEO') {
@@ -451,7 +451,7 @@ export const sendNotice = async (req, res, next) => {
 
 // ==================== PRIVATE CHAT CONTROLLERS (CEO) ====================
 
-// @desc    Get all employees for private chat
+// Get all employees for private chat
 export const getEmployees = async (req, res, next) => {
   try {
     if (req.user.role !== 'CEO') {
@@ -473,7 +473,7 @@ export const getEmployees = async (req, res, next) => {
   }
 };
 
-// @desc    Send private message
+// Send private message
 export const sendPrivateMessage = async (req, res, next) => {
   try {
     if (req.user.role !== 'CEO') {
@@ -526,7 +526,7 @@ export const sendPrivateMessage = async (req, res, next) => {
   }
 };
 
-// @desc    Get all private channels
+// Get all private channels
 export const getPrivateChannels = async (req, res, next) => {
   try {
     if (req.user.role !== 'CEO') {
@@ -553,7 +553,7 @@ export const getPrivateChannels = async (req, res, next) => {
 
 // ==================== SEARCH CONTROLLERS ====================
 
-// @desc    Search messages
+// Search messages
 export const searchMessages = async (req, res, next) => {
   try {
     const { query, limit = 20 } = req.query;

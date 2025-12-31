@@ -33,6 +33,22 @@ export const AttendanceProvider = ({ children }) => {
     }
   };
 
+  // check-out
+  const checkOut = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const { data } = await api.put('/attendance/checkout');
+      setTodayAttendance(data.data);
+      return data;
+    }catch (err) {
+      setError(err.message || 'Failed to check out');
+      throw err;
+    }finally {
+      setLoading(false);
+    }
+  }
+
   const getTodayAttendance = async () => {
     try {
       setLoading(true);
@@ -70,6 +86,7 @@ export const AttendanceProvider = ({ children }) => {
 
     // Actions
     checkIn,
+    checkOut,
     getTodayAttendance,
     getAllAttendance,
     setError,

@@ -52,11 +52,9 @@ const AttendancePrompt = ({ onCheckIn }) => {
 
   const handleCheckInClick = async () => {
     const result = await checkIn();
-
-    console.log("Check-in result:", result);
-    
     if (result.success) {
       onCheckIn(currentTime);
+       console.log("Check-in result:", result);
     } else {
       alert(result.error || "Failed to check in. Please try again.");
     }

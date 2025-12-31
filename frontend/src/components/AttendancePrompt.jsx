@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useAttendance } from "../context/AttendanceContext";
 
 // Replace this with the actual backend endpoint later
 const USER_INFO_ENDPOINT = "/api/user/profile";
@@ -10,6 +11,8 @@ const AttendancePrompt = ({ onCheckIn }) => {
     isLoading: true,
     error: null,
   });
+
+  const { checkIn} = useAttendance();
 
   // Update the current time every second
   useEffect(() => {
@@ -46,6 +49,18 @@ const AttendancePrompt = ({ onCheckIn }) => {
 
     fetchUserProfile();
   }, []);
+
+  const handleCheckInClick = async () => {
+    const result = await checkIn();
+
+    console.log("Check-in result:", result);
+    
+    if (result.success) {
+      onCheckIn(currentTime);
+    } else {
+      alert(result.error || "Failed to check in. Please try again.");
+    }
+  };
 
   const getGreeting = () => {
     const hour = currentTime.getHours();
@@ -88,7 +103,7 @@ const AttendancePrompt = ({ onCheckIn }) => {
         </div>
 
         <button
-          onClick={() => onCheckIn(currentTime)}
+          onClick={handleCheckInClick}
           disabled={profile.isLoading || profile.error}
           className={`w-full py-3 text-white text-lg font-bold rounded-lg shadow-lg transition duration-200 ease-in-out ${
             profile.isLoading || profile.error

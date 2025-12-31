@@ -1,57 +1,74 @@
 import { useState } from "react";
-import { initialRooms, users } from "../../../data/dummyChatData";
+import { users, initialRooms } from "../../../data/dummyChatData";
 import TeamSidebar from "../../../components/chat/tlchat/TeamSidebar";
 import ChatRoom from "../../../components/chat/tlchat/ChatRoom";
-import UserManager from "../../../components/chat/tlchat/UserManager";
-import CreateChannelModal from "../../../components/chat/tlchat/CreateChannelModal";
+
+const CURRENT_USER_ID = 2; // TL (Nimal)
 
 export default function TeamChatPage() {
   const [rooms, setRooms] = useState(initialRooms);
   const [activeRoomId, setActiveRoomId] = useState(initialRooms[0].id);
-  const [showCreate, setShowCreate] = useState(false);
 
   const activeRoom = rooms.find((r) => r.id === activeRoomId);
 
+  // 💬 SEND MESSAGE
   const sendMessage = (text) => {
     setRooms((prev) =>
       prev.map((r) =>
         r.id === activeRoomId
           ? {
               ...r,
-              messages: [...r.messages, { id: Date.now(), userId: 1, text }],
+              messages: [
+                ...r.messages,
+                {
+                  id: Date.now(),
+                  userId: CURRENT_USER_ID,
+                  text,
+                },
+              ],
             }
           : r
       )
     );
   };
 
-  const createChannel = (channel) => {
-    setRooms((prev) => [...prev, channel]);
-    setActiveRoomId(channel.id);
+  // 📩 START OR OPEN DM
+  const startDM = (user) => {
+    const existing = rooms.find(
+      (r) =>
+        r.type === "dm" &&
+        r.members.includes(CURRENT_USER_ID) &&
+        r.members.includes(user.id)
+    );
+
+    if (existing) {
+      setActiveRoomId(existing.id);
+      return;
+    }
+
+    const newRoom = {
+      id: `dm-${CURRENT_USER_ID}-${user.id}`,
+      name: user.name,
+      type: "dm",
+      members: [CURRENT_USER_ID, user.id],
+      messages: [],
+    };
+
+    setRooms((prev) => [...prev, newRoom]);
+    setActiveRoomId(newRoom.id);
   };
 
   return (
-    <>
-      <div className="flex h-[80vh] bg-[#F7FAFC] rounded-xl border border-[#E0E0E0]">
-        <TeamSidebar
-          rooms={rooms}
-          activeRoomId={activeRoomId}
-          setActiveRoomId={setActiveRoomId}
-          onCreateTeam={() => setShowCreate(true)}
-        />
+    <div className="flex h-[80vh] border rounded-xl overflow-hidden">
+      <TeamSidebar
+        rooms={rooms}
+        users={users}
+        activeRoomId={activeRoomId}
+        setActiveRoomId={setActiveRoomId}
+        onStartDM={startDM}
+      />
 
-        <ChatRoom room={activeRoom} users={users} onSend={sendMessage} />
-
-        <UserManager room={activeRoom} users={users} setRooms={setRooms} />
-      </div>
-
-      {showCreate && (
-        <CreateChannelModal
-          users={users}
-          onCreate={createChannel}
-          onClose={() => setShowCreate(false)}
-        />
-      )}
-    </>
+      <ChatRoom room={activeRoom} users={users} onSend={sendMessage} />
+    </div>
   );
 }

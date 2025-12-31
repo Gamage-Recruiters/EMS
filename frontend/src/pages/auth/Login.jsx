@@ -1,12 +1,9 @@
 import React, { useState } from "react";
-import { useGoogleLogin } from "@react-oauth/google";
-import { FcGoogle } from "react-icons/fc";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
+import api from "../../utils/api.js";
 
 const Login = () => {
-  const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
-
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -70,33 +67,22 @@ const Login = () => {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          email: formData.email.toLowerCase().trim(),
-          password: formData.password,
-        }),
+      const response = await api.post('/api/auth/login', {
+        email: formData.email.toLowerCase().trim(),
+        password: formData.password,
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setApiError(data.message || "Login failed. Please try again.");
-        setIsSubmitting(false);
-        return;
-      }
+      const data = response.data;
 
       // Store user data and token
       const userData = {
-        id: data.user.id,
-        email: data.user.email,
-        firstName: data.user.firstName,
-        lastName: data.user.lastName,
-        role: data.user.role,
-        profileImage: data.user.profileImage,
-        token: data.token,
+        id: data._id,
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        role: data.role,
+        token: data.accessToken,
+        refreshToken: data.refreshToken,
       };
 
       login(userData);
@@ -104,82 +90,23 @@ const Login = () => {
       // Redirect based on role
       const roleRoutes = {
         CEO: "/dashboard/ceo",
-        "SYSTEM_OWNER": "/dashboard/system-owner",
+        SYSTEM_OWNER: "/dashboard/system-owner",
         TL: "/dashboard/tl",
         ATL: "/dashboard/atl",
         PM: "/dashboard/pm",
-        Developer: "/dashboard/developer",
-        Unassigned: "/dashboard/unassigned",
+        Developer: "/dashboard/dev",
+        Unassigned: "/dashboard",
       };
 
-      const redirectPath = roleRoutes[data.user.role] || "/dashboard";
+      const redirectPath = roleRoutes[data.role] || "/dashboard";
       navigate(redirectPath);
     } catch (err) {
       console.error("Login error:", err);
-      setApiError("Network error. Please check your connection and try again.");
+      setApiError(err.response?.data?.message || "Login failed. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  const googleLogin = useGoogleLogin({
-    flow: "implicit",
-    onSuccess: async (tokenResponse) => {
-      setApiError("");
-      setIsSubmitting(true);
-
-      try {
-        const res = await fetch(`${API_BASE}/api/auth/google-login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ access_token: tokenResponse.access_token }),
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          setApiError(data.message || "Google login failed. Please try again.");
-          setIsSubmitting(false);
-          return;
-        }
-
-        const userData = {
-          id: data.user.id,
-          email: data.user.email,
-          firstName: data.user.firstName,
-          lastName: data.user.lastName,
-          role: data.user.role,
-          profileImage: data.user.profileImage,
-          token: data.token,
-        };
-
-        login(userData);
-
-        const roleRoutes = {
-          CEO: "/dashboard/ceo",
-          "SYSTEM_OWNER": "/dashboard/system-owner",
-          TL: "/dashboard/tl",
-          ATL: "/dashboard/atl",
-          PM: "/dashboard/pm",
-          Developer: "/dashboard/developer",
-          Unassigned: "/dashboard/unassigned",
-        };
-
-        const redirectPath = roleRoutes[data.user.role] || "/dashboard";
-        navigate(redirectPath);
-      } catch (err) {
-        console.error("Google login error:", err);
-        setApiError("Google login failed. Please try again.");
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
-    onError: () => {
-      setApiError("Google login failed. Please try again.");
-      setIsSubmitting(false);
-    },
-  });
 
   const inputClass = (fieldName) =>
     `mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 transition-colors ${
@@ -211,28 +138,8 @@ const Login = () => {
           </div>
         )}
 
-        {/* Google Login Button */}
-        <button
-          type="button"
-          onClick={() => googleLogin()}
-          disabled={isSubmitting}
-          className="w-full flex items-center justify-center gap-3 rounded-lg border-2 border-gray-200 py-3 text-sm font-semibold text-slate-700 hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
-        >
-          <FcGoogle className="text-2xl" />
-          <span>Continue with Google</span>
-        </button>
-
-        {/* Divider */}
-        <div className="mt-6 flex items-center gap-3">
-          <div className="h-px flex-1 bg-gray-200" />
-          <span className="text-xs font-medium uppercase text-gray-500">
-            Or continue with email
-          </span>
-          <div className="h-px flex-1 bg-gray-200" />
-        </div>
-
         {/* Email & Password Form */}
-        <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* Email Field */}
           <div>
             <label

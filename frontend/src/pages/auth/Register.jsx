@@ -72,7 +72,7 @@ const Register = () => {
 
     setIsSubmitting(true);
     try {
-      const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const API_BASE = import.meta.env.VITE_API_BASE || "";
 
       const body = {
         firstName: formData.firstName.trim(),
@@ -109,7 +109,16 @@ const Register = () => {
 
       // Success -> use AuthContext login and navigate
       if (data) {
-        if (typeof login === "function") login(data);
+        const userData = {
+          id: data._id,
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          role: data.role,
+          token: data.accessToken,
+          refreshToken: data.refreshToken,
+        };
+        if (typeof login === "function") login(userData);
         navigate("/dashboard");
       }
     } catch (err) {

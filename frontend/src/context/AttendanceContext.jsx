@@ -33,7 +33,35 @@ export const AttendanceProvider = ({ children }) => {
     }
   };
 
-  
+  const getTodayAttendance = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const { data } = await api.get('/attendance/todayAttendance');
+      setTodayAttendance(data.data);
+      return data;
+    }catch (err) {
+      setError(err.message || 'Failed to fetch today\'s attendance');
+      throw err;
+    }finally {
+      setLoading(false);
+    }
+  }
+
+  const getAllAttendance = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const { data } = await api.get('/attendance');
+      return data;
+    }catch (err) {
+      setError(err.message || 'Failed to fetch attendance records');
+      throw err;
+    }finally {
+      setLoading(false);
+    }
+  }
+
   const value = {
     // State
     loading,
@@ -42,6 +70,8 @@ export const AttendanceProvider = ({ children }) => {
 
     // Actions
     checkIn,
+    getTodayAttendance,
+    getAllAttendance,
     setError,
   };
 

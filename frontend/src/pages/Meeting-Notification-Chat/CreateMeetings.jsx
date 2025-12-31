@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import MeetingHeader from "./components/meeting/MeetingHeader";
 import MeetingForm from "./components/meeting/MeetingForm";
 import ParticipantsPanel from "./components/meeting/ParticipantsPanel";
@@ -12,12 +13,12 @@ const CreateMeetings = () => {
     meetingType: "",
     locationType: "",
     meetingLink: "",
-    location: "",
   });
 
   const [participants, setParticipants] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Handles form field updates
+  //  HANDLE FORM CHANGE 
   const handleMeetingChange = (field, value) => {
     setMeetingData((prev) => ({
       ...prev,
@@ -25,91 +26,119 @@ const CreateMeetings = () => {
     }));
   };
 
-  // Add participant
+  //  ADD PARTICIPANT 
   const handleAddParticipant = (email) => {
-    setParticipants((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        name: email,
-        role: "Developer",
-        avatar: email.substring(0, 2).toUpperCase(),
-      },
-    ]);
-  };
+    if (!email) return;
 
-  //  Remove participant
-  const handleRemoveParticipant = (id) => {
-    setParticipants((prev) => prev.filter((p) => p.id !== id));
-  };
-
-  //  Convert form data → calendar meeting
-  const buildCalendarMeeting = () => {
-    const start = `${meetingData.date}T${meetingData.time}`;
-
-    const endDate = new Date(start);
-    endDate.setMinutes(
-      endDate.getMinutes() + Number(meetingData.duration || 0)
-    );
-
-    return {
-      id: Date.now(),
-      title: meetingData.title,
-      start,
-      end: endDate.toISOString(),
-      meetingType: meetingData.meetingType,
-      locationType: meetingData.locationType,
-      meetingLink: meetingData.meetingLink,
-      location: meetingData.location,
-      participants,
-    };
-  };
-
-  //  Submit meeting
-  const handleSubmit = () => {
-    if (!meetingData.title || !meetingData.date || !meetingData.time) {
-      alert("Please fill required fields");
+    // prevent duplicate
+    if (participants.some((p) => p.email === email)) {
+      alert("Participant already added");
       return;
     }
 
-    const newMeeting = buildCalendarMeeting();
-
-    const storedMeetings =
-      JSON.parse(localStorage.getItem("meetings")) || [];
-
-    localStorage.setItem(
-      "meetings",
-      JSON.stringify([...storedMeetings, newMeeting])
-    );
-
-    alert("Meeting created successfully!");
-
-    // Optional: reset form
-    setMeetingData({
-      title: "",
-      date: "",
-      time: "",
-      duration: "",
-      meetingType: "",
-      locationType: "",
-      meetingLink: "",
-      location: "",
-    });
-    setParticipants([]);
+    setParticipants((prev) => [...prev, { email }]);
   };
 
+  //  REMOVE PARTICIPANT 
+  const handleRemoveParticipant = (email) => {
+    setParticipants((prev) =>
+      prev.filter((p) => p.email !== email)
+    );
+  };
+
+  // SUBMIT MEETING 
+  const handleSubmit = async () => {
+    const {
+      title,
+      date,
+      time,
+      duration,
+      meetingType,
+      locationType,
+      meetingLink,
+    } = meetingData;
+
+    // Frontend validation 
+    if (
+      !title ||
+      !date ||
+      !time ||
+      !duration ||
+      !meetingType ||
+      !locationType
+    ) {
+      alert("Please fill all required fields");
+      return;
+    }
+
+    if (locationType === "online" && !meetingLink) {
+      alert("Meeting link is required for online meetings");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      await axios.post("/api/meetings",
+        {
+          title,
+          date: new Date(date), 
+          time,
+          duration,
+          meetingType,
+          locationType,
+          meetingLink:
+            locationType === "online" ? meetingLink : "",
+
+          participants: participants.map((p) => ({
+            email: p.email,
+          })),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      alert("Meeting created successfully");
+
+      // reset form
+      setMeetingData({
+        title: "",
+        date: "",
+        time: "",
+        duration: "",
+        meetingType: "",
+        locationType: "",
+        meetingLink: "",
+      });
+      setParticipants([]);
+    } catch (error) {
+      console.error("Create meeting error:", error);
+      alert(
+        error.response?.data?.message ||
+          "Failed to create meeting"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  //  UI 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
         <MeetingHeader
           title="Schedule Meeting"
           subtitle="Plan and organize team meetings"
-          submitLabel="Create Schedule Meeting"
+          submitLabel={loading ? "Saving..." : "Create Meeting"}
           onSubmit={handleSubmit}
-          onCancel={() => console.log("Cancelled")}
+          onCancel={() => window.history.back()}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          {/* LEFT FORM */}
           <div className="lg:col-span-2">
             <MeetingForm
               meetingData={meetingData}
@@ -117,6 +146,7 @@ const CreateMeetings = () => {
             />
           </div>
 
+          {/* RIGHT PARTICIPANTS */}
           <ParticipantsPanel
             participants={participants}
             onAddParticipant={handleAddParticipant}

@@ -82,6 +82,7 @@ export const AttendanceProvider = ({ children }) => {
     // State
     loading,
     error,
+    todayAttendance,
     hasCheckedIn: !!todayAttendance,
 
     // Actions

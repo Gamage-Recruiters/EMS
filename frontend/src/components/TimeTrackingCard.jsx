@@ -1,27 +1,32 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAttendance } from "../context/AttendanceContext";
 
 const TimeTrackingCard = ({ checkInTime }) => {
-  const [checkOutTime, setCheckOutTime] = useState(null);
+ const { checkOut, todayAttendance, getTodayAttendance } = useAttendance();
 
+
+  useEffect(()=> {
+    getTodayAttendance()
+  },[])
   const formatTime = (time) => {
     if (!time) return "- - -";
-    return time.toLocaleTimeString("en-US", {
+    const date = new Date(time)
+    return date.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
     });
   };
-
+  
+  const checkOutTime = todayAttendance?.checkOutTime;
+  console.log(checkOutTime)
   const formattedCheckInTime = formatTime(checkInTime);
   const formattedCheckOutTime = formatTime(checkOutTime);
-  const { checkOut } = useAttendance();
 
   const handleCheckOut = async () => {
     // Call check-out API here
     const result = await checkOut();
     if (result.success) {
-      setCheckOutTime(new Date());
       console.log("checkout-result",result);
     } else {
       alert(result.error || "Failed to check out. Please try again.");

@@ -1,70 +1,147 @@
-// src/pages/ExecutiveComplaint.jsx
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import TextInput from '../Components/TextInput.jsx'
-import TextArea from '../Components/TextArea.jsx'
-import SelectInput from '../Components/SelectInput.jsx'
-import { submitExecutiveComplaint } from '../Services/api.js'
 
-const urgencyOptions = [
-  { value: 'informational', label: 'Informational' },
-  { value: 'time-sensitive', label: 'Time-sensitive' },
-  { value: 'urgent', label: 'Urgent' },
-  { value: 'blocker', label: 'Blocker' },
-]
+import { useState } from "react";
 
 export default function ExecutiveComplaint() {
-  const navigate = useNavigate()
-  const [form, setForm] = useState({
-    reporterName: '',
-    reporterEmail: '',
-    department: '',
-    title: '',
-    narrative: '',
-    impactAreas: '',
-    impactedKpis: '',
-    urgency: '',
-    requestedAction: '',
-    attachmentsUrl: '',
-  })
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [department, setDepartment] = useState("");
+  const [title, setTitle] = useState("");
+  const [narrative, setNarrative] = useState("");
+  const [urgency, setUrgency] = useState("");
+  const [requestedAction, setRequestedAction] = useState("");
+  const [role, setRole] = useState("CEO"); // CEO / PR / TL
+  const [imageFile, setImageFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [error, setError] = useState("");
 
-  function update(field, value) {
-    setForm(prev => ({ ...prev, [field]: value }))
+  const MAX_FILE_SIZE = 5 * 1024 * 1024;
+  const ALLOWED_TYPES = ["image/jpeg","image/png","image/webp"];
+
+  function handleFileChange(e){
+    setError("");
+    const file = e.target.files?.[0];
+    if(!file) return;
+    if(!ALLOWED_TYPES.includes(file.type)){ setError("Only JPG, PNG or WEBP allowed."); return; }
+    if(file.size > MAX_FILE_SIZE){ setError("Max 5 MB allowed."); return; }
+    setImageFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+  function removeImage(){
+    setImageFile(null);
+    if(previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+  }
+
+  async function handleSubmit(e){
+    e.preventDefault();
+    setError("");
+    if(!name.trim() || !email.trim() || !narrative.trim() || !urgency || !requestedAction){
+      setError("Please fill required fields.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("email", email);
+    formData.append("department", department);
+    formData.append("title", title);
+    formData.append("narrative", narrative);
+    formData.append("urgency", urgency);
+    formData.append("requestedAction", requestedAction);
+    formData.append("role", role);
+    if(imageFile) formData.append("image", imageFile);
+
     try {
-      await submitExecutiveComplaint(form)
-      navigate('/success')
-    } catch (err) {
-      setError(err.message || 'Submission failed')
-    } finally {
-      setLoading(false)
+      const res = await fetch("/api/complaints/executive", { method: "POST", body: formData });
+      if(!res.ok) throw new Error(await res.text() || "Submission failed");
+      // reset
+      setName(""); setEmail(""); setDepartment(""); setTitle(""); setNarrative(""); setUrgency(""); setRequestedAction(""); setRole("CEO");
+      removeImage();
+      alert("Executive complaint submitted.");
+    } catch(err){
+      setError(err.message || "Submission failed.");
     }
   }
 
   return (
-    <section>
-      <h2>Executive complaint</h2>
-      <form onSubmit={handleSubmit} className="form">
-        <TextInput label="Name" value={form.reporterName} onChange={v => update('reporterName', v)} required />
-        <TextInput label="Email" type="email" value={form.reporterEmail} onChange={v => update('reporterEmail', v)} required />
-        <TextInput label="Department" value={form.department} onChange={v => update('department', v)} required />
-        <TextInput label="Title" value={form.title} onChange={v => update('title', v)} required />
-        <TextArea label="Narrative / Context" value={form.narrative} onChange={v => update('narrative', v)} required rows={8} />
-        <TextInput label="Impact areas" value={form.impactAreas} onChange={v => update('impactAreas', v)} placeholder="Customers, revenue, compliance" />
-        <TextInput label="Impacted KPIs" value={form.impactedKpis} onChange={v => update('impactedKpis', v)} placeholder="NPS, churn, SLA, cost" />
-        <SelectInput label="Urgency" value={form.urgency} onChange={v => update('urgency', v)} options={urgencyOptions} required />
-        <TextArea label="Requested action" value={form.requestedAction} onChange={v => update('requestedAction', v)} required />
-        <TextInput label="Attachments URL" value={form.attachmentsUrl} onChange={v => update('attachmentsUrl', v)} placeholder="Drive/Dropbox link" />
-        {error && <p className="error">{error}</p>}
-        <button type="submit" disabled={loading}>{loading ? 'Submitting…' : 'Submit complaint'}</button>
-      </form>
-    </section>
-  )
+    <main className="main-content">
+      <div className="container">
+        <h1 className="page-title">Executive Complaint</h1>
+
+        <section className="card">
+          <form className="form" onSubmit={handleSubmit}>
+            <div className="field">
+              <label htmlFor="role">Path (CEO / PR / TL)</label>
+              <select id="role" className="input" value={role} onChange={(e)=>setRole(e.target.value)}>
+                <option value="CEO">CEO</option>
+                <option value="PR">PR</option>
+                <option value="TL">TL</option>
+              </select>
+            </div>
+
+            <div className="field">
+              <label htmlFor="name">Name *</label>
+              <input id="name" className="input" value={name} onChange={(e)=>setName(e.target.value)} required />
+            </div>
+
+            <div className="field">
+              <label htmlFor="email">Email *</label>
+              <input id="email" type="email" className="input" value={email} onChange={(e)=>setEmail(e.target.value)} required />
+            </div>
+
+            <div className="field">
+              <label htmlFor="department">Department</label>
+              <input id="department" className="input" value={department} onChange={(e)=>setDepartment(e.target.value)} />
+            </div>
+
+            <div className="field">
+              <label htmlFor="title">Title</label>
+              <input id="title" className="input" value={title} onChange={(e)=>setTitle(e.target.value)} />
+            </div>
+
+            <div className="field">
+              <label htmlFor="narrative">Narrative / Context *</label>
+              <textarea id="narrative" className="input" value={narrative} onChange={(e)=>setNarrative(e.target.value)} required />
+            </div>
+
+            <div className="field">
+              <label htmlFor="urgency">Urgency *</label>
+              <select id="urgency" className="input" value={urgency} onChange={(e)=>setUrgency(e.target.value)} required>
+                <option value="">Select</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+
+            <div className="field">
+              <label htmlFor="requestedAction">Requested action *</label>
+              <textarea id="requestedAction" className="input" value={requestedAction} onChange={(e)=>setRequestedAction(e.target.value)} required />
+            </div>
+
+            <div className="field">
+              <label htmlFor="image">Attach Image</label>
+              <input id="image" type="file" accept="image/*" onChange={handleFileChange} className="file-input" />
+              {previewUrl && (
+                <div className="image-preview" aria-live="polite">
+                  <img src={previewUrl} alt="Preview" className="preview-img" />
+                  <button type="button" className="remove-btn" onClick={removeImage}>Remove</button>
+                </div>
+              )}
+            </div>
+
+            {error && <div className="error" role="alert">{error}</div>}
+
+            <div style={{display:"flex",gap:12}}>
+              <button type="submit" className="btn">Submit</button>
+              <button type="button" className="btn secondary" onClick={()=>{
+                setName(""); setEmail(""); setDepartment(""); setTitle(""); setNarrative(""); setUrgency(""); setRequestedAction(""); setRole("CEO"); removeImage(); setError("");
+              }}>Cancel</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </main>
+  );
 }

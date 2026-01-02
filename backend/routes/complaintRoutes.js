@@ -5,6 +5,7 @@ import {
   getDeveloperComplaints,
   updateComplaintStatus,
   createAdminComplaint,
+  getAdminComplaints,
 } from "../controllers/complaintController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 import upload from "../middlewares/uploadMiddleware.js";
@@ -22,5 +23,7 @@ router.put("/:id/status", protect, updateComplaintStatus);
 
 // Admin create complaint
 router.post("/admin", protect, upload.single("image"), createAdminComplaint);
+// CEO / PM view admin complaints (PM, TL, CEO)
+router.get("/admin", protect, getAdminComplaints);
 
 export default router;

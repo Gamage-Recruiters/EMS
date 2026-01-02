@@ -235,3 +235,50 @@ export const createAdminComplaint = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Get complaints created by PM / TL / CEO
+ * @route   GET /api/complaints/admin
+ * @access  Private (CEO / PM only)
+ */
+export const getAdminComplaints = async (req, res) => {
+  try {
+    // Role check
+    if (!["CEO", "PM"].includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied",
+      });
+    }
+
+    // 1️⃣ Get PM, TL, CEO user IDs
+    const adminUsers = await User.find(
+      { role: { $in: ["PM", "TL", "CEO"] } },
+      { _id: 1 }
+    );
+
+    const adminUserIds = adminUsers.map((u) => u._id);
+
+    // 2️⃣ Find complaints created by those users
+    const complaints = await Complaint.find({
+      user: { $in: adminUserIds },
+    })
+      .populate({
+        path: "user",
+        select: "firstName lastName email role profileImage",
+      })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: complaints.length,
+      data: complaints,
+    });
+  } catch (error) {
+    console.error("Get admin complaints error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve admin complaints",
+    });
+  }
+};

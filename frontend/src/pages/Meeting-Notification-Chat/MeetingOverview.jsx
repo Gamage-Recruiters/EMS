@@ -5,15 +5,17 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { Plus, X } from "lucide-react";
-import MeetingTabs from "./components/meeting/MeetingTabs";
+import MeetingTabs from "../../components/meeting/MeetingTabs";
+import { useNavigate } from "react-router-dom";
 
 const MeetingOverview = () => {
+  const navigate = useNavigate();
+
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [editData, setEditData] = useState({});
   const [activeTab, setActiveTab] = useState("All");
-
 
   //  DURATION 
   const getDurationInMinutes = (duration) => {
@@ -29,7 +31,7 @@ const MeetingOverview = () => {
     return start.toISOString();
   };
 
-  //  FETCH 
+  //  FETCH MEETINGS 
   const fetchMeetings = async () => {
     try {
       setLoading(true);
@@ -59,7 +61,7 @@ const MeetingOverview = () => {
 
       setEvents(formattedEvents);
     } catch (error) {
-       console.error("Calendar load error:", error);
+      console.error("Fetch meetings error:", error);
       alert("Failed to load meetings");
     } finally {
       setLoading(false);
@@ -84,13 +86,20 @@ const MeetingOverview = () => {
     });
   };
 
-  //  EDIT 
+  //  EDIT MEETING
   const handleEditMeeting = async () => {
     try {
       setLoading(true);
 
-      await axios.put(`/api/meetings/${selectedMeeting._id}`,
-        editData,
+      await axios.put(
+        `/api/meetings/${selectedMeeting._id}`,
+        {
+          title: editData.title,
+          date: new Date(editData.date),
+          time: editData.time,
+          duration: editData.duration,
+          meetingLink: editData.meetingLink,
+        },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -98,82 +107,75 @@ const MeetingOverview = () => {
         }
       );
 
-      alert("Meeting updated");
+      alert("Meeting updated successfully");
       setSelectedMeeting(null);
       fetchMeetings();
-    } catch {
-      alert("Edit failed");
+    } catch (error) {
+      console.error("Edit meeting error:", error);
+      alert("Failed to update meeting");
     } finally {
       setLoading(false);
     }
   };
 
-  //  CANCEL 
+  //  CANCEL MEETING 
   const handleCancelMeeting = async () => {
     if (!window.confirm("Cancel this meeting?")) return;
 
     try {
       setLoading(true);
 
-      await axios.delete(`/api/meetings/${selectedMeeting._id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      await axios.delete(`/api/meetings/${selectedMeeting._id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
       alert("Meeting cancelled");
       setSelectedMeeting(null);
       fetchMeetings();
-    } catch {
-      alert("Cancel failed");
+    } catch (error) {
+      console.error("Cancel meeting error:", error);
+      alert("Failed to cancel meeting");
     } finally {
       setLoading(false);
     }
   };
 
+  //  FILTER EVENTS 
   const filteredEvents = events.filter((event) => {
-  const meeting = event.extendedProps;
-  const now = new Date();
-  const meetingDate = new Date(event.start);
+    const meeting = event.extendedProps;
+    const now = new Date();
+    const meetingDate = new Date(event.start);
 
-  if (activeTab === "All") return true;
+    if (activeTab === "All") return true;
+    if (activeTab === "Upcoming")
+      return meetingDate > now && meeting.status !== "Cancelled";
+    if (activeTab === "Past")
+      return meetingDate < now && meeting.status !== "Cancelled";
+    if (activeTab === "Cancelled")
+      return meeting.status === "Cancelled";
 
-  if (activeTab === "Upcoming") {
-    return meetingDate > now && meeting.status !== "Cancelled";
-  }
+    return true;
+  });
 
-  if (activeTab === "Past") {
-    return meetingDate < now && meeting.status !== "Cancelled";
-  }
-
-  if (activeTab === "Cancelled") {
-    return meeting.status === "Cancelled";
-  }
-
-  return true;
-});
-
-
+ 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
 
         {/* HEADER */}
-        <div className="bg-white rounded-xl shadow-sm  p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Schedule Meeting Overview
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <h1 className="text-2xl font-bold">Schedule Meeting Overview</h1>
+            <p className="text-sm text-gray-500">
               Plan and organize team meetings
             </p>
           </div>
 
           <button
-            onClick={() => console.log("Navigate to Create Meeting")}
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition"
+            onClick={() => navigate("/meetings/create")}
+            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg"
           >
             <Plus size={18} />
             Schedule Meeting
@@ -181,7 +183,7 @@ const MeetingOverview = () => {
         </div>
 
         {/* TABS */}
-         <MeetingTabs active={activeTab} setActive={setActiveTab} />
+        <MeetingTabs active={activeTab} setActive={setActiveTab} />
 
         {/* CALENDAR */}
         <div className="bg-white rounded-xl shadow p-4">
@@ -207,7 +209,7 @@ const MeetingOverview = () => {
         </div>
       </div>
 
-      {/* EDIT / CANCEL MODAL */}
+      {/* EDIT / CANCEL  */}
       {selectedMeeting && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl w-full max-w-lg p-6 space-y-4">

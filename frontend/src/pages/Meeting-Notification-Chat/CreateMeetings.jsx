@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
-import MeetingHeader from "./components/meeting/MeetingHeader";
-import MeetingForm from "./components/meeting/MeetingForm";
-import ParticipantsPanel from "./components/meeting/ParticipantsPanel";
+import MeetingHeader from "../../components/meeting/MeetingHeader";
+import MeetingForm from "../../components/meeting/MeetingForm";
+import ParticipantsPanel from "../../components/meeting/ParticipantsPanel";
 
 const CreateMeetings = () => {
   const [meetingData, setMeetingData] = useState({

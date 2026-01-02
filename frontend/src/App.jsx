@@ -1,75 +1,87 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import Register from './pages/auth/Register.jsx';
-import Login from './pages/auth/Login.jsx';
-import ForgotPassword from "./pages/auth/ForgotPassword.jsx";
-import VerifyCode from "./pages/auth/VerifyCode.jsx";
-import ResetPassword from "./pages/auth/ResetPassword.jsx";
-import ResetSuccess from "./pages/auth/ResetSuccess.jsx";
+import PageLayout from "./components/layout/PageLayout";
+import AttendancePrompt from "./components/AttendancePrompt";
 
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
+// Existing pages (from HEAD)
+import DashboardPage from "./pages/DashboardPage";
+import AttendancePage from "./pages/AttendancePage";
 
-import CeoDashboard from "./pages/dashboard/CeoDashboard.jsx";
-import DevDashboard from "./pages/dashboard/DevDashboard.jsx";
-import SystemOwnerDashboard from "./pages/dashboard/SystemOwnerDashboard.jsx";
-import TLDashboard from "./pages/dashboard/TLDashboard.jsx";
+// Management (from integrate-kanchana-kavya)
+import UserManagementPage from "./features/management/pages/UserManagementPage";
+import TeamManagementPage from "./features/management/pages/TeamManagementPage";
+import TeamHierarchyPage from "./features/management/pages/TeamHierarchyPage";
 
-function App() {
+// Employee profile routes (from integrate-kanchana-kavya)
+import EmployeeProfile from "./employee profile/EmployeeProfile";
+import PersonalDetails from "./employee profile/PersonalDetails";
+import ContactDetails from "./employee profile/ContactDetails";
+import EducationQualification from "./employee profile/EducationQualification";
+import JobDetails from "./employee profile/JobDetails";
+
+// Other pages (from integrate-kanchana-kavya)
+import UserManagement from "./pages/UserManagement";
+import UserProfile from "./pages/UserProfile";
+
+export default function App() {
+  const [checkInTime, setCheckInTime] = useState(null);
+  const [isCheckedIn, setIsCheckedIn] = useState(false);
+
+  const handleCheckIn = (time) => {
+    setCheckInTime(time);
+    setIsCheckedIn(true);
+  };
+
   return (
-    <Routes>
+    <BrowserRouter>
+      {/* Check-in modal/prompt stays clickable even when app UI is disabled */}
+      {!isCheckedIn && <AttendancePrompt onCheckIn={handleCheckIn} />}
 
-      {/* Default route – for now go to /register */}
-      <Route path="/" element={<Navigate to="/register" replace />} />
+      {/* Disable the main app until checked-in */}
+      <div
+        className={`min-h-screen bg-gray-50 transition-opacity duration-300 ${
+          !isCheckedIn ? "opacity-50 pointer-events-none" : ""
+        }`}
+      >
+        <Routes>
+          <Route element={<PageLayout />}>
+            {/* Default landing */}
+            <Route index element={<Navigate to="/dashboard" replace />} />
 
-      {/* Auth pages route */}
-      <Route path="/register" element={<Register />} />
-      <Route path="/login" element={<Login />} />
+            {/* HEAD routes */}
+            <Route
+              path="/dashboard"
+              element={<DashboardPage checkInTime={checkInTime} />}
+            />
+            <Route path="/attendance" element={<AttendancePage />} />
 
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/verify-code" element={<VerifyCode />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/reset-success" element={<ResetSuccess />} />
+            {/* integrate-kanchana-kavya routes */}
+            <Route path="/employees" element={<UserManagementPage />} />
+            <Route path="/team-management" element={<TeamManagementPage />} />
+            <Route path="/team-hierarchy" element={<TeamHierarchyPage />} />
+            <Route path="/teams" element={<Navigate to="/team-management" replace />} />
 
-      {/* RBAC dashboards */}
-      <Route
-        path="/dashboard/ceo"
-        element={
-          <ProtectedRoute allowedRoles={["CEO"]}>
-            <CeoDashboard />
-          </ProtectedRoute>
-        }
-      />
+            {/* Employee profile with nested routes */}
+            <Route path="/profile" element={<EmployeeProfile />}>
+              <Route path="personal-details" element={<PersonalDetails />} />
+              <Route path="contact-details" element={<ContactDetails />} />
+              <Route
+                path="education-qualification"
+                element={<EducationQualification />}
+              />
+              <Route path="job-details" element={<JobDetails />} />
+            </Route>
 
-      <Route
-        path="/dashboard/dev"
-        element={
-          <ProtectedRoute allowedRoles={["DEVELOPER"]}>
-            <DevDashboard />
-          </ProtectedRoute>
-        }
-      />
+            {/* Other pages */}
+            <Route path="/user-management" element={<UserManagement />} />
+            <Route path="/user-profile/:id" element={<UserProfile />} />
 
-      <Route
-        path="/dashboard/system-owner"
-        element={
-          <ProtectedRoute allowedRoles={["SYSTEM_OWNER"]}>
-            <SystemOwnerDashboard />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/dashboard/tl"
-        element={
-          <ProtectedRoute allowedRoles={["TL"]}>
-            <TLDashboard />
-          </ProtectedRoute>
-        }
-      />
-
-    </Routes>
-  )
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Route>
+        </Routes>
+      </div>
+    </BrowserRouter>
+  );
 }
-
-export default App;

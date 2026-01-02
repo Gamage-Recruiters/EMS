@@ -189,7 +189,7 @@ export const assignRole = async (req, res, next) => {
         const { userId, newRole } = req.body;
         const actorRole = req.user.role;
 
-        if (actorRole !== 'CEO' && actorRole !== 'TL') {
+        if (actorRole !== 'CEO' && actorRole !== 'SystemAdmin' && actorRole !== 'TL') {
             return next(new AppError('Not authorized to assign roles', 403));
         }
 

@@ -13,12 +13,12 @@ import UserManagementPage from "./features/management/pages/UserManagementPage";
 import TeamManagementPage from "./features/management/pages/TeamManagementPage";
 import TeamHierarchyPage from "./features/management/pages/TeamHierarchyPage";
 
-// Employee profile routes (from integrate-kanchana-kavya)
-import EmployeeProfile from "./employee profile/EmployeeProfile";
-import PersonalDetails from "./employee profile/PersonalDetails";
-import ContactDetails from "./employee profile/ContactDetails";
-import EducationQualification from "./employee profile/EducationQualification";
-import JobDetails from "./employee profile/JobDetails";
+// Employee profile routes (folder renamed to `employee-profile`)
+import EmployeeProfile from "./employee-profile/EmployeeProfile";
+import PersonalDetails from "./employee-profile/PersonalDetails";
+import ContactDetails from "./employee-profile/ContactDetails";
+import EducationQualification from "./employee-profile/EducationQualification";
+import JobDetails from "./employee-profile/JobDetails";
 
 // Other pages (from integrate-kanchana-kavya)
 import UserManagement from "./pages/UserManagement";
@@ -60,7 +60,10 @@ export default function App() {
             <Route path="/employees" element={<UserManagementPage />} />
             <Route path="/team-management" element={<TeamManagementPage />} />
             <Route path="/team-hierarchy" element={<TeamHierarchyPage />} />
-            <Route path="/teams" element={<Navigate to="/team-management" replace />} />
+            <Route
+              path="/teams"
+              element={<Navigate to="/team-management" replace />}
+            />
 
             {/* Employee profile with nested routes */}
             <Route path="/profile" element={<EmployeeProfile />}>

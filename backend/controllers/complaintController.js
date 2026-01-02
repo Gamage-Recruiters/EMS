@@ -172,3 +172,66 @@ export const updateComplaintStatus = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Create complaint by Admin (PM / TL / CEO)
+ * @route   POST /api/complaints/admin
+ * @access  Private (PM / TL / CEO)
+ */
+export const createAdminComplaint = async (req, res) => {
+  try {
+    // Role check
+    if (!["PM", "TL", "CEO"].includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "Only PM, TL, or CEO can create admin complaints",
+      });
+    }
+
+    const { subject, description, urgency, department, requiredAction } =
+      req.body;
+
+    // ================= VALIDATION =================
+    if (
+      !subject ||
+      !description ||
+      !urgency ||
+      !department ||
+      !requiredAction
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Subject, description, urgency, department and required action are required",
+      });
+    }
+
+    // ================= IMAGE =================
+    const imagePath = req.file ? req.file.path : "";
+
+    // ================= CREATE COMPLAINT =================
+    const complaint = await Complaint.create({
+      user: req.user.id,
+      subject,
+      description,
+      urgency,
+      department,
+      requiredAction,
+      image: imagePath,
+      type: null, // explicitly no type
+      status: "In Review",
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Complaint created successfully",
+      data: complaint,
+    });
+  } catch (error) {
+    console.error("Admin create complaint error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create complaint",
+    });
+  }
+};

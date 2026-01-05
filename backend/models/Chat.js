@@ -5,7 +5,7 @@ const chatSchema = new mongoose.Schema({
   chatName: { type: String },
   participants: [{ 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Employee' 
+    ref: 'User' 
   }]
 }, { timestamps: true });
 

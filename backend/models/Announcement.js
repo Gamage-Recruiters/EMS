@@ -5,7 +5,7 @@ const announcementSchema = new mongoose.Schema({
   message: { type: String, required: true },
   postedBy: { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Employee', 
+    ref: 'User', 
     required: true 
   },
   date: { type: Date, default: Date.now }

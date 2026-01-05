@@ -2,8 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
-import path from 'path';
-import { fileURLToPath } from 'url';
+import path from "path";
+import { fileURLToPath } from "url";
 
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -43,7 +43,7 @@ app.get("/", (req, res) => {
 });
 
 // Serve uploaded images statically
-app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
+app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
 
 // Routes
 app.use('/api/auth', authRoutes);

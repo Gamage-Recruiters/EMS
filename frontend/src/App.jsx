@@ -18,7 +18,7 @@ import UserManagementPage from "./features/management/pages/UserManagementPage";
 import TeamManagementPage from "./features/management/pages/TeamManagementPage";
 import TeamHierarchyPage from "./features/management/pages/TeamHierarchyPage";
 
-// Employee profile routes (folder renamed to `employee-profile`)
+// Employee profile (your renamed folder)
 import EmployeeProfile from "./employee-profile/EmployeeProfile";
 import PersonalDetails from "./employee-profile/PersonalDetails";
 import ContactDetails from "./employee-profile/ContactDetails";
@@ -64,6 +64,7 @@ export default function App() {
             </>
           }
         >
+
           {/* Default */}
           <Route index element={<Navigate to="/dashboard" replace />} />
 
@@ -83,43 +84,24 @@ export default function App() {
             element={<Navigate to="/team-management" replace />}
           />
 
-          {/* Employee profile */}
+          {/* ================= EMPLOYEE PROFILE (NESTED) ================= */}
           <Route path="/profile" element={<EmployeeProfile />}>
+
+            <Route index element={<Navigate to="personal-details" replace />} />
+
             <Route path="personal-details" element={<PersonalDetails />} />
             <Route path="contact-details" element={<ContactDetails />} />
             <Route
               path="education-qualification"
               element={<EducationQualification />}
             />
-            <Route path="/attendance" element={<AttendancePage />} />
-
-            {/* integrate-kanchana-kavya routes */}
-            <Route path="/employees" element={<UserManagementPage />} />
-            <Route path="/team-management" element={<TeamManagementPage />} />
-            <Route path="/team-hierarchy" element={<TeamHierarchyPage />} />
-            <Route
-              path="/teams"
-              element={<Navigate to="/team-management" replace />}
-            />
-
-            {/* Employee profile with nested routes */}
-            <Route path="/profile" element={<EmployeeProfile />}>
-              <Route path="personal-details" element={<PersonalDetails />} />
-              <Route path="contact-details" element={<ContactDetails />} />
-              <Route
-                path="education-qualification"
-                element={<EducationQualification />}
-              />
-              <Route path="job-details" element={<JobDetails />} />
-            </Route>
-
-            {/* Other pages */}
-            <Route path="/user-management" element={<UserManagement />} />
-            <Route path="/user-profile/:id" element={<UserProfile />} />
-
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
             <Route path="job-details" element={<JobDetails />} />
+
+            {/* Attendance inside profile */}
+            <Route path="attendance" element={<AttendancePage />} />
+
+            {/* Fallback inside profile */}
+            <Route path="*" element={<Navigate to="personal-details" replace />} />
           </Route>
 
           {/* Other */}

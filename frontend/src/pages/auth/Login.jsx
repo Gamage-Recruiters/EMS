@@ -1,5 +1,5 @@
 import { useState, useContext } from "react";
-import { FcGoogle } from "react-icons/fc";
+import { GoogleLogin } from '@react-oauth/google';
 import { useNavigate, Link } from "react-router-dom";
 import AuthContext from "../../context/AuthContext.jsx";
 
@@ -11,6 +11,21 @@ const Login = () => {
 
   const { login, googleLogin } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const success = await googleLogin(credentialResponse);
+      if (success) {
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      setErrors({ api: "Google login failed. Please try again." });
+    }
+  };
+
+  const handleGoogleError = () => {
+    setErrors({ api: "Google login failed. Please try again." });
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -59,14 +74,17 @@ const Login = () => {
         )}
 
         
-        <button
-          type="button"
-          onClick={googleLogin}
-          className="mt-8 w-full flex items-center justify-center gap-3 rounded-full border border-gray-300 py-2.5 text-sm font-medium text-slate-700 hover:bg-gray-50"
-        >
-          <FcGoogle className="text-xl" />
-          Continue with Google
-        </button>
+        <div className="mt-8 flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            useOneTap
+            theme="outline"
+            size="large"
+            text="signin_with"
+            width="100%"
+          />
+        </div>
 
         <div className="mt-6 flex items-center gap-3">
           <div className="h-px flex-1 bg-gray-200" />

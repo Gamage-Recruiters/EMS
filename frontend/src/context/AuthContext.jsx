@@ -70,8 +70,10 @@ export const AuthProvider = ({ children }) => {
 
       setUser(data);
       toast.success('Google Login Successful');
+      return true;
     } catch (error) {
       toast.error('Google Login Failed');
+      return false;
     }
   };
 

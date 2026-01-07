@@ -1,6 +1,6 @@
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 import AppError from '../utils/AppError.js';
 import { OAuth2Client } from 'google-auth-library';
 

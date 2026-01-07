@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useAttendance } from "../context/AttendanceContext";
+
+import { checkIn } from "../services/attendanceService";
 
 // Replace this with the actual backend endpoint later
 const USER_INFO_ENDPOINT = "/api/user/profile";
@@ -12,7 +13,7 @@ const AttendancePrompt = ({ onCheckIn }) => {
     error: null,
   });
 
-  const { checkIn} = useAttendance();
+
 
   // Update the current time every second
   useEffect(() => {

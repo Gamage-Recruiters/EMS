@@ -1,43 +1,70 @@
-// src/App.js
-import React, { useState } from 'react'; 
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import DashboardPage from './pages/DashboardPage';
-import AttendancePage from './pages/AttendancePage'; 
-import AttendancePrompt from './components/AttendancePrompt'; 
-import Header from './components/Header';
-import Sidebar from './components/Sidebar';
+import { useState } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 
-function App() {
-    const [checkInTime, setCheckInTime] = useState(null); 
-    const [isCheckedIn, setIsCheckedIn] = useState(false);
+import PageLayout from "./components/layout/PageLayout";
+import AttendancePrompt from "./components/AttendancePrompt";
+import PrivateRoute from "./routes/PrivateRoute";
 
-    const handleCheckIn = (time) => {
-        setCheckInTime(time);
-        setIsCheckedIn(true);
-    };
+// Auth pages
+import LoginPage from "./pages/auth/Login";
 
-    return (
-        <BrowserRouter>
-            {!isCheckedIn && <AttendancePrompt onCheckIn={handleCheckIn} />}
+// Main pages
+import DashboardPage from "./pages/DashboardPage";
+import AttendancePage from "./pages/AttendancePage";
 
-            <div className={`flex h-screen bg-gray-50 transition-opacity duration-300 ${!isCheckedIn ? 'opacity-50 pointer-events-none' : ''}`}>
-                
-                <Sidebar />
-                
-                <div className="flex flex-col flex-grow">
-                    <Header />
-                    <div className="flex-grow overflow-y-auto">
-                        <Routes>
-                            <Route path="/" element={<DashboardPage checkInTime={checkInTime} />} />
-                            <Route path="/dashboard" element={<DashboardPage checkInTime={checkInTime} />} />
-                            <Route path="/attendance" element={<AttendancePage />} /> {/* <-- Add this */}
-                            <Route path="*" element={<div className="p-5"><h2>404 Not Found</h2></div>} />
-                        </Routes>
-                    </div>
-                </div>
-            </div>
-        </BrowserRouter>
-    );
+
+export default function App() {
+  const [checkInTime, setCheckInTime] = useState(null);
+  const [isCheckedIn, setIsCheckedIn] = useState(false);
+
+  const handleCheckIn = (time) => {
+    setCheckInTime(time);
+    setIsCheckedIn(true);
+  };
+
+  return (
+    <Routes>
+
+      {/* ================= PUBLIC ROUTES ================= */}
+      <Route path="/login" element={<LoginPage />} />
+
+      {/* ================= PROTECTED ROUTES ================= */}
+      <Route element={<PrivateRoute />}>
+        <Route
+          element={
+            <>
+              {!isCheckedIn && (
+                <AttendancePrompt onCheckIn={handleCheckIn} />
+              )}
+
+              <div
+                className={`min-h-screen bg-gray-50 transition-opacity duration-300 ${
+                  !isCheckedIn ? "opacity-50 pointer-events-none" : ""
+                }`}
+              >
+                <PageLayout />
+              </div>
+            </>
+          }
+        >
+          {/* Default */}
+          <Route index element={<Navigate to="/dashboard" replace />} />
+
+          {/* Core */}
+          <Route
+            path="/dashboard"
+            element={<DashboardPage checkInTime={checkInTime} />}
+          />
+          <Route path="/attendance" element={<AttendancePage />} />
+
+          {/* App fallback */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Route>
+      </Route>
+
+      {/* ================= GLOBAL FALLBACK ================= */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
+
+    </Routes>
+  );
 }
-
-export default App;

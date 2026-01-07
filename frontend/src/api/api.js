@@ -1,32 +1,55 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api/'; // Base URL for the backend API
 
-// Create an Axios instance with default settings
 const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    // timeout: 10000, // 10 seconds timeout
+  baseURL: import.meta.env.VITE_API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
-})
 
-export default api;
-
-// Request interceptor - add token to all requests
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers['Authorization'] = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
+  (error) => Promise.reject(error)
+);
+
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    
+    if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        const res = await axios.post(`${API_URL}/auth/refresh-token`, { refreshToken });
+
+        // Save new tokens
+        localStorage.setItem('accessToken', res.data.accessToken);
+        localStorage.setItem('refreshToken', res.data.refreshToken);
+
+        // Update header and retry original request
+        api.defaults.headers.common['Authorization'] = `Bearer ${res.data.accessToken}`;
+        return api(originalRequest);
+      } catch (err) {
+        
+        console.error('Session expired', err);
+        localStorage.clear();
+        window.location.href = '/login';
+      }
+    }
     return Promise.reject(error);
   }
 );
 
-
-
+export default api;

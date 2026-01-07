@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useAttendance } from "../context/AttendanceContext";
+import { checkOut , getTodayAttendance} from "../services/attendanceService";
 
 const TimeTrackingCard = ({ checkInTime }) => {
- const { checkOut, todayAttendance, getTodayAttendance } = useAttendance();
-
 
   useEffect(()=> {
     getTodayAttendance()
@@ -18,7 +16,7 @@ const TimeTrackingCard = ({ checkInTime }) => {
     });
   };
   
-  const checkOutTime = todayAttendance?.checkOutTime;
+  const checkOutTime = getTodayAttendance?.checkOutTime;
   console.log(checkOutTime)
   const formattedCheckInTime = formatTime(checkInTime);
   const formattedCheckOutTime = formatTime(checkOutTime);

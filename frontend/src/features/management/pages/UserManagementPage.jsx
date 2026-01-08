@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Input from "../../../components/common/Input";
 import Button from "../../../components/common/Button";
 import Modal from "../../../components/common/Modal";
 import { employeeService } from "../../../services/employeeService";
 
 export default function UserManagementPage() {
+  const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [team, setTeam] = useState("");
   const [role, setRole] = useState("");
@@ -62,13 +64,19 @@ export default function UserManagementPage() {
 
   return (
     <div>
-      <h2 style={{ marginTop: 0 }}>Employees</h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <h2 style={{ margin: 0 }}>Employees</h2>
+        <Button onClick={() => navigate("/profile")} variant="primary">
+          Add Employee
+        </Button>
+      </div>
 
       <div
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 180px 180px 140px",
           gap: 12,
+          marginTop: 30,
           marginBottom: 12,
         }}
       >

@@ -23,6 +23,11 @@ export default function Sidebar() {
       <div style={{ fontWeight: 700, marginBottom: 16 }}>EMS</div>
 
       <nav>
+        {/* dashboard */}
+        <NavLink to="/dashboard" style={linkStyle}>
+          Dashboard
+        </NavLink>
+
         {/* list employees */}
         <NavLink to="/employees" style={linkStyle}>
           Employees

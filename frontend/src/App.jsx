@@ -13,12 +13,12 @@ import RegisterPage from "./pages/auth/Register";
 import DashboardPage from "./pages/DashboardPage";
 import AttendancePage from "./pages/AttendancePage";
 
-// Management
+//Management
 import UserManagementPage from "./features/management/pages/UserManagementPage";
 import TeamManagementPage from "./features/management/pages/TeamManagementPage";
 import TeamHierarchyPage from "./features/management/pages/TeamHierarchyPage";
 
-// Employee profile (your renamed folder)
+// Employee profile
 import EmployeeProfile from "./employee-profile/EmployeeProfile";
 import PersonalDetails from "./employee-profile/PersonalDetails";
 import ContactDetails from "./employee-profile/ContactDetails";
@@ -79,28 +79,16 @@ export default function App() {
           <Route path="/employees" element={<UserManagementPage />} />
           <Route path="/team-management" element={<TeamManagementPage />} />
           <Route path="/team-hierarchy" element={<TeamHierarchyPage />} />
-          <Route
-            path="/teams"
-            element={<Navigate to="/team-management" replace />}
-          />
+          <Route path="/teams" element={<Navigate to="/team-management" replace />} />
 
           {/* ================= EMPLOYEE PROFILE (NESTED) ================= */}
           <Route path="/profile" element={<EmployeeProfile />}>
-
             <Route index element={<Navigate to="personal-details" replace />} />
-
             <Route path="personal-details" element={<PersonalDetails />} />
             <Route path="contact-details" element={<ContactDetails />} />
-            <Route
-              path="education-qualification"
-              element={<EducationQualification />}
-            />
+            <Route path="education-qualification" element={<EducationQualification />} />
             <Route path="job-details" element={<JobDetails />} />
-
-            {/* Attendance inside profile */}
             <Route path="attendance" element={<AttendancePage />} />
-
-            {/* Fallback inside profile */}
             <Route path="*" element={<Navigate to="personal-details" replace />} />
           </Route>
 

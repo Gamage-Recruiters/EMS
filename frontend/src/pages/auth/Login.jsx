@@ -9,11 +9,21 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const rawGoogleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const googleClientId = typeof rawGoogleClientId === "string" ? rawGoogleClientId.trim() : "";
+  const isGoogleConfigured =
+    Boolean(googleClientId) &&
+    !["GOOGLE_CLIENT_ID", "YOUR_GOOGLE_CLIENT_ID_HERE"].includes(googleClientId);
+
   const { login, googleLogin } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
+      if (!credentialResponse?.credential) {
+        setErrors({ api: "Google didn’t return a credential. Check your Google OAuth origin settings and try again." });
+        return;
+      }
       const success = await googleLogin(credentialResponse);
       if (success) {
         navigate("/dashboard");
@@ -75,15 +85,20 @@ const Login = () => {
 
         
         <div className="mt-8 flex justify-center">
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={handleGoogleError}
-            useOneTap
-            theme="outline"
-            size="large"
-            text="signin_with"
-            width="100%"
-          />
+          {isGoogleConfigured ? (
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              theme="outline"
+              size="large"
+              text="signin_with"
+            />
+          ) : (
+            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 w-full text-center">
+              Google Sign-In isn’t configured. Set <span className="font-mono">VITE_GOOGLE_CLIENT_ID</span> in
+              <span className="font-mono"> frontend/.env</span>.
+            </p>
+          )}
         </div>
 
         <div className="mt-6 flex items-center gap-3">

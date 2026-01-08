@@ -4,8 +4,6 @@ import bcrypt from 'bcrypt';
 import AppError from '../utils/AppError.js';
 import { OAuth2Client } from 'google-auth-library';
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
 const generateTokens = (id) => {
   const accessToken = jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
   const refreshToken = jwt.sign({ id }, process.env.JWT_REFRESH_SECRET, { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN });
@@ -95,6 +93,21 @@ export const loginUser = async (req, res, next) => {
 export const googleAuth = async (req, res, next) => {
   try {
     const { tokenId } = req.body; 
+
+    if (!tokenId || typeof tokenId !== 'string') {
+      return next(new AppError('Missing Google credential token.', 400));
+    }
+
+    if (!process.env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID === 'GOOGLE_CLIENT_ID') {
+      return next(
+        new AppError(
+          'Google Sign-In is not configured on the server (missing GOOGLE_CLIENT_ID).',
+          500,
+        ),
+      );
+    }
+
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
     
     const ticket = await client.verifyIdToken({
       idToken: tokenId,
@@ -102,7 +115,12 @@ export const googleAuth = async (req, res, next) => {
     });
     
     // Google provides given_name and family_name
-    const { given_name, family_name, email, sub: googleId, picture } = ticket.getPayload();
+    const payload = ticket.getPayload();
+    if (!payload) {
+      return next(new AppError('Invalid Google token payload.', 401));
+    }
+
+    const { given_name, family_name, email, sub: googleId, picture } = payload;
 
     let user = await User.findOne({ email });
 
@@ -137,8 +155,12 @@ export const googleAuth = async (req, res, next) => {
     });
 
   } catch (error) {
-    console.error(error); 
-    next(new AppError('Google Authentication Failed', 400));
+    console.error(error);
+    const message =
+      process.env.NODE_ENV === 'production'
+        ? 'Google Authentication Failed'
+        : `Google Authentication Failed: ${error.message}`;
+    next(new AppError(message, 401));
   }
 };
 

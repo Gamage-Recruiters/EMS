@@ -1,26 +1,31 @@
-import React, { useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useState } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import PageLayout from "./components/layout/PageLayout";
 import AttendancePrompt from "./components/AttendancePrompt";
+import PrivateRoute from "./routes/PrivateRoute";
 
-// Existing pages (from HEAD)
+// Auth pages
+import LoginPage from "./pages/auth/Login";
+import RegisterPage from "./pages/auth/Register";
+
+// Main pages
 import DashboardPage from "./pages/DashboardPage";
 import AttendancePage from "./pages/AttendancePage";
 
-// Management (from integrate-kanchana-kavya)
+//Management
 import UserManagementPage from "./features/management/pages/UserManagementPage";
 import TeamManagementPage from "./features/management/pages/TeamManagementPage";
 import TeamHierarchyPage from "./features/management/pages/TeamHierarchyPage";
 
-// Employee profile routes (folder renamed to `employee-profile`)
+// Employee profile
 import EmployeeProfile from "./employee-profile/EmployeeProfile";
 import PersonalDetails from "./employee-profile/PersonalDetails";
 import ContactDetails from "./employee-profile/ContactDetails";
 import EducationQualification from "./employee-profile/EducationQualification";
 import JobDetails from "./employee-profile/JobDetails";
 
-// Other pages (from integrate-kanchana-kavya)
+// Other pages
 import UserManagement from "./pages/UserManagement";
 import UserProfile from "./pages/UserProfile";
 
@@ -34,57 +39,71 @@ export default function App() {
   };
 
   return (
-    <BrowserRouter>
-      {/* Check-in modal/prompt stays clickable even when app UI is disabled */}
-      {!isCheckedIn && <AttendancePrompt onCheckIn={handleCheckIn} />}
+    <Routes>
 
-      {/* Disable the main app until checked-in */}
-      <div
-        className={`min-h-screen bg-gray-50 transition-opacity duration-300 ${
-          !isCheckedIn ? "opacity-50 pointer-events-none" : ""
-        }`}
-      >
-        <Routes>
-          <Route element={<PageLayout />}>
-            {/* Default landing */}
-            <Route index element={<Navigate to="/dashboard" replace />} />
+      {/* ================= PUBLIC ROUTES ================= */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
 
-            {/* HEAD routes */}
-            <Route
-              path="/dashboard"
-              element={<DashboardPage checkInTime={checkInTime} />}
-            />
-            <Route path="/attendance" element={<AttendancePage />} />
+      {/* ================= PROTECTED ROUTES ================= */}
+      <Route element={<PrivateRoute />}>
+        <Route
+          element={
+            <>
+              {!isCheckedIn && (
+                <AttendancePrompt onCheckIn={handleCheckIn} />
+              )}
 
-            {/* integrate-kanchana-kavya routes */}
-            <Route path="/employees" element={<UserManagementPage />} />
-            <Route path="/team-management" element={<TeamManagementPage />} />
-            <Route path="/team-hierarchy" element={<TeamHierarchyPage />} />
-            <Route
-              path="/teams"
-              element={<Navigate to="/team-management" replace />}
-            />
+              <div
+                className={`min-h-screen bg-gray-50 transition-opacity duration-300 ${
+                  !isCheckedIn ? "opacity-50 pointer-events-none" : ""
+                }`}
+              >
+                <PageLayout />
+              </div>
+            </>
+          }
+        >
 
-            {/* Employee profile with nested routes */}
-            <Route path="/profile" element={<EmployeeProfile />}>
-              <Route path="personal-details" element={<PersonalDetails />} />
-              <Route path="contact-details" element={<ContactDetails />} />
-              <Route
-                path="education-qualification"
-                element={<EducationQualification />}
-              />
-              <Route path="job-details" element={<JobDetails />} />
-            </Route>
+          {/* Default */}
+          <Route index element={<Navigate to="/dashboard" replace />} />
 
-            {/* Other pages */}
-            <Route path="/user-management" element={<UserManagement />} />
-            <Route path="/user-profile/:id" element={<UserProfile />} />
+          {/* Core */}
+          <Route
+            path="/dashboard"
+            element={<DashboardPage checkInTime={checkInTime} />}
+          />
+          <Route path="/attendance" element={<AttendancePage />} />
 
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          {/* Management */}
+          <Route path="/employees" element={<UserManagementPage />} />
+          <Route path="/team-management" element={<TeamManagementPage />} />
+          <Route path="/team-hierarchy" element={<TeamHierarchyPage />} />
+          <Route path="/teams" element={<Navigate to="/team-management" replace />} />
+
+          {/* ================= EMPLOYEE PROFILE (NESTED) ================= */}
+          <Route path="/profile" element={<EmployeeProfile />}>
+            <Route index element={<Navigate to="personal-details" replace />} />
+            <Route path="personal-details" element={<PersonalDetails />} />
+            <Route path="contact-details" element={<ContactDetails />} />
+            <Route path="education-qualification" element={<EducationQualification />} />
+            <Route path="job-details" element={<JobDetails />} />
+            <Route path="attendance" element={<AttendancePage />} />
+            <Route path="*" element={<Navigate to="personal-details" replace />} />
           </Route>
-        </Routes>
-      </div>
-    </BrowserRouter>
+
+          {/* Other */}
+          <Route path="/user-management" element={<UserManagement />} />
+          <Route path="/user-profile/:id" element={<UserProfile />} />
+
+          {/* App fallback */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Route>
+      </Route>
+
+      {/* ================= GLOBAL FALLBACK ================= */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
+
+    </Routes>
   );
 }

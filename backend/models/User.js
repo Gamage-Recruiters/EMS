@@ -12,6 +12,11 @@ const userSchema = new mongoose.Schema({
   refreshToken: { type: String },
   googleId: { type: String },
 
+  // Contact information
+  contactNumber: { type: String, default: '' },
+  address: { type: String, default: '' },
+  city: { type: String, default: '' },
+
   // Role and permissions
   role: {
     type: String,
@@ -26,6 +31,16 @@ const userSchema = new mongoose.Schema({
   designation: { type: String },
   department: { type: String },
   joinedDate: { type: Date, default: Date.now },
+
+  // Education information
+  education: {
+    institution: { type: String, default: '' },
+    department: { type: String, default: '' },
+    degree: { type: String, default: '' },
+    location: { type: String, default: '' },
+    startDate: { type: Date },
+    endDate: { type: Date }
+  },
 
   // Account state
   status: { 

@@ -19,7 +19,11 @@ export const addUserByAdmin = async (req, res, next) => {
       password,
       role,
       designation,
-      department
+      department,
+      contactNumber,
+      address,
+      city,
+      education
     } = req.body;
 
     // Basic validation
@@ -46,6 +50,17 @@ export const addUserByAdmin = async (req, res, next) => {
       role,
       designation,
       department,
+      contactNumber: contactNumber || '',
+      address: address || '',
+      city: city || '',
+      education: {
+        institution: education?.institution || '',
+        department: education?.department || '',
+        degree: education?.degree || '',
+        location: education?.location || '',
+        startDate: education?.startDate ? new Date(education.startDate) : undefined,
+        endDate: education?.endDate ? new Date(education.endDate) : undefined
+      },
       status: 'Active'
     });
 
@@ -58,7 +73,11 @@ export const addUserByAdmin = async (req, res, next) => {
         email: user.email,
         role: user.role,
         designation: user.designation,
-        department: user.department
+        department: user.department,
+        contactNumber: user.contactNumber,
+        address: user.address,
+        city: user.city,
+        education: user.education
       }
     });
 
@@ -87,7 +106,11 @@ export const updateDeveloperByAdmin = async (req, res, next) => {
       designation,
       department,
       status,
-      role
+      role,
+      contactNumber,
+      address,
+      city,
+      education
     } = req.body;
 
     const user = await User.findById(userId);
@@ -101,12 +124,25 @@ export const updateDeveloperByAdmin = async (req, res, next) => {
     }
 
     // Update fields
-    user.firstName = firstName || user.firstName;
-    user.lastName = lastName || user.lastName;
-    user.email = email || user.email;
-    user.designation = designation || user.designation;
-    user.department = department || user.department;
-    user.status = status || user.status;
+    if (firstName !== undefined) user.firstName = firstName;
+    if (lastName !== undefined) user.lastName = lastName;
+    if (email !== undefined) user.email = email;
+    if (designation !== undefined) user.designation = designation;
+    if (department !== undefined) user.department = department;
+    if (status !== undefined) user.status = status;
+    if (contactNumber !== undefined) user.contactNumber = contactNumber;
+    if (address !== undefined) user.address = address;
+    if (city !== undefined) user.city = city;
+    
+    // Update education fields
+    if (education !== undefined) {
+      if (education.institution !== undefined) user.education.institution = education.institution;
+      if (education.department !== undefined) user.education.department = education.department;
+      if (education.degree !== undefined) user.education.degree = education.degree;
+      if (education.location !== undefined) user.education.location = education.location;
+      if (education.startDate !== undefined) user.education.startDate = education.startDate ? new Date(education.startDate) : null;
+      if (education.endDate !== undefined) user.education.endDate = education.endDate ? new Date(education.endDate) : null;
+    }
 
     // Role change (optional)
     if (role) {
@@ -134,7 +170,11 @@ export const updateDeveloperByAdmin = async (req, res, next) => {
         role: user.role,
         designation: user.designation,
         department: user.department,
-        status: user.status
+        status: user.status,
+        contactNumber: user.contactNumber,
+        address: user.address,
+        city: user.city,
+        education: user.education
       }
     });
 

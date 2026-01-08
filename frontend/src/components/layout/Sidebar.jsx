@@ -32,16 +32,6 @@ export default function Sidebar() {
         <NavLink to="/employees" style={linkStyle}>
           Employees
         </NavLink>
-
-        {/* hierarchy view */}
-        <NavLink to="/team-hierarchy" style={linkStyle}>
-          Hierarchy
-        </NavLink>
-
-        {/* team assignment */}
-        <NavLink to="/team-management" style={linkStyle}>
-          Team Assignment
-        </NavLink>
       </nav>
     </aside>
   );

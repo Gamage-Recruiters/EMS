@@ -1,100 +1,102 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function CreateChannelModal({ users, onCreate, onClose }) {
-  const [channelName, setChannelName] = useState("");
-  const [selectedUsers, setSelectedUsers] = useState([]);
-  const [type, setType] = useState("team"); // default type
+export default function CreateChannelModal({
+  users,
+  currentUser,
+  onCreate,
+  onClose,
+}) {
+  const [name, setName] = useState("");
+  const [type, setType] = useState("regular");
+  const [selected, setSelected] = useState([]);
 
-  const toggleUser = (id) => {
-    setSelectedUsers((prev) =>
+  // ✅ ALL ACTIVE USERS ARE ASSIGNABLE
+  const assignableUsers = users.filter((u) => u.status === "Active");
+
+  // Reset modal fields on open
+  useEffect(() => {
+    setName("");
+    setType("regular");
+    setSelected([]);
+  }, [users]);
+
+  const toggle = (id) => {
+    setSelected((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   };
 
-  const createChannel = () => {
-    if (!channelName.trim()) return;
-
-    let members = [];
-    if (type === "team") members = selectedUsers;
-    else if (type === "notice") members = users.map((u) => u.id); // all users
-    else if (type === "complaint")
-      members = users.filter((u) => u.role !== "Developer").map((u) => u.id); // PM/TL
+  const create = () => {
+    if (!name.trim()) return;
 
     onCreate({
-      id: Date.now().toString(),
-      name: channelName,
+      name,
       type,
-      members,
-      messages: [],
+      members: type === "regular" ? [...selected, currentUser._id] : [],
     });
-
-    onClose();
+    onClose(); // close after creation
   };
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-      <div className="bg-[#FFFFFF] w-96 rounded-xl p-5">
-        <h3 className="text-lg font-semibold text-[#1F1F1F] mb-4">
-          Create Channel
-        </h3>
+      <div className="bg-white w-96 rounded-xl p-5">
+        <h3 className="text-lg font-semibold mb-4">Create Channel</h3>
 
-        <div className="mb-3">
-          <label className="text-sm font-medium text-[#4D4D4D] mb-1 block">
-            Type
-          </label>
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            className="w-full border border-[#E0E0E0] rounded-lg px-3 py-2"
-          >
-            <option value="team">Team</option>
-            <option value="notice">Notice</option>
-            <option value="complaint">Complaint</option>
-          </select>
-        </div>
+        <select
+          value={type}
+          onChange={(e) => setType(e.target.value)}
+          className="w-full mb-3 border rounded px-3 py-2"
+        >
+          <option value="regular">Team</option>
+          <option value="notice">Notice</option>
+        </select>
 
-        <div className="mb-3">
-          <label className="text-sm font-medium text-[#4D4D4D] mb-1 block">
-            Name
-          </label>
-          <input
-            value={channelName}
-            onChange={(e) => setChannelName(e.target.value)}
-            placeholder="Channel name"
-            className="w-full border border-[#E0E0E0] rounded-lg px-3 py-2"
-          />
-        </div>
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Channel name"
+          className="w-full mb-3 border px-3 py-2 rounded"
+        />
 
-        {type === "team" && (
-          <div className="mb-3">
-            <p className="text-sm font-medium text-[#4D4D4D] mb-1">
-              Assign Developers
-            </p>
-            <div className="max-h-32 overflow-y-auto border border-[#E0E0E0] rounded-lg p-2">
-              {users.map((u) => (
+        {type === "regular" && (
+          <>
+            <p className="text-sm font-medium mb-1">Assign Team Members</p>
+            <div className="max-h-40 overflow-y-auto border rounded p-2">
+              {assignableUsers.length === 0 && (
+                <p className="text-xs text-gray-400">
+                  No assignable users available
+                </p>
+              )}
+
+              {assignableUsers.map((u) => (
                 <div
-                  key={u.id}
+                  key={u._id}
                   className="flex justify-between items-center mb-1"
                 >
-                  <span>{u.name}</span>
+                  <span>
+                    {u.firstName} {u.lastName}
+                  </span>
                   <input
                     type="checkbox"
-                    checked={selectedUsers.includes(u.id)}
-                    onChange={() => toggleUser(u.id)}
+                    checked={selected.includes(u._id)}
+                    onChange={() => toggle(u._id)}
                   />
                 </div>
               ))}
             </div>
-          </div>
+          </>
         )}
 
         <div className="flex justify-end gap-2 mt-4">
-          <button onClick={onClose} className="px-3 py-1 text-[#7A7A7A]">
+          <button
+            onClick={onClose}
+            className="px-3 py-1 border rounded hover:bg-gray-100"
+          >
             Cancel
           </button>
           <button
-            onClick={createChannel}
-            className="px-4 py-2 bg-[#34C759] text-white rounded-lg"
+            onClick={create}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
           >
             Create
           </button>

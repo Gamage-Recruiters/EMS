@@ -1,25 +1,44 @@
 import { useState } from "react";
+import socket from "../socket";
 
-export default function MessageInput({ onSend }) {
+export default function MessageInput({ channel }) {
   const [text, setText] = useState("");
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  const canSend =
+    channel.type !== "notice" || ["CEO", "TL", "PM"].includes(user.role);
 
   const send = () => {
     if (!text.trim()) return;
-    onSend(text);
-    setText("");
+
+    socket.emit("message:send", { channelId: channel._id, text }, (res) => {
+      if (res.success) setText("");
+      else alert(res.error);
+    });
   };
 
+  if (!canSend) {
+    return (
+      <div className="p-4 text-center text-sm text-gray-400 border-t">
+        You cannot send messages in this channel
+      </div>
+    );
+  }
+
   return (
-    <div className="p-4 bg-[#FFFFFF] border-t border-[#E0E0E0]">
-      <div className="flex items-center gap-2 bg-[#F7FAFC] rounded-lg px-3 py-2 border border-[#E0E0E0]">
+    <div className="p-4 bg-white border-t">
+      <div className="flex gap-2">
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder="Message #channel"
-          className="flex-1 bg-transparent outline-none text-sm text-[#1F1F1F] placeholder-[#7A7A7A]"
+          placeholder="Type a message..."
+          className="flex-1 border rounded-lg px-3 py-2 text-sm"
         />
-        <button onClick={send} className="text-[#3676E0] font-semibold">
+        <button
+          onClick={send}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+        >
           Send
         </button>
       </div>

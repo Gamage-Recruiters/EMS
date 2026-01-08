@@ -7,7 +7,7 @@ export const taskService = {
   // Get tasks assigned to logged-in user
   myTasks: () => api.get("/tasks/my"),
 
-  // Update task status (drag & drop)
+  // Update task status 
   updateStatus: (id, status) =>
     api.patch(`/tasks/${id}/status`, { status }),
 };

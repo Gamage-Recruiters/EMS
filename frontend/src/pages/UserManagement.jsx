@@ -1,36 +1,67 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
+import { employeeService } from "../services/employeeService";
 
 export default function UserManagement() {
-  const users = [
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john@example.com",
-      role: "Developer",
-      team: "Frontend",
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      email: "jane@example.com",
-      role: "Team Lead",
-      team: "Backend",
-      status: "Pending",
-    },
-  ];
-
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 
-  const handleViewDetails = (id) => {
-    navigate(`/user-profile/${id}`);
+  // Load employees on mount
+  useEffect(() => {
+    loadEmployees();
+  }, []);
+
+  const loadEmployees = async () => {
+    try {
+      setLoading(true);
+      const res = await employeeService.list();
+      setEmployees(res.data.employees || res.data || []);
+    } catch (err) {
+      console.error("Failed to load employees:", err);
+      setEmployees([]);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleViewDetails = (id) => {
+    navigate(`/profile?mode=view&id=${id}`);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this employee?"))
+      return;
+
+    try {
+      await employeeService.remove(id);
+      alert("Employee deleted successfully");
+      loadEmployees(); // Reload list
+    } catch (err) {
+      console.error("Failed to delete employee:", err);
+      alert("Failed to delete employee");
+    }
+  };
+
+  const handleEdit = (id) => {
+    navigate(`/profile?mode=edit&id=${id}`);
+  };
+
+  const filteredEmployees = employees.filter(
+    (emp) =>
+      emp.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      emp.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      emp.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const activeCount = employees.filter((e) => e.status === "Active").length;
+  const totalCount = employees.length;
   return (
     <div className="min-h-screen bg-gray-100 flex">
       {/* ================= SIDEBAR ================= */}
-      <Sidebar/>
+      <Sidebar />
 
       {/* ================= MAIN CONTENT ================= */}
       <div className="flex-1 p-8">
@@ -47,10 +78,10 @@ export default function UserManagement() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           {[
-            { title: "Total Users", value: 120 },
-            { title: "Active Users", value: 98 },
-            { title: "Team Leads", value: 12 },
-            { title: "Pending Setup", value: 10 },
+            { title: "Total Users", value: totalCount },
+            { title: "Active Users", value: activeCount },
+            { title: "Inactive Users", value: totalCount - activeCount },
+            { title: "Pending Setup", value: 0 },
           ].map((item, index) => (
             <div
               key={index}
@@ -67,54 +98,78 @@ export default function UserManagement() {
           <input
             type="text"
             placeholder="Search users..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full md:w-1/3 px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300"
           />
         </div>
 
         {/* Table */}
         <div className="bg-white rounded-xl shadow overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-gray-100 text-gray-600">
-              <tr>
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Email</th>
-                <th className="px-4 py-3">Role Level</th>
-                <th className="px-4 py-3">Team</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Action</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id} className="border-t">
-                  <td className="px-4 py-3">{user.name}</td>
-                  <td className="px-4 py-3">{user.email}</td>
-                  <td className="px-4 py-3">{user.role}</td>
-                  <td className="px-4 py-3">{user.team}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`font-medium ${
-                        user.status === "Active"
-                          ? "text-green-600"
-                          : "text-yellow-600"
-                      }`}
-                    >
-                      {user.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => handleViewDetails(user.id)}
-                      className="text-blue-600 hover:underline"
-                    >
-                      View Details
-                    </button>
-                  </td>
+          {loading ? (
+            <div className="p-8 text-center">Loading employees...</div>
+          ) : filteredEmployees.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              No employees found
+            </div>
+          ) : (
+            <table className="w-full text-sm text-left">
+              <thead className="bg-gray-100 text-gray-600">
+                <tr>
+                  <th className="px-4 py-3">Name</th>
+                  <th className="px-4 py-3">Email</th>
+                  <th className="px-4 py-3">Role</th>
+                  <th className="px-4 py-3">Department</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody>
+                {filteredEmployees.map((emp) => (
+                  <tr key={emp._id} className="border-t hover:bg-gray-50">
+                    <td className="px-4 py-3">{`${emp.firstName} ${emp.lastName}`}</td>
+                    <td className="px-4 py-3">{emp.email}</td>
+                    <td className="px-4 py-3">{emp.role || "N/A"}</td>
+                    <td className="px-4 py-3">{emp.department || "N/A"}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-semibold ${
+                          emp.status === "Active"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {emp.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleViewDetails(emp._id)}
+                          className="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600"
+                        >
+                          View
+                        </button>
+                        <button
+                          onClick={() => handleEdit(emp._id)}
+                          className="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(emp._id)}
+                          className="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>

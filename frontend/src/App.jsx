@@ -15,15 +15,13 @@ import AttendancePage from "./pages/AttendancePage";
 
 //Management
 import UserManagementPage from "./features/management/pages/UserManagementPage";
-import TeamManagementPage from "./features/management/pages/TeamManagementPage";
-import TeamHierarchyPage from "./features/management/pages/TeamHierarchyPage";
 
 // Employee profile
-import EmployeeProfile from "./employee-profile/EmployeeProfile";
-import PersonalDetails from "./employee-profile/PersonalDetails";
-import ContactDetails from "./employee-profile/ContactDetails";
-import EducationQualification from "./employee-profile/EducationQualification";
-import JobDetails from "./employee-profile/JobDetails";
+import EmployeeProfile from "./features/management/pages/employee-profile/EmployeeProfile";
+import PersonalDetails from "./features/management/pages/employee-profile/PersonalDetails";
+import ContactDetails from "./features/management/pages/employee-profile/ContactDetails";
+import EducationQualification from "./features/management/pages/employee-profile/EducationQualification";
+import JobDetails from "./features/management/pages/employee-profile/JobDetails";
 
 // Other pages
 import UserManagement from "./pages/UserManagement";
@@ -40,7 +38,6 @@ export default function App() {
 
   return (
     <Routes>
-
       {/* ================= PUBLIC ROUTES ================= */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
@@ -50,9 +47,7 @@ export default function App() {
         <Route
           element={
             <>
-              {!isCheckedIn && (
-                <AttendancePrompt onCheckIn={handleCheckIn} />
-              )}
+              {!isCheckedIn && <AttendancePrompt onCheckIn={handleCheckIn} />}
 
               <div
                 className={`min-h-screen bg-gray-50 transition-opacity duration-300 ${
@@ -64,7 +59,6 @@ export default function App() {
             </>
           }
         >
-
           {/* Default */}
           <Route index element={<Navigate to="/dashboard" replace />} />
 
@@ -77,19 +71,22 @@ export default function App() {
 
           {/* Management */}
           <Route path="/employees" element={<UserManagementPage />} />
-          <Route path="/team-management" element={<TeamManagementPage />} />
-          <Route path="/team-hierarchy" element={<TeamHierarchyPage />} />
-          <Route path="/teams" element={<Navigate to="/team-management" replace />} />
 
           {/* ================= EMPLOYEE PROFILE (NESTED) ================= */}
           <Route path="/profile" element={<EmployeeProfile />}>
             <Route index element={<Navigate to="personal-details" replace />} />
             <Route path="personal-details" element={<PersonalDetails />} />
             <Route path="contact-details" element={<ContactDetails />} />
-            <Route path="education-qualification" element={<EducationQualification />} />
+            <Route
+              path="education-qualification"
+              element={<EducationQualification />}
+            />
             <Route path="job-details" element={<JobDetails />} />
             <Route path="attendance" element={<AttendancePage />} />
-            <Route path="*" element={<Navigate to="personal-details" replace />} />
+            <Route
+              path="*"
+              element={<Navigate to="personal-details" replace />}
+            />
           </Route>
 
           {/* Other */}
@@ -103,7 +100,6 @@ export default function App() {
 
       {/* ================= GLOBAL FALLBACK ================= */}
       <Route path="*" element={<Navigate to="/login" replace />} />
-
     </Routes>
   );
 }

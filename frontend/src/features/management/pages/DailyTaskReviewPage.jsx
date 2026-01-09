@@ -147,7 +147,7 @@ export default function DailyTaskReviewPage() {
 
                 {/* PM CHECK */}
                 <td className="px-3 py-2">
-                  {user.role === "PM" || user.role === "CEO" ? (
+                  {user.role === "PM" ? (
                     <select
                       value={t.pmCheck}
                       onChange={(e) => handlePM(t._id, e.target.value)}
@@ -165,7 +165,7 @@ export default function DailyTaskReviewPage() {
 
                 {/* TL CHECK */}
                 <td className="px-3 py-2">
-                  {user.role === "TL" || user.role === "CEO" ? (
+                  {user.role === "TL" ? (
                     <select
                       value={t.teamLeadCheck}
                       onChange={(e) => handleTL(t._id, e.target.value)}

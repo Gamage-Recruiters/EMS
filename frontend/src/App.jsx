@@ -17,6 +17,7 @@ import AttendancePage from "./pages/AttendancePage";
 import UserManagementPage from "./features/management/pages/UserManagementPage";
 import TeamManagementPage from "./features/management/pages/TeamManagementPage";
 import TeamHierarchyPage from "./features/management/pages/TeamHierarchyPage";
+import DailyTaskReviewPage from "./features/management/pages/DailyTaskReviewPage";
 
 // Employee profile
 import EmployeeProfile from "./employee profile/EmployeeProfile";
@@ -24,6 +25,10 @@ import PersonalDetails from "./employee profile/PersonalDetails";
 import ContactDetails from "./employee profile/ContactDetails";
 import EducationQualification from "./employee profile/EducationQualification";
 import JobDetails from "./employee profile/JobDetails";
+
+// Developer pages
+import DailyTaskFormPage from "./features/developer/pages/DailyTaskFormPage";
+import DailyTaskPage from "./features/developer/pages/DailyTaskPage";
 
 // Other pages
 import UserManagement from "./pages/UserManagement";
@@ -40,7 +45,6 @@ export default function App() {
 
   return (
     <Routes>
-
       {/* ================= PUBLIC ROUTES ================= */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
@@ -50,9 +54,7 @@ export default function App() {
         <Route
           element={
             <>
-              {!isCheckedIn && (
-                <AttendancePrompt onCheckIn={handleCheckIn} />
-              )}
+              {!isCheckedIn && <AttendancePrompt onCheckIn={handleCheckIn} />}
 
               <div
                 className={`min-h-screen bg-gray-50 transition-opacity duration-300 ${
@@ -97,6 +99,12 @@ export default function App() {
           {/* Other */}
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="/user-profile/:id" element={<UserProfile />} />
+          {/* Developer */}
+          <Route path="/tasks" element={<DailyTaskPage />} />
+          <Route path="/tasks/new" element={<DailyTaskFormPage />} />
+
+          {/* Management */}
+          <Route path="/tasks/review" element={<DailyTaskReviewPage />} />
 
           {/* App fallback */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
@@ -105,7 +113,6 @@ export default function App() {
 
       {/* ================= GLOBAL FALLBACK ================= */}
       <Route path="*" element={<Navigate to="/login" replace />} />
-
     </Routes>
   );
 }

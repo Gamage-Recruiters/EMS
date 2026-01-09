@@ -1,13 +1,18 @@
-import React, { useRef, useState } from "react";
+// PersonalDetails.jsx
+import React, { useEffect, useRef, useState } from "react";
 import { FiCamera, FiUser } from "react-icons/fi";
 import { useOutletContext } from "react-router-dom";
 
 export default function PersonalDetails() {
   const { employee, setEmployee, isView } = useOutletContext();
   const fileInputRef = useRef(null);
-  const [previewImage, setPreviewImage] = useState(
-    employee?.profileImage || null
-  );
+
+  const [previewImage, setPreviewImage] = useState(employee?.profileImage || null);
+
+  // Keep preview in sync when employee loads in edit/view mode
+  useEffect(() => {
+    setPreviewImage(employee?.profileImage || null);
+  }, [employee?.profileImage]);
 
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
@@ -59,6 +64,7 @@ export default function PersonalDetails() {
               </div>
               {!isView && (
                 <button
+                  type="button"
                   onClick={() => fileInputRef.current?.click()}
                   className="absolute bottom-0 right-0 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-lg"
                 >
@@ -91,17 +97,12 @@ export default function PersonalDetails() {
               type="text"
               value={employee.firstName || ""}
               onChange={(e) =>
-                setEmployee((prev) => ({
-                  ...prev,
-                  firstName: e.target.value,
-                }))
+                setEmployee((prev) => ({ ...prev, firstName: e.target.value }))
               }
               placeholder="John"
               disabled={isView}
               className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                isView
-                  ? "bg-gray-50 cursor-not-allowed text-gray-600"
-                  : "bg-white"
+                isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
               }`}
             />
           </div>
@@ -114,17 +115,12 @@ export default function PersonalDetails() {
               type="text"
               value={employee.lastName || ""}
               onChange={(e) =>
-                setEmployee((prev) => ({
-                  ...prev,
-                  lastName: e.target.value,
-                }))
+                setEmployee((prev) => ({ ...prev, lastName: e.target.value }))
               }
               placeholder="Doe"
               disabled={isView}
               className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                isView
-                  ? "bg-gray-50 cursor-not-allowed text-gray-600"
-                  : "bg-white"
+                isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
               }`}
             />
           </div>
@@ -140,17 +136,12 @@ export default function PersonalDetails() {
               type="email"
               value={employee.email || ""}
               onChange={(e) =>
-                setEmployee((prev) => ({
-                  ...prev,
-                  email: e.target.value,
-                }))
+                setEmployee((prev) => ({ ...prev, email: e.target.value }))
               }
               placeholder="john@example.com"
               disabled={isView}
               className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                isView
-                  ? "bg-gray-50 cursor-not-allowed text-gray-600"
-                  : "bg-white"
+                isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
               }`}
             />
           </div>
@@ -163,19 +154,19 @@ export default function PersonalDetails() {
               type="password"
               value={employee.password || ""}
               onChange={(e) =>
-                setEmployee((prev) => ({
-                  ...prev,
-                  password: e.target.value,
-                }))
+                setEmployee((prev) => ({ ...prev, password: e.target.value }))
               }
-              placeholder="••••••••"
+              placeholder={isView ? "" : "Leave blank to keep unchanged"}
               disabled={isView}
               className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                isView
-                  ? "bg-gray-50 cursor-not-allowed text-gray-600"
-                  : "bg-white"
+                isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
               }`}
             />
+            {!isView && (
+              <p className="text-xs text-gray-500 mt-2">
+                Leave blank to keep the current password.
+              </p>
+            )}
           </div>
         </div>
       </div>

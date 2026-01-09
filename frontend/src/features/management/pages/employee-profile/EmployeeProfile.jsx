@@ -236,7 +236,36 @@ export default function EmployeeProfile() {
       const ok2 = validateContact();
       if (!ok1 || !ok2) return;
 
-      await employeeService.create(employee);
+      if (employee.profileFile) {
+        const form = new FormData();
+        // Append top-level fields
+        form.append("firstName", employee.firstName || "");
+        form.append("lastName", employee.lastName || "");
+        form.append("email", employee.email || "");
+        if (employee.password) form.append("password", employee.password);
+        form.append("role", employee.role || "Unassigned");
+        form.append("designation", employee.designation || "");
+        form.append("department", employee.department || "");
+        form.append("status", employee.status || "Active");
+        form.append("contactNumber", employee.contactNumber || "");
+        form.append("address", employee.address || "");
+        form.append("city", employee.city || "");
+        form.append("joinedDate", employee.joinedDate || "");
+
+        // Education fields using bracket notation so express.urlencoded can parse them
+        form.append("education[institution]", employee.education?.institution || "");
+        form.append("education[department]", employee.education?.department || "");
+        form.append("education[degree]", employee.education?.degree || "");
+        form.append("education[location]", employee.education?.location || "");
+        form.append("education[startDate]", employee.education?.startDate || "");
+        form.append("education[endDate]", employee.education?.endDate || "");
+
+        form.append("profileImage", employee.profileFile);
+
+        await employeeService.create(form);
+      } else {
+        await employeeService.create(employee);
+      }
 
       setSuccessMsg("Employee created successfully.");
       setTimeout(() => {
@@ -266,10 +295,39 @@ export default function EmployeeProfile() {
       const ok2 = validateContact();
       if (!ok1 || !ok2) return;
 
-      const payload = { ...employee };
-      if (!payload.password) delete payload.password;
+      if (employee.profileFile) {
+        const form = new FormData();
+        form.append("firstName", employee.firstName || "");
+        form.append("lastName", employee.lastName || "");
+        form.append("email", employee.email || "");
+        if (employee.password) form.append("password", employee.password);
+        form.append("role", employee.role || "Unassigned");
+        form.append("designation", employee.designation || "");
+        form.append("department", employee.department || "");
+        form.append("status", employee.status || "Active");
+        form.append("contactNumber", employee.contactNumber || "");
+        form.append("address", employee.address || "");
+        form.append("city", employee.city || "");
+        form.append("joinedDate", employee.joinedDate || "");
 
-      await employeeService.update(employeeId, payload);
+        form.append("education[institution]", employee.education?.institution || "");
+        form.append("education[department]", employee.education?.department || "");
+        form.append("education[degree]", employee.education?.degree || "");
+        form.append("education[location]", employee.education?.location || "");
+        form.append("education[startDate]", employee.education?.startDate || "");
+        form.append("education[endDate]", employee.education?.endDate || "");
+
+        form.append("profileImage", employee.profileFile);
+
+        await employeeService.update(employeeId, form);
+      } else {
+        const payload = { ...employee };
+        if (!payload.password) delete payload.password;
+        // remove profileFile if present in state
+        if (payload.profileFile) delete payload.profileFile;
+
+        await employeeService.update(employeeId, payload);
+      }
 
       setSuccessMsg("Employee updated successfully.");
       setTimeout(() => {

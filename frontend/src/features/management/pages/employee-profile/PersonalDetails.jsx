@@ -35,6 +35,7 @@ export default function PersonalDetails() {
       setEmployee((prev) => ({
         ...prev,
         profileImage: base64String,
+        profileFile: file,
       }));
     };
     reader.readAsDataURL(file);
@@ -42,6 +43,19 @@ export default function PersonalDetails() {
 
   const clearField = (name) => {
     setFieldErrors?.((p) => ({ ...p, [name]: undefined }));
+  };
+
+  // Helper to get the correct image URL (handle both base64 and saved filenames)
+  const getImageSrc = (image) => {
+    if (!image) return null;
+    // If it's a data URL (base64), use as-is
+    if (image.startsWith("data:")) {
+      return image;
+    }
+    // Otherwise assume it's a filename and construct the full backend URL
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+    const backendBase = apiBase.replace("/api", ""); // Remove /api to get http://localhost:5000
+    return `${backendBase}/uploads/${image}`;
   };
 
   return (
@@ -68,7 +82,7 @@ export default function PersonalDetails() {
               <div className="w-32 h-32 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-gray-200 flex items-center justify-center overflow-hidden">
                 {previewImage ? (
                   <img
-                    src={previewImage}
+                    src={getImageSrc(previewImage)}
                     alt="Profile"
                     className="w-full h-full object-cover"
                   />

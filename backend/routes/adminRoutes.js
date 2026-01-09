@@ -8,6 +8,7 @@ import {
   getEmployeesByName
 } from "../controllers/adminController.js";
 import { protect, authorize } from "../middlewares/authMiddleware.js";
+import upload from "../middlewares/uploadMiddleware.js";
 
 const router = express.Router();
 
@@ -18,6 +19,7 @@ router.use(protect);
 router.post(
   "/add-user",
   authorize("CEO", "SystemAdmin"),
+  upload.single("profileImage"),
   addUserByAdmin
 );
 
@@ -25,6 +27,7 @@ router.post(
 router.put(
   "/developer/:userId",
   authorize("CEO", "SystemAdmin"),
+  upload.single("profileImage"),
   updateUserByAdmin
 );
 

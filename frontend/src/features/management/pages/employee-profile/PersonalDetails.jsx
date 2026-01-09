@@ -226,20 +226,6 @@ export default function PersonalDetails() {
             )}
           </div>
         </div>
-
-        {/* Wizard: Next (ADD only) */}
-        {isAdd && !isView && (
-          <div className="flex justify-end pt-8 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onNext}
-              disabled={saving}
-              className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 font-medium rounded-lg transition"
-            >
-              {saving ? "Saving…" : "Next"}
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

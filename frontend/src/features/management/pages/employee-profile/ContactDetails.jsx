@@ -109,28 +109,6 @@ export default function ContactDetails() {
             }`}
           />
         </div>
-
-        {/* Wizard: Back/Next (ADD only) */}
-        {isAdd && !isView && (
-          <div className="flex items-center justify-between pt-8 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onBack}
-              disabled={saving}
-              className="px-6 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium rounded-lg transition disabled:opacity-50"
-            >
-              Back
-            </button>
-            <button
-              type="button"
-              onClick={onNext}
-              disabled={saving}
-              className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 font-medium rounded-lg transition disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -7,6 +7,9 @@ export default function TeamHierarchyTab() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [draggedMember, setDraggedMember] = useState(null);
+  // Store departments per team ID
+  const [departmentsByTeam, setDepartmentsByTeam] = useState({});
 
   async function loadTeams() {
     setLoading(true);
@@ -37,6 +40,104 @@ export default function TeamHierarchyTab() {
   }, []);
 
   const selectedTeam = teams.find((t) => (t._id || t.id) === selectedTeamId);
+
+  // Get departments for current team
+  const departments = selectedTeamId
+    ? departmentsByTeam[selectedTeamId] || {
+        frontend: [],
+        backend: [],
+        hr: [],
+        admin: [],
+        maintenance: [],
+      }
+    : {
+        frontend: [],
+        backend: [],
+        hr: [],
+        admin: [],
+        maintenance: [],
+      };
+
+  // Drag and Drop Handlers
+  const handleDragStart = (member) => {
+    setDraggedMember(member);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (departmentName) => {
+    if (draggedMember && selectedTeamId) {
+      setDepartmentsByTeam((prev) => {
+        const currentDepts = prev[selectedTeamId] || {
+          frontend: [],
+          backend: [],
+          hr: [],
+          admin: [],
+          maintenance: [],
+        };
+
+        // Remove member from all departments
+        const newDepts = Object.keys(currentDepts).reduce((acc, dept) => {
+          acc[dept] = currentDepts[dept].filter(
+            (m) =>
+              (m._id || m.id || m.email) !==
+              (draggedMember._id || draggedMember.id || draggedMember.email)
+          );
+          return acc;
+        }, {});
+
+        // Add to target department
+        newDepts[departmentName] = [...newDepts[departmentName], draggedMember];
+
+        return {
+          ...prev,
+          [selectedTeamId]: newDepts,
+        };
+      });
+      setDraggedMember(null);
+    }
+  };
+
+  const handleRemoveFromDepartment = (departmentName, memberToRemove) => {
+    if (selectedTeamId) {
+      setDepartmentsByTeam((prev) => {
+        const currentDepts = prev[selectedTeamId] || {
+          frontend: [],
+          backend: [],
+          hr: [],
+          admin: [],
+          maintenance: [],
+        };
+
+        return {
+          ...prev,
+          [selectedTeamId]: {
+            ...currentDepts,
+            [departmentName]: currentDepts[departmentName].filter(
+              (m) =>
+                (m._id || m.id || m.email) !==
+                (memberToRemove._id ||
+                  memberToRemove.id ||
+                  memberToRemove.email)
+            ),
+          },
+        };
+      });
+    }
+  };
+
+  // Check if member is already assigned to a department
+  const isMemberAssigned = (member) => {
+    return Object.values(departments).some((deptMembers) =>
+      deptMembers.some(
+        (m) =>
+          (m._id || m.id || m.email) ===
+          (member._id || member.id || member.email)
+      )
+    );
+  };
 
   return (
     <div className="w-full">
@@ -108,9 +209,9 @@ export default function TeamHierarchyTab() {
 
       {/* Hierarchy Display */}
       {selectedTeam ? (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-          {/* Team Lead */}
-          <div className="mb-12">
+        <div className="space-y-8">
+          {/* Team Lead - kept as is */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-6">
               Team Lead
             </h3>
@@ -142,43 +243,136 @@ export default function TeamHierarchyTab() {
             )}
           </div>
 
-          {/* Team Members */}
-          <div>
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-6">
-              Team Members ({(selectedTeam.members || []).length})
+          {/* Team Members - Small Cards */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+              <span>TEAM MEMBERS ({(selectedTeam.members || []).length})</span>
+              <span className="text-xs font-normal text-gray-500">
+                (Drag to assign to departments)
+              </span>
             </h3>
             {Array.isArray(selectedTeam.members) &&
             selectedTeam.members.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {selectedTeam.members.map((member, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-6 hover:shadow-md transition"
-                  >
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg mx-auto mb-3">
-                      {(
-                        member.firstName?.[0] ||
-                        member.name?.[0] ||
-                        "M"
-                      ).toUpperCase()}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {selectedTeam.members.map((member, idx) => {
+                  const isAssigned = isMemberAssigned(member);
+                  return (
+                    <div
+                      key={idx}
+                      draggable={!isAssigned}
+                      onDragStart={() => handleDragStart(member)}
+                      className={`${
+                        isAssigned
+                          ? "bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed"
+                          : "bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 cursor-move hover:shadow-lg hover:scale-105"
+                      } border-2 rounded-lg p-3 transition-all duration-200`}
+                      title={
+                        isAssigned
+                          ? "Already assigned to a department"
+                          : "Drag to assign to department"
+                      }
+                    >
+                      <div
+                        className={`w-12 h-12 rounded-full ${
+                          isAssigned
+                            ? "bg-gray-400"
+                            : "bg-gradient-to-br from-blue-400 to-blue-600"
+                        } flex items-center justify-center text-white font-bold text-sm mx-auto mb-2`}
+                      >
+                        {(
+                          member.firstName?.[0] ||
+                          member.name?.[0] ||
+                          "M"
+                        ).toUpperCase()}
+                      </div>
+                      <p className="font-semibold text-gray-900 text-center text-xs truncate">
+                        {`${member.firstName || ""} ${
+                          member.lastName || ""
+                        }`.trim() || member.name}
+                      </p>
+                      <p className="text-xs text-gray-600 text-center truncate">
+                        {member.email}
+                      </p>
+                      <p
+                        className={`text-xs ${
+                          isAssigned ? "text-gray-500" : "text-blue-600"
+                        } font-semibold text-center mt-1 uppercase`}
+                      >
+                        {isAssigned ? "ASSIGNED" : "UNASSIGNED"}
+                      </p>
                     </div>
-                    <p className="font-semibold text-gray-900 text-center">
-                      {`${member.firstName || ""} ${
-                        member.lastName || ""
-                      }`.trim() || member.name}
-                    </p>
-                    <p className="text-sm text-gray-600 text-center mt-1">
-                      {member.email}
-                    </p>
-                    <p className="text-xs text-blue-600 font-semibold text-center mt-3 uppercase tracking-wider">
-                      {member.role || member.designation || "Member"}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
-              <p className="text-gray-500">No team members assigned yet</p>
+              <p className="text-gray-500 text-center py-4">
+                No team members assigned yet
+              </p>
             )}
+          </div>
+
+          {/* Department Hierarchy */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-sm font-bold text-gray-700 mb-6">
+              DEPARTMENT HIERARCHY
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              {Object.entries(departments).map(([deptName, members]) => (
+                <div
+                  key={deptName}
+                  onDragOver={handleDragOver}
+                  onDrop={() => handleDrop(deptName)}
+                  className="border-2 border-dashed border-gray-300 rounded-lg p-4 min-h-[200px] hover:border-indigo-400 hover:bg-indigo-50/30 transition-all"
+                >
+                  <div className="flex items-center justify-center mb-4">
+                    <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                      {deptName}
+                    </h4>
+                  </div>
+                  <div className="space-y-2">
+                    {members.length > 0 ? (
+                      members.map((member, idx) => (
+                        <div
+                          key={idx}
+                          className="bg-white border border-gray-200 rounded-lg p-2 shadow-sm hover:shadow-md transition-shadow relative group"
+                        >
+                          <button
+                            onClick={() =>
+                              handleRemoveFromDepartment(deptName, member)
+                            }
+                            className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-600"
+                            title="Remove from department"
+                          >
+                            ×
+                          </button>
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center text-white font-bold text-xs mx-auto mb-1">
+                            {(
+                              member.firstName?.[0] ||
+                              member.name?.[0] ||
+                              "M"
+                            ).toUpperCase()}
+                          </div>
+                          <p className="font-medium text-gray-900 text-center text-xs truncate">
+                            {`${member.firstName || ""} ${
+                              member.lastName || ""
+                            }`.trim() || member.name}
+                          </p>
+                          <p className="text-xs text-gray-500 text-center truncate">
+                            {member.role || member.designation || "Member"}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-xs text-gray-400">
+                          Drop members here
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       ) : (

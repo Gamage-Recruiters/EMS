@@ -53,6 +53,7 @@ export const addUserByAdmin = async (req, res, next) => {
       contactNumber: contactNumber || '',
       address: address || '',
       city: city || '',
+      profileImage: req.file ? req.file.filename : '',
       education: {
         institution: education?.institution || '',
         department: education?.department || '',
@@ -77,6 +78,7 @@ export const addUserByAdmin = async (req, res, next) => {
         contactNumber: user.contactNumber,
         address: user.address,
         city: user.city,
+        profileImage: user.profileImage,
         education: user.education
       }
     });
@@ -87,8 +89,8 @@ export const addUserByAdmin = async (req, res, next) => {
 };
 
 
-// System owner or CEO update developer profile
-export const updateDeveloperByAdmin = async (req, res, next) => {
+// System owner or CEO update user profile
+export const updateUserByAdmin = async (req, res, next) => {
   try {
     const actorRole = req.user.role;
 
@@ -118,11 +120,6 @@ export const updateDeveloperByAdmin = async (req, res, next) => {
       return next(new AppError("User not found", 404));
     }
 
-    // Optional: restrict updates to developers only
-    if (user.role !== "Developer") {
-      return next(new AppError("Only developer profiles can be updated here", 403));
-    }
-
     // Update fields
     if (firstName !== undefined) user.firstName = firstName;
     if (lastName !== undefined) user.lastName = lastName;
@@ -133,6 +130,7 @@ export const updateDeveloperByAdmin = async (req, res, next) => {
     if (contactNumber !== undefined) user.contactNumber = contactNumber;
     if (address !== undefined) user.address = address;
     if (city !== undefined) user.city = city;
+    if (req.file) user.profileImage = req.file.filename;
     
     // Update education fields
     if (education !== undefined) {
@@ -161,7 +159,7 @@ export const updateDeveloperByAdmin = async (req, res, next) => {
     await user.save();
 
     res.status(200).json({
-      message: "Developer profile updated successfully",
+      message: "User profile updated successfully",
       user: {
         _id: user._id,
         firstName: user.firstName,
@@ -174,6 +172,7 @@ export const updateDeveloperByAdmin = async (req, res, next) => {
         contactNumber: user.contactNumber,
         address: user.address,
         city: user.city,
+        profileImage: user.profileImage,
         education: user.education
       }
     });
@@ -184,8 +183,8 @@ export const updateDeveloperByAdmin = async (req, res, next) => {
 };
 
 
-// System owner or CEO delete developer profile
-export const deleteDeveloperByAdmin = async (req, res, next) => {
+// System owner or CEO delete user profile
+export const deleteUserByAdmin = async (req, res, next) => {
   try {
     const actorRole = req.user.role;
 
@@ -201,15 +200,10 @@ export const deleteDeveloperByAdmin = async (req, res, next) => {
       return next(new AppError("User not found", 404));
     }
 
-    // Safety check
-    if (user.role !== "Developer") {
-      return next(new AppError("Only developers can be deleted using this endpoint", 403));
-    }
-
     await User.deleteOne({ _id: userId });
 
     res.status(200).json({
-      message: "Developer removed successfully"
+      message: "User removed successfully"
     });
 
   } catch (error) {

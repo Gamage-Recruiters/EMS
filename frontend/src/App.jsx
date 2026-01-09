@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import PageLayout from "./components/layout/PageLayout";
@@ -11,42 +11,53 @@ import LoginPage from "./pages/auth/Login";
 // Main pages
 import DashboardPage from "./pages/DashboardPage";
 import AttendancePage from "./pages/AttendancePage";
+// import { getTodayAttendance } from "./services/attendanceService";
+
 
 export default function App() {
   const [checkInTime, setCheckInTime] = useState(null);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
-  const [isLoadingCheckIn, setIsLoadingCheckIn] = useState(true);
+  // const [attendanceChecked, setAttendanceChecked] = useState(false);
 
-  // Load check-in status when app mounts
-  useEffect(() => {
-    const savedCheckInTime = sessionStorage.getItem('checkInTime');
-    const savedIsCheckedIn = sessionStorage.getItem('isCheckedIn');
-    
-    if (savedIsCheckedIn === 'true' && savedCheckInTime) {
-      setCheckInTime(savedCheckInTime);
-      setIsCheckedIn(true);
-    }
-    
-    setIsLoadingCheckIn(false);
-  }, []);
 
   const handleCheckIn = (time) => {
     setCheckInTime(time);
     setIsCheckedIn(true);
-    
-    // Save to sessionStorage so it persists during the session
-    sessionStorage.setItem('checkInTime', time);
-    sessionStorage.setItem('isCheckedIn', 'true');
   };
+  
+  // useEffect(() => {
+  //   const attendanceInitStatus = async () => {
+  //     const token = localStorage.getItem("token");
+  //     if (!token) {
+  //       return;
+  //     }
+      
+  //     try {
+  //       const response = await getTodayAttendance();
+  //       if (response.success && response.data?.checkInTime) {
+  //         const checkInDate = new Date(response.data.checkInTime);
 
-  // Show loading while checking status
-  if (isLoadingCheckIn) {
-    return null; // or a loading spinner if you prefer
-  }
+  //         const today = new Date();
+  //         const isTodayCheckIn = checkInDate.toDateString() === today.toDateString();
+          
+  //         if (isTodayCheckIn) {
+  //           setCheckInTime(checkInDate);
+  //           setIsCheckedIn(true);
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching today's attendance:", error);
+  //     } finally {
+  //       setAttendanceChecked(true);
+  //     }
+  //   };
+    
+  //   attendanceInitStatus();
+
+  // }, []);
 
   return (
     <Routes>
-
       {/* ================= PUBLIC ROUTES ================= */}
       <Route path="/login" element={<LoginPage />} />
 
@@ -58,35 +69,18 @@ export default function App() {
               {!isCheckedIn && (
                 <AttendancePrompt onCheckIn={handleCheckIn} />
               )}
-
-              <div
-                className={`min-h-screen bg-gray-50 transition-opacity duration-300 ${
-                  !isCheckedIn ? "opacity-50 pointer-events-none" : ""
-                }`}
-              >
-                <PageLayout />
-              </div>
+              <PageLayout />
             </>
           }
         >
-          {/* Default */}
           <Route index element={<Navigate to="/dashboard" replace />} />
-
-          {/* Core */}
           <Route
             path="/dashboard"
             element={<DashboardPage checkInTime={checkInTime} />}
           />
           <Route path="/attendance" element={<AttendancePage />} />
-
-          {/* App fallback */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
       </Route>
-
-      {/* ================= GLOBAL FALLBACK ================= */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
-
     </Routes>
   );
 }

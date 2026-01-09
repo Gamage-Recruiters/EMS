@@ -24,7 +24,7 @@ const TimeTrackingCard = ({ checkInTime }) => {
   };
   
   const checkOutTime = todayAttendance?.checkOutTime;
-  console.log(checkOutTime)
+  console.log("checkouttime",checkOutTime)
   const formattedCheckInTime = formatTime(checkInTime);
   const formattedCheckOutTime = formatTime(checkOutTime);
 
@@ -35,6 +35,7 @@ const TimeTrackingCard = ({ checkInTime }) => {
       console.log("checkout-result",result);
     } else {
       alert(result.error || "Failed to check out. Please try again.");
+      console.error("Check-out error:", result.error);
     }
   };
 

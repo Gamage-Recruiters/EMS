@@ -136,7 +136,7 @@ const Login = () => {
           break;
         case "DEVELOPER":
         default:
-          navigate("/dashboard/dev");
+          navigate("/dashboard/");
           break;
       }
     } catch (err) {

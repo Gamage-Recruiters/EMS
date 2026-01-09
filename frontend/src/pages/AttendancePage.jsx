@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useAttendance } from '../context/AttendanceContext';
+// import { useAttendance } from '../context/AttendanceContext';
 import { Calendar, Users, Clock, TrendingUp } from 'lucide-react';
+import { getAllAttendance } from '../services/attendanceService';
 
 const AttendancePage = () => {
-    const { getAllAttendance } = useAttendance();
+    // const { getAllAttendance } = useAttendance();
     const [allAttendanceData, setAllAttendanceData] = useState([]);
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -17,10 +18,13 @@ const AttendancePage = () => {
         const fetchAllAttendance = async () => {
             try {
                 setLoading(true);
-                const data = await getAllAttendance();
-                console.log('Fetched attendance data:', data);
-                setAllAttendanceData(data.data || []);
-                setError(null);
+                const response = await getAllAttendance();
+                if (response.success){
+                    setAllAttendanceData(response.data.data || []);
+                }else {
+                    setError(response.error || 'Failed to load attendance data.');
+                }
+                
             } catch (err) {
                 console.error('Error fetching attendance:', err);
                 setError('Failed to load attendance data.');

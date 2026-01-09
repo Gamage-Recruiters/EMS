@@ -43,3 +43,18 @@ export const getTodayAttendance = async () => {
     };
    }
 }
+
+export const getAllAttendance = async () => {
+   try {
+    const response = await api.get("/attendance");
+    return {
+        success: true,
+        data: response.data,
+    };
+   }catch (error) {
+    return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to fetch attendance records',
+    };
+   }
+}

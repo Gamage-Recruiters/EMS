@@ -264,19 +264,28 @@ export default function UserManagementPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">
+                    <th className="text-left px-6 py-2 text-sm font-semibold text-gray-700">
                       Employee
                     </th>
-                    <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">
+                    <th className="text-left px-6 py-2 text-sm font-semibold text-gray-700">
                       Role
                     </th>
-                    <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">
-                      Team
+                    <th className="text-left px-6 py-2 text-sm font-semibold text-gray-700">
+                      Contact No:
                     </th>
-                    <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">
+                    <th className="text-left px-6 py-2 text-sm font-semibold text-gray-700">
+                      City
+                    </th>
+                    <th className="text-left px-6 py-2 text-sm font-semibold text-gray-700">
+                      Designation
+                    </th>
+                    <th className="text-left px-6 py-2 text-sm font-semibold text-gray-700">
+                      Joined Date
+                    </th>
+                    <th className="text-left px-6 py-2 text-sm font-semibold text-gray-700">
                       Status
                     </th>
-                    <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">
+                    <th className="text-left px-6 py-2 text-sm font-semibold text-gray-700">
                       Actions
                     </th>
                   </tr>
@@ -298,7 +307,7 @@ export default function UserManagementPage() {
 
                   {!loading && safeEmployees.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="px-6 py-8 text-center">
+                      <td colSpan={9} className="px-6 py-8 text-center">
                         <FiUsers className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                         <p className="text-gray-600">No employees found</p>
                         <p className="text-sm text-gray-500">

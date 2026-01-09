@@ -72,21 +72,15 @@ export default function App() {
           {/* Management */}
           <Route path="/employees" element={<UserManagementPage />} />
 
-          {/* ================= EMPLOYEE PROFILE (NESTED) ================= */}
+          {/* EMPLOYEE PROFILE (NESTED) */}
           <Route path="/profile" element={<EmployeeProfile />}>
             <Route index element={<Navigate to="personal-details" replace />} />
             <Route path="personal-details" element={<PersonalDetails />} />
             <Route path="contact-details" element={<ContactDetails />} />
-            <Route
-              path="education-qualification"
-              element={<EducationQualification />}
-            />
+            <Route path="education-qualification" element={<EducationQualification />} />
             <Route path="job-details" element={<JobDetails />} />
             <Route path="attendance" element={<AttendancePage />} />
-            <Route
-              path="*"
-              element={<Navigate to="personal-details" replace />}
-            />
+            <Route path="*" element={<Navigate to="personal-details" replace />}/>
           </Route>
 
           {/* Other */}

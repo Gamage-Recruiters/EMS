@@ -29,7 +29,7 @@ export default function UserRow({ user, onView, onEdit, onDelete }) {
   return (
     <tr className="border-b border-gray-100 hover:bg-gray-50 transition">
       {/* Name */}
-      <td className="px-6 py-4">
+      <td className="px-6 py-2">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
             {(user.firstName?.[0] || user.name?.[0] || "U").toUpperCase()}
@@ -46,7 +46,7 @@ export default function UserRow({ user, onView, onEdit, onDelete }) {
       </td>
 
       {/* Role */}
-      <td className="px-6 py-4">
+      <td className="px-6 py-2">
         <span
           className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getRoleColor(
             user.role
@@ -56,15 +56,30 @@ export default function UserRow({ user, onView, onEdit, onDelete }) {
         </span>
       </td>
 
-      {/* Team */}
-      <td className="px-6 py-4">
+      {/* Contact Number */}
+      <td className="px-6 py-2">
+        <p className="text-gray-700 font-medium">{user.contactNumber || '-'}</p>
+      </td>
+
+      {/* City */}
+      <td className="px-6 py-2">
+        <p className="text-gray-700 font-medium">{user.city || '-'}</p>
+      </td>
+
+      {/* Designation */}
+      <td className="px-6 py-2">
+        <p className="text-gray-700 font-medium">{user.designation || '-'}</p>
+      </td>
+      
+      {/* Joined Date */}
+      <td className="px-6 py-2">
         <p className="text-gray-700 font-medium">
-          {user.team || user.department || "-"}
+          {user.joinedDate ? new Date(user.joinedDate).toLocaleDateString() : '-'}
         </p>
       </td>
 
       {/* Status */}
-      <td className="px-6 py-4">
+      <td className="px-6 py-2">
         <span
           className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
             user.status

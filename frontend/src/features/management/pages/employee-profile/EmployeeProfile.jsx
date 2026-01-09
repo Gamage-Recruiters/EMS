@@ -1,24 +1,26 @@
-import React, { useEffect, useState } from "react";
-import { Link, Outlet, useSearchParams, useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  FiArrowLeft,
-  FiSave,
-  FiTrash2,
-  FiAlertCircle,
-  FiCheckCircle,
-} from "react-icons/fi";
+  Link,
+  Outlet,
+  useSearchParams,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
+import { FiSave, FiTrash2, FiAlertCircle } from "react-icons/fi";
 import { employeeService } from "../../../../services/employeeService";
 
 export default function EmployeeProfile() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const mode = searchParams.get("mode") || "add";
   const employeeId = searchParams.get("id");
+
   const isEdit = mode === "edit";
   const isView = mode === "view";
 
-  const [loading, setLoading] = useState(isEdit);
+  const [loading, setLoading] = useState(isEdit || isView);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
@@ -47,21 +49,37 @@ export default function EmployeeProfile() {
     },
   });
 
-  // Load existing employee in edit or view mode
+  // Build query string to preserve mode/id on tab navigation
+  const qs = useMemo(() => {
+    const s = searchParams.toString();
+    return s ? `?${s}` : "";
+  }, [searchParams]);
+
+  // Only show "Create/Update" action bar on the last step when creating.
+  // In edit mode, allow save from any tab (better UX).
+  const isJobDetailsStep = useMemo(
+    () => location.pathname.endsWith("/job-details"),
+    [location.pathname]
+  );
+  const showActionBar = !isView && (isEdit || isJobDetailsStep);
+
+  // Load existing employee in edit/view mode
   useEffect(() => {
     if ((!isEdit && !isView) || !employeeId) return;
 
     setLoading(true);
+    setError(null);
+
     employeeService
       .get(employeeId)
       .then((res) => {
-        const data = res.data.user || res.data;
+        const data = res?.data?.user || res?.data || {};
 
         setEmployee({
           firstName: data.firstName ?? "",
           lastName: data.lastName ?? "",
           email: data.email ?? "",
-          password: "", // Don't load password
+          password: "", // never prefill password
           role: data.role ?? "Unassigned",
           designation: data.designation ?? "",
           department: data.department ?? "",
@@ -99,33 +117,40 @@ export default function EmployeeProfile() {
       setSaving(true);
       setError(null);
 
-      // Validate required fields
+      // Validate required fields (minimum)
       if (!employee.firstName || !employee.lastName || !employee.email) {
         setError("First name, last name, and email are required.");
         return;
       }
 
-      if ((isEdit || isView) && employeeId) {
-        // Update: use admin endpoint
-        await employeeService.update(employeeId, employee);
-      } else {
-        // Create: use admin endpoint
-        if (!employee.password) {
-          setError("Password is required for new employees.");
-          return;
-        }
-        const res = await employeeService.create(employee);
-        const newId = res.data.user?._id || res.data._id;
-        navigate(`/profile?mode=edit&id=${newId}`);
+      if (isEdit && employeeId) {
+        // Update: do NOT send password unless user entered a new one
+        const payload = { ...employee };
+        if (!payload.password) delete payload.password;
+
+        await employeeService.update(employeeId, payload);
+        alert("Profile updated successfully.");
         return;
       }
 
-      alert("Profile saved successfully.");
+      // Create
+      if (!employee.password) {
+        setError("Password is required for new employees.");
+        return;
+      }
+
+      const res = await employeeService.create(employee);
+      const newId = res?.data?.user?._id || res?.data?._id;
+
+      // After create, go to edit mode on job details (or first tab if you prefer)
+      if (newId) {
+        navigate(`/profile/personal-details?mode=edit&id=${newId}`);
+      } else {
+        navigate("/employees");
+      }
     } catch (err) {
       console.error(err);
-      setError(
-        err.response?.data?.message || "Failed to save employee profile."
-      );
+      setError(err?.response?.data?.message || "Failed to save employee profile.");
     } finally {
       setSaving(false);
     }
@@ -133,8 +158,7 @@ export default function EmployeeProfile() {
 
   const handleDelete = async () => {
     if (!employeeId) return;
-    if (!window.confirm("Are you sure you want to delete this profile?"))
-      return;
+    if (!window.confirm("Are you sure you want to delete this profile?")) return;
 
     try {
       await employeeService.remove(employeeId);
@@ -145,8 +169,6 @@ export default function EmployeeProfile() {
       setError("Failed to delete employee.");
     }
   };
-
-  const qs = searchParams.toString() ? `?${searchParams.toString()}` : "";
 
   if (loading) {
     return (
@@ -212,8 +234,8 @@ export default function EmployeeProfile() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 space-y-8">
               <Outlet context={{ employee, setEmployee, isEdit, isView }} />
 
-              {/* Action Buttons - Bottom */}
-              {!isView && (
+              {/* Action Buttons - show only on last step for Create; anywhere for Edit */}
+              {showActionBar && (
                 <div className="flex items-center justify-between pt-8 border-t border-gray-200">
                   <button
                     onClick={() => navigate("/employees")}
@@ -221,6 +243,7 @@ export default function EmployeeProfile() {
                   >
                     Cancel
                   </button>
+
                   <div className="flex items-center gap-3">
                     {isEdit && (
                       <button
@@ -231,6 +254,7 @@ export default function EmployeeProfile() {
                         Delete
                       </button>
                     )}
+
                     <button
                       onClick={handleSave}
                       disabled={saving}

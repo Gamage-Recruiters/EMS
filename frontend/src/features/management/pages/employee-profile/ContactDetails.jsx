@@ -1,5 +1,5 @@
 import React from "react";
-import { FiPhone, FiMail, FiMapPin, FiHome } from "react-icons/fi";
+import { FiPhone, FiHome } from "react-icons/fi";
 import { useOutletContext } from "react-router-dom";
 
 export default function ContactDetails() {
@@ -35,9 +35,7 @@ export default function ContactDetails() {
             placeholder="+1 (555) 123-4567"
             disabled={isView}
             className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition ${
-              isView
-                ? "bg-gray-50 cursor-not-allowed text-gray-600"
-                : "bg-white"
+              isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
             }`}
           />
         </div>
@@ -60,9 +58,7 @@ export default function ContactDetails() {
             placeholder="123 Main Street"
             disabled={isView}
             className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition ${
-              isView
-                ? "bg-gray-50 cursor-not-allowed text-gray-600"
-                : "bg-white"
+              isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
             }`}
           />
         </div>

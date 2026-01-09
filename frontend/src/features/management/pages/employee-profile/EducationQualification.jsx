@@ -4,7 +4,6 @@ import { useOutletContext } from "react-router-dom";
 
 export default function EducationQualification() {
   const { employee, setEmployee, isView } = useOutletContext();
-
   const edu = employee.education || {};
 
   return (
@@ -39,9 +38,7 @@ export default function EducationQualification() {
               placeholder="e.g., MIT, Stanford"
               disabled={isView}
               className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition ${
-                isView
-                  ? "bg-gray-50 cursor-not-allowed text-gray-600"
-                  : "bg-white"
+                isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
               }`}
             />
           </div>
@@ -62,9 +59,7 @@ export default function EducationQualification() {
               placeholder="e.g., Computer Science"
               disabled={isView}
               className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition ${
-                isView
-                  ? "bg-gray-50 cursor-not-allowed text-gray-600"
-                  : "bg-white"
+                isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
               }`}
             />
           </div>
@@ -88,9 +83,7 @@ export default function EducationQualification() {
               placeholder="e.g., Bachelor of Science"
               disabled={isView}
               className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition ${
-                isView
-                  ? "bg-gray-50 cursor-not-allowed text-gray-600"
-                  : "bg-white"
+                isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
               }`}
             />
           </div>
@@ -111,9 +104,7 @@ export default function EducationQualification() {
               placeholder="e.g., Cambridge, MA"
               disabled={isView}
               className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition ${
-                isView
-                  ? "bg-gray-50 cursor-not-allowed text-gray-600"
-                  : "bg-white"
+                isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
               }`}
             />
           </div>
@@ -127,11 +118,7 @@ export default function EducationQualification() {
             </label>
             <input
               type="date"
-              value={
-                edu.startDate
-                  ? new Date(edu.startDate).toISOString().split("T")[0]
-                  : ""
-              }
+              value={edu.startDate ? new Date(edu.startDate).toISOString().split("T")[0] : ""}
               onChange={(e) =>
                 setEmployee((prev) => ({
                   ...prev,
@@ -140,9 +127,7 @@ export default function EducationQualification() {
               }
               disabled={isView}
               className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition ${
-                isView
-                  ? "bg-gray-50 cursor-not-allowed text-gray-600"
-                  : "bg-white"
+                isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
               }`}
             />
           </div>
@@ -153,11 +138,7 @@ export default function EducationQualification() {
             </label>
             <input
               type="date"
-              value={
-                edu.endDate
-                  ? new Date(edu.endDate).toISOString().split("T")[0]
-                  : ""
-              }
+              value={edu.endDate ? new Date(edu.endDate).toISOString().split("T")[0] : ""}
               onChange={(e) =>
                 setEmployee((prev) => ({
                   ...prev,
@@ -166,9 +147,7 @@ export default function EducationQualification() {
               }
               disabled={isView}
               className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition ${
-                isView
-                  ? "bg-gray-50 cursor-not-allowed text-gray-600"
-                  : "bg-white"
+                isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
               }`}
             />
           </div>
@@ -179,8 +158,7 @@ export default function EducationQualification() {
           <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-4 flex items-start gap-3">
             <FiCheckCircle className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-purple-900">
-              <span className="font-semibold">Education record complete</span> —
-              All required fields filled
+              <span className="font-semibold">Education record complete</span> — All required fields filled
             </p>
           </div>
         )}

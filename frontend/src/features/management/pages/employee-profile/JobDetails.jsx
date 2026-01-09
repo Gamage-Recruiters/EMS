@@ -1,9 +1,10 @@
+// JobDetails.jsx
 import React from "react";
 import { FiBriefcase, FiCheckCircle } from "react-icons/fi";
 import { useOutletContext } from "react-router-dom";
 
 export default function JobDetails() {
-  const { employee, setEmployee, isEdit, isView } = useOutletContext();
+  const { employee, setEmployee, isView } = useOutletContext();
 
   return (
     <div className="w-full">
@@ -32,9 +33,7 @@ export default function JobDetails() {
               }
               disabled={isView}
               className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                isView
-                  ? "bg-gray-50 cursor-not-allowed text-gray-600"
-                  : "bg-white"
+                isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
               }`}
             >
               <option value="">Select role</option>
@@ -56,17 +55,12 @@ export default function JobDetails() {
               type="text"
               value={employee.designation || ""}
               onChange={(e) =>
-                setEmployee((prev) => ({
-                  ...prev,
-                  designation: e.target.value,
-                }))
+                setEmployee((prev) => ({ ...prev, designation: e.target.value }))
               }
               placeholder="e.g., Senior Developer"
               disabled={isView}
               className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                isView
-                  ? "bg-gray-50 cursor-not-allowed text-gray-600"
-                  : "bg-white"
+                isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
               }`}
             />
           </div>
@@ -84,9 +78,7 @@ export default function JobDetails() {
               placeholder="e.g., Engineering"
               disabled={isView}
               className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                isView
-                  ? "bg-gray-50 cursor-not-allowed text-gray-600"
-                  : "bg-white"
+                isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
               }`}
             />
           </div>
@@ -99,19 +91,13 @@ export default function JobDetails() {
           </label>
           <input
             type="date"
-            value={
-              employee.joinedDate
-                ? new Date(employee.joinedDate).toISOString().split("T")[0]
-                : ""
-            }
+            value={employee.joinedDate ? new Date(employee.joinedDate).toISOString().split("T")[0] : ""}
             onChange={(e) =>
               setEmployee((prev) => ({ ...prev, joinedDate: e.target.value }))
             }
             disabled={isView}
             className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-              isView
-                ? "bg-gray-50 cursor-not-allowed text-gray-600"
-                : "bg-white"
+              isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
             }`}
           />
         </div>
@@ -121,8 +107,7 @@ export default function JobDetails() {
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
             <FiCheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-blue-900">
-              <span className="font-semibold">Job details complete</span> —
-              Employee role and department set
+              <span className="font-semibold">Job details complete</span> — Employee role and department set
             </p>
           </div>
         )}

@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
-import { FiUsers, FiRefreshCw, FiTrash2, FiAlertCircle } from "react-icons/fi";
+import { FiUsers, FiRefreshCw, FiTrash2, FiAlertCircle, FiEdit2 } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 import { teamService } from "../../../services/teamService";
 
 export default function TeamListTab() {
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(false);
   const [teams, setTeams] = useState([]);
   const [error, setError] = useState(null);
@@ -13,16 +16,17 @@ export default function TeamListTab() {
     try {
       const res = await teamService.list();
       const d = res?.data;
-      // server returns { success, count, data: teams }
+
+      // normalize: backend may return { success, count, data: [] } OR { teams: [] } OR []
       let list = [];
       if (Array.isArray(d)) list = d;
       else if (Array.isArray(d?.data)) list = d.data;
       else if (Array.isArray(d?.teams)) list = d.teams;
-      else list = [];
+
       setTeams(list);
     } catch (err) {
       console.error("Failed to load teams", err);
-      setError("Failed to load teams");
+      setError(err?.response?.data?.message || "Failed to load teams");
       setTeams([]);
     } finally {
       setLoading(false);
@@ -35,8 +39,20 @@ export default function TeamListTab() {
 
   async function remove(id) {
     if (!window.confirm("Delete this team?")) return;
-    await teamService.remove(id);
-    load();
+    try {
+      await teamService.remove(id);
+      load();
+    } catch (err) {
+      console.error("Failed to delete team", err);
+      setError(err?.response?.data?.message || "Failed to delete team");
+    }
+  }
+
+  function editTeam(id) {
+    // IMPORTANT: change this path if your tabs are not controlled via query params.
+    // Typical pattern:
+    // - Employees page reads ?tab=team-creation and renders <TeamCreationTab />
+    navigate(`/employees?tab=team-creation&mode=edit&id=${id}`);
   }
 
   return (
@@ -54,6 +70,7 @@ export default function TeamListTab() {
             </p>
           </div>
         </div>
+
         <button
           onClick={load}
           disabled={loading}
@@ -94,75 +111,92 @@ export default function TeamListTab() {
               </th>
             </tr>
           </thead>
+
           <tbody>
-            {teams.map((t, idx) => (
-              <tr
-                key={t._id ?? t.id}
-                className={`border-b border-gray-100 ${
-                  idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                } hover:bg-gray-100 transition`}
-              >
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-sm">
-                      {(t.teamName?.[0] || "T").toUpperCase()}
+            {teams.map((t, idx) => {
+              const id = t._id ?? t.id;
+              return (
+                <tr
+                  key={id}
+                  className={`border-b border-gray-100 ${
+                    idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                  } hover:bg-gray-100 transition`}
+                >
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+                        {(t.teamName?.[0] || "T").toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {t.teamName ?? "-"}
+                        </p>
+                        {t.description && (
+                          <p className="text-sm text-gray-500 truncate">
+                            {t.description}
+                          </p>
+                        )}
+                      </div>
                     </div>
+                  </td>
+
+                  <td className="px-6 py-4">
                     <div>
                       <p className="font-medium text-gray-900">
-                        {t.teamName ?? "-"}
+                        {t.teamLead
+                          ? `${t.teamLead.firstName ?? ""} ${t.teamLead.lastName ?? ""}`.trim()
+                          : "-"}
                       </p>
-                      {t.description && (
-                        <p className="text-sm text-gray-500 truncate">
-                          {t.description}
+                      {t.teamLead?.email && (
+                        <p className="text-sm text-gray-500">
+                          {t.teamLead.email}
                         </p>
                       )}
                     </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {t.teamLead
-                        ? `${t.teamLead.firstName ?? ""} ${
-                            t.teamLead.lastName ?? ""
-                          }`.trim()
-                        : "-"}
-                    </p>
-                    {t.teamLead && (
-                      <p className="text-sm text-gray-500">
-                        {t.teamLead.email}
-                      </p>
-                    )}
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
-                      {Array.isArray(t.members) ? t.members.length : 0}
-                    </span>
-                    <span className="text-gray-600 text-sm">members</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-gray-600 text-sm">
-                  {t.createdAt
-                    ? new Date(t.createdAt).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })
-                    : "-"}
-                </td>
-                <td className="px-6 py-4">
-                  <button
-                    onClick={() => remove(t._id ?? t.id)}
-                    className="inline-flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition font-medium text-sm"
-                  >
-                    <FiTrash2 className="w-4 h-4" />
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                        {Array.isArray(t.members) ? t.members.length : 0}
+                      </span>
+                      <span className="text-gray-600 text-sm">members</span>
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4 text-gray-600 text-sm">
+                    {t.createdAt
+                      ? new Date(t.createdAt).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : "-"}
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => editTeam(id)}
+                        className="inline-flex items-center gap-2 px-3 py-2 text-amber-700 hover:bg-amber-50 rounded-lg transition font-medium text-sm"
+                      >
+                        <FiEdit2 className="w-4 h-4" />
+                        Edit
+                      </button>
+
+                      <button
+                        onClick={() => remove(id)}
+                        className="inline-flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition font-medium text-sm"
+                      >
+                        <FiTrash2 className="w-4 h-4" />
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+
             {!loading && teams.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-6 py-8 text-center">

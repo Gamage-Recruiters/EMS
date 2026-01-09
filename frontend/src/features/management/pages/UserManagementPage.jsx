@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   FiUsers,
   FiSearch,
@@ -17,7 +17,39 @@ import UserRow from "../components/UserRow";
 
 export default function UserManagementPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("employees"); // employees | team-creation | teams | hierarchy
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // --- URL -> UI tab sync ---
+  const initialTab = searchParams.get("tab") || "employees";
+  const [activeTab, setActiveTab] = useState(initialTab); // employees | team-creation | teams | hierarchy
+
+  // Sync state whenever URL changes (e.g., clicking Edit sets ?tab=team-creation...)
+  useEffect(() => {
+    const tab = searchParams.get("tab") || "employees";
+    setActiveTab(tab);
+  }, [searchParams]);
+
+  // Helper to change tab AND write to URL
+  const changeTab = useCallback(
+    (tab) => {
+      setActiveTab(tab);
+
+      const next = new URLSearchParams(searchParams);
+      next.set("tab", tab);
+
+      // Recommended: when leaving team-creation, clear edit mode/id
+      // so URL doesn't keep stale edit state.
+      if (tab !== "team-creation") {
+        next.delete("mode");
+        next.delete("id");
+      }
+
+      setSearchParams(next, { replace: true });
+    },
+    [searchParams, setSearchParams]
+  );
+
+  // ---- existing state ----
   const [q, setQ] = useState("");
   const [team, setTeam] = useState("");
   const [role, setRole] = useState("");
@@ -43,20 +75,17 @@ export default function UserManagementPage() {
       if (Array.isArray(d)) {
         list = d;
       } else if (Array.isArray(d?.data)) {
-        // e.g. { data: [...] }
         list = d.data;
       } else if (Array.isArray(d?.employees)) {
-        // e.g. { employees: [...] }
         list = d.employees;
       } else {
-        // fallback – nothing usable
         list = [];
       }
 
       setEmployees(list);
     } catch (err) {
       console.error("Employee list failed (backend down):", err);
-      setEmployees([]); // keep UI alive
+      setEmployees([]);
     } finally {
       setLoading(false);
     }
@@ -64,27 +93,24 @@ export default function UserManagementPage() {
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
   async function onDeleteConfirm() {
     setIsDeleting(true);
     setDeleteError(null);
     try {
-      const res = await employeeService.remove(deleteId);
-      console.log("Delete response:", res);
+      await employeeService.remove(deleteId);
       setDeleteId(null);
       await load();
     } catch (err) {
       console.error("Delete failed:", err);
-      setDeleteError(
-        err.response?.data?.message || "Failed to delete employee"
-      );
+      setDeleteError(err.response?.data?.message || "Failed to delete employee");
     } finally {
       setIsDeleting(false);
     }
   }
 
-  // SAFETY: guarantee we only ever map over an array
   const safeEmployees = Array.isArray(employees) ? employees : [];
 
   return (
@@ -93,7 +119,7 @@ export default function UserManagementPage() {
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-8 py-4">
         <div className="flex gap-2">
           <button
-            onClick={() => setActiveTab("employees")}
+            onClick={() => changeTab("employees")}
             className={`px-4 py-2 rounded-lg font-medium transition ${
               activeTab === "employees"
                 ? "bg-blue-600 text-white shadow-md"
@@ -103,8 +129,9 @@ export default function UserManagementPage() {
             <FiUsers className="inline-block w-4 h-4 mr-2" />
             Employees
           </button>
+
           <button
-            onClick={() => setActiveTab("team-creation")}
+            onClick={() => changeTab("team-creation")}
             className={`px-4 py-2 rounded-lg font-medium transition ${
               activeTab === "team-creation"
                 ? "bg-blue-600 text-white shadow-md"
@@ -113,8 +140,9 @@ export default function UserManagementPage() {
           >
             Team Creation
           </button>
+
           <button
-            onClick={() => setActiveTab("teams")}
+            onClick={() => changeTab("teams")}
             className={`px-4 py-2 rounded-lg font-medium transition ${
               activeTab === "teams"
                 ? "bg-blue-600 text-white shadow-md"
@@ -123,8 +151,9 @@ export default function UserManagementPage() {
           >
             Teams
           </button>
+
           <button
-            onClick={() => setActiveTab("hierarchy")}
+            onClick={() => changeTab("hierarchy")}
             className={`px-4 py-2 rounded-lg font-medium transition ${
               activeTab === "hierarchy"
                 ? "bg-blue-600 text-white shadow-md"
@@ -151,9 +180,7 @@ export default function UserManagementPage() {
                   <FiUsers className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    Employees
-                  </h2>
+                  <h2 className="text-2xl font-bold text-gray-900">Employees</h2>
                   <p className="text-sm text-gray-600 mt-1">
                     Manage all employees in your organization
                   </p>
@@ -171,10 +198,9 @@ export default function UserManagementPage() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
               <div className="flex items-center gap-2 mb-4">
                 <FiFilter className="w-5 h-5 text-gray-600" />
-                <h3 className="font-semibold text-gray-900">
-                  Filters & Search
-                </h3>
+                <h3 className="font-semibold text-gray-900">Filters & Search</h3>
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -191,6 +217,7 @@ export default function UserManagementPage() {
                     />
                   </div>
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Team
@@ -203,6 +230,7 @@ export default function UserManagementPage() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Role
@@ -215,6 +243,7 @@ export default function UserManagementPage() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
+
                 <div className="flex items-end">
                   <button
                     onClick={() => load()}
@@ -257,11 +286,16 @@ export default function UserManagementPage() {
                     <UserRow
                       key={e._id ?? e.id}
                       user={e}
-                      onView={(id) => navigate(`/profile?mode=view&id=${id}`)}
-                      onEdit={(id) => navigate(`/profile?mode=edit&id=${id}`)}
+                      onView={(id) =>
+                        navigate(`/profile/personal-details?mode=view&id=${id}`)
+                      }
+                      onEdit={(id) =>
+                        navigate(`/profile/personal-details?mode=edit&id=${id}`)
+                      }
                       onDelete={(id) => setDeleteId(id)}
                     />
                   ))}
+
                   {!loading && safeEmployees.length === 0 && (
                     <tr>
                       <td colSpan={5} className="px-6 py-8 text-center">

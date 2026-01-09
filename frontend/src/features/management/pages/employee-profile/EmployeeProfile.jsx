@@ -39,10 +39,7 @@ export default function EmployeeProfile() {
   const [pageError, setPageError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
 
-  // Field-level errors
-  const [fieldErrors, setFieldErrors] = useState({});
-
-  // Wizard gating for ADD mode
+  // Wizard gating for ADD + EDIT (VIEW has no buttons)
   const [maxUnlockedStep, setMaxUnlockedStep] = useState(0);
 
   const [employee, setEmployee] = useState({
@@ -80,35 +77,42 @@ export default function EmployeeProfile() {
     return idx >= 0 ? idx : 0;
   }, [location.pathname]);
 
-  const isJobDetailsStep = useMemo(() => {
-    return location.pathname.endsWith("/job-details");
-  }, [location.pathname]);
+  const lastStepIndex = STEP_ROUTES.length - 1;
+  const isLastStep = currentStepIndex === lastStepIndex;
 
-  // ADD mode: prevent jumping ahead
+  const clearMessages = () => {
+    setPageError(null);
+    setSuccessMsg(null);
+  };
+
+  // Reset wizard lock when mode/employee changes
   useEffect(() => {
-    if (!isAdd) return;
+    if (isView) return;
+    setMaxUnlockedStep(0);
+  }, [mode, employeeId, isView]);
+
+  // Enforce sequential navigation for ADD + EDIT (VIEW not enforced)
+  useEffect(() => {
+    if (isView) return;
     if (currentStepIndex > maxUnlockedStep) {
       navigate(`/profile/${STEP_ROUTES[maxUnlockedStep].path}${qs}`, {
         replace: true,
       });
     }
-  }, [isAdd, currentStepIndex, maxUnlockedStep, navigate, qs]);
+  }, [isView, currentStepIndex, maxUnlockedStep, navigate, qs]);
 
   // Load in edit/view mode
   useEffect(() => {
     if ((!isEdit && !isView) || !employeeId) return;
 
     setLoading(true);
-    setPageError(null);
-    setSuccessMsg(null);
+    clearMessages();
 
     employeeService
       .get(employeeId)
       .then((res) => {
         const data = res?.data?.user || res?.data || {};
-        console.log("GET employee response:", res?.data);
-        // IMPORTANT:
-        // If your backend returns different field names, map them here.
+
         setEmployee({
           firstName: data.firstName ?? "",
           lastName: data.lastName ?? "",
@@ -119,7 +123,7 @@ export default function EmployeeProfile() {
           department: data.department ?? "",
           status: data.status ?? "Active",
           profileImage: data.profileImage ?? "",
-          contactNumber: data.contactNumber ?? data.phone ?? "",
+          contactNumber: data.contactNumber ?? "",
           address: data.address ?? "",
           city: data.city ?? "",
           joinedDate: data.joinedDate
@@ -146,88 +150,97 @@ export default function EmployeeProfile() {
       .finally(() => setLoading(false));
   }, [isEdit, isView, employeeId]);
 
-  // -------- Validation helpers --------
+  // -------- Validation helpers (used for Next + Save) --------
   const validatePersonal = () => {
-    const e = {};
-    if (!employee.firstName?.trim()) e.firstName = "First name is required.";
-    if (!employee.lastName?.trim()) e.lastName = "Last name is required.";
-
-    if (!employee.email?.trim()) e.email = "Email is required.";
-    else if (!emailRegex.test(employee.email.trim()))
-      e.email = "Enter a valid email address.";
-
-    // Password required only for ADD
-    if (isAdd) {
-      if (!employee.password?.trim()) e.password = "Password is required.";
-      else if (employee.password.trim().length < 6)
-        e.password = "Password must be at least 6 characters.";
+    if (!employee.firstName?.trim()) {
+      setPageError("First name is required.");
+      return false;
+    }
+    if (!employee.lastName?.trim()) {
+      setPageError("Last name is required.");
+      return false;
     }
 
-    setFieldErrors((prev) => ({ ...prev, ...e }));
-    return Object.keys(e).length === 0;
+    if (!employee.email?.trim()) {
+      setPageError("Email is required.");
+      return false;
+    }
+    if (!emailRegex.test(employee.email.trim())) {
+      setPageError("Enter a valid email address.");
+      return false;
+    }
+
+    // Password required only for ADD (not edit)
+    if (isAdd) {
+      if (!employee.password?.trim()) {
+        setPageError("Password is required for new employees.");
+        return false;
+      }
+      if (employee.password.trim().length < 6) {
+        setPageError("Password must be at least 6 characters.");
+        return false;
+      }
+    }
+
+    return true;
   };
 
   const validateContact = () => {
-    const e = {};
-    if (!employee.contactNumber?.trim())
-      e.contactNumber = "Mobile number is required.";
-    else if (!mobileRegex.test(employee.contactNumber.trim()))
-      e.contactNumber =
-        "Enter a valid Sri Lankan mobile number (07XXXXXXXX / +947XXXXXXXX).";
-
-    setFieldErrors((prev) => ({ ...prev, ...e }));
-    return Object.keys(e).length === 0;
+    if (!employee.contactNumber?.trim()) {
+      setPageError("Mobile number is required.");
+      return false;
+    }
+    if (!mobileRegex.test(employee.contactNumber.trim())) {
+      setPageError(
+        "Enter a valid Sri Lankan mobile number (07XXXXXXXX / +947XXXXXXXX)."
+      );
+      return false;
+    }
+    return true;
   };
 
-  const clearMessages = () => {
-    setPageError(null);
-    setSuccessMsg(null);
-  };
-
-  // -------- Wizard navigation (ADD) --------
-  const goNext = () => {
-    if (!isAdd || isView) return;
+  const validateStep = (idx) => {
     clearMessages();
+    if (idx === 0) return validatePersonal();
+    if (idx === 1) return validateContact();
+    return true; // education/job optional
+  };
 
-    const idx = currentStepIndex;
-    let ok = true;
+  // -------- Wizard navigation (ADD + EDIT) --------
+  const goNext = () => {
+    if (isView) return;
 
-    if (idx === 0) ok = validatePersonal();
-    if (idx === 1) ok = validateContact();
-
+    const ok = validateStep(currentStepIndex);
     if (!ok) return;
 
-    const next = Math.min(idx + 1, STEP_ROUTES.length - 1);
+    const next = Math.min(currentStepIndex + 1, lastStepIndex);
     setMaxUnlockedStep((prev) => Math.max(prev, next));
     navigate(`/profile/${STEP_ROUTES[next].path}${qs}`);
   };
 
   const goBack = () => {
-    if (!isAdd || isView) return;
+    if (isView) return;
     clearMessages();
 
     const prev = Math.max(currentStepIndex - 1, 0);
     navigate(`/profile/${STEP_ROUTES[prev].path}${qs}`);
   };
 
-  // -------- Create / Update --------
+  // -------- Create / Update (only on last step) --------
   const handleCreate = async () => {
     try {
       setSaving(true);
       clearMessages();
-      setFieldErrors({});
 
-      const okPersonal = validatePersonal();
-      const okContact = validateContact();
-      if (!okPersonal || !okContact) return;
+      const ok1 = validatePersonal();
+      const ok2 = validateContact();
+      if (!ok1 || !ok2) return;
 
-      const res = await employeeService.create(employee);
-      const newId = res?.data?.user?._id || res?.data?._id;
+      await employeeService.create(employee);
 
       setSuccessMsg("Employee created successfully.");
       setTimeout(() => {
-        if (newId) navigate(`/profile/personal-details?mode=edit&id=${newId}`);
-        else navigate("/employees");
+        navigate("/employees");
       }, 900);
     } catch (err) {
       console.error(err);
@@ -243,33 +256,25 @@ export default function EmployeeProfile() {
     try {
       setSaving(true);
       clearMessages();
-      setFieldErrors({});
 
-      // basic safe validation
-      if (!employee.firstName?.trim() || !employee.lastName?.trim()) {
-        setPageError("First name and last name are required.");
-        return;
-      }
-      if (!employee.email?.trim() || !emailRegex.test(employee.email.trim())) {
-        setPageError("Please enter a valid email address.");
-        return;
-      }
-      if (employee.contactNumber?.trim() && !mobileRegex.test(employee.contactNumber.trim())) {
-        setPageError("Please enter a valid Sri Lankan mobile number.");
+      if (!employeeId) {
+        setPageError("Missing employee id for update.");
         return;
       }
 
-      // IMPORTANT: Update payload - do not send password if empty
-      // Also, if backend is strict about role, you can avoid sending it unless necessary:
+      const ok1 = validatePersonal(); // password not required in edit
+      const ok2 = validateContact();
+      if (!ok1 || !ok2) return;
+
       const payload = { ...employee };
       if (!payload.password) delete payload.password;
 
-      // OPTIONAL mitigation:
-      // If backend rejects role values, comment this in to avoid sending role unless user changed it.
-      // delete payload.role;
-
       await employeeService.update(employeeId, payload);
+
       setSuccessMsg("Employee updated successfully.");
+      setTimeout(() => {
+        navigate("/employees");
+      }, 900);
     } catch (err) {
       console.error(err);
       setPageError(
@@ -280,14 +285,9 @@ export default function EmployeeProfile() {
     }
   };
 
-  // UI rule:
-  // - ADD: Next/Back/Create buttons are inside cards
-  // - EDIT: Update button ONLY on last card (Job Details)
-  const showUpdateBar = !isView && isEdit && isJobDetailsStep;
-
   const canOpenStep = (idx) => {
-    if (!isAdd) return true; // in edit mode, allow navigation
-    return idx <= maxUnlockedStep;
+    if (isView) return true;
+    return idx <= maxUnlockedStep; // ADD + EDIT are sequential
   };
 
   if (loading) {
@@ -371,16 +371,11 @@ export default function EmployeeProfile() {
                   isView,
                   isAdd,
                   saving,
-                  fieldErrors,
-                  setFieldErrors,
-                  onNext: goNext,
-                  onBack: goBack,
-                  onCreate: handleCreate,
                 }}
               />
 
-              {/* EDIT MODE: Update button only on Job Details */}
-              {showUpdateBar && (
+              {/* Wizard Footer (ADD + EDIT): Back / Next / Create / Update */}
+              {!isView && (
                 <div className="flex items-center justify-between pt-8 border-t border-gray-200">
                   <button
                     onClick={() => navigate("/employees")}
@@ -389,18 +384,51 @@ export default function EmployeeProfile() {
                     Cancel
                   </button>
 
-                  <button
-                    onClick={handleUpdate}
-                    disabled={saving}
-                    className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 font-medium rounded-lg transition"
-                  >
-                    <FiSave className="w-5 h-5" />
-                    {saving ? "Updating…" : "Update Employee"}
-                  </button>
+                  <div className="flex items-center gap-3">
+                    {currentStepIndex > 0 && (
+                      <button
+                        onClick={goBack}
+                        disabled={saving}
+                        className="px-6 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 font-medium rounded-lg transition"
+                      >
+                        Back
+                      </button>
+                    )}
+
+                    {!isLastStep && (
+                      <button
+                        onClick={goNext}
+                        disabled={saving}
+                        className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 font-medium rounded-lg transition"
+                      >
+                        Next
+                      </button>
+                    )}
+
+                    {isLastStep && isAdd && (
+                      <button
+                        onClick={handleCreate}
+                        disabled={saving}
+                        className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 font-medium rounded-lg transition"
+                      >
+                        <FiSave className="w-5 h-5" />
+                        {saving ? "Creating…" : "Create Employee"}
+                      </button>
+                    )}
+
+                    {isLastStep && isEdit && (
+                      <button
+                        onClick={handleUpdate}
+                        disabled={saving}
+                        className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 font-medium rounded-lg transition"
+                      >
+                        <FiSave className="w-5 h-5" />
+                        {saving ? "Updating…" : "Update Employee"}
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
-
-              {/* No Delete button in edit mode (QA requirement) */}
             </div>
           </div>
         </div>

@@ -58,7 +58,7 @@ app.use("/api/attendance", AttendanceRoutes);
 app.use("/api/leaves", leaveRoutes);
 app.use("/api/availability", availabilityRoutes);
 app.use("/api/tasks", taskRoutes);
-app.use("/api/dailytasks", dailyTaskRoutes);
+app.use("/api/daily-tasks", dailyTaskRoutes);
 app.use("/api/complaints", complaintRoutes);
 
 // app.use('/test', testRoutes);

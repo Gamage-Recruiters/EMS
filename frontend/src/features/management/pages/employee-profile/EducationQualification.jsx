@@ -3,7 +3,8 @@ import { FiBook, FiCheckCircle } from "react-icons/fi";
 import { useOutletContext } from "react-router-dom";
 
 export default function EducationQualification() {
-  const { employee, setEmployee, isView } = useOutletContext();
+  const { employee, setEmployee, isView, isAdd, saving, onNext, onBack } =
+    useOutletContext();
   const edu = employee.education || {};
 
   return (
@@ -35,7 +36,7 @@ export default function EducationQualification() {
                   education: { ...prev.education, institution: e.target.value },
                 }))
               }
-              placeholder="e.g., MIT, Stanford"
+              placeholder="e.g., University of ..."
               disabled={isView}
               className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition ${
                 isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
@@ -101,7 +102,7 @@ export default function EducationQualification() {
                   education: { ...prev.education, location: e.target.value },
                 }))
               }
-              placeholder="e.g., Cambridge, MA"
+              placeholder="e.g., Colombo"
               disabled={isView}
               className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition ${
                 isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
@@ -118,7 +119,9 @@ export default function EducationQualification() {
             </label>
             <input
               type="date"
-              value={edu.startDate ? new Date(edu.startDate).toISOString().split("T")[0] : ""}
+              value={
+                edu.startDate ? new Date(edu.startDate).toISOString().split("T")[0] : ""
+              }
               onChange={(e) =>
                 setEmployee((prev) => ({
                   ...prev,
@@ -158,8 +161,31 @@ export default function EducationQualification() {
           <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-4 flex items-start gap-3">
             <FiCheckCircle className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-purple-900">
-              <span className="font-semibold">Education record complete</span> — All required fields filled
+              <span className="font-semibold">Education record complete</span> —
+              Key fields filled
             </p>
+          </div>
+        )}
+
+        {/* Wizard: Back/Next (ADD only) */}
+        {isAdd && !isView && (
+          <div className="flex items-center justify-between pt-8 border-t border-gray-200">
+            <button
+              type="button"
+              onClick={onBack}
+              disabled={saving}
+              className="px-6 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium rounded-lg transition disabled:opacity-50"
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={onNext}
+              disabled={saving}
+              className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 font-medium rounded-lg transition disabled:opacity-50"
+            >
+              Next
+            </button>
           </div>
         )}
       </div>

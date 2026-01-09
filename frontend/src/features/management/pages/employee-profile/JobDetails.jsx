@@ -1,10 +1,17 @@
-// JobDetails.jsx
 import React from "react";
 import { FiBriefcase, FiCheckCircle } from "react-icons/fi";
 import { useOutletContext } from "react-router-dom";
 
 export default function JobDetails() {
-  const { employee, setEmployee, isView } = useOutletContext();
+  const {
+    employee,
+    setEmployee,
+    isView,
+    isAdd,
+    saving,
+    onBack,
+    onCreate,
+  } = useOutletContext();
 
   return (
     <div className="w-full">
@@ -91,7 +98,11 @@ export default function JobDetails() {
           </label>
           <input
             type="date"
-            value={employee.joinedDate ? new Date(employee.joinedDate).toISOString().split("T")[0] : ""}
+            value={
+              employee.joinedDate
+                ? new Date(employee.joinedDate).toISOString().split("T")[0]
+                : ""
+            }
             onChange={(e) =>
               setEmployee((prev) => ({ ...prev, joinedDate: e.target.value }))
             }
@@ -107,8 +118,32 @@ export default function JobDetails() {
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
             <FiCheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-blue-900">
-              <span className="font-semibold">Job details complete</span> — Employee role and department set
+              <span className="font-semibold">Job details complete</span> —
+              Employee role and department set
             </p>
+          </div>
+        )}
+
+        {/* Wizard: Back + Create (ADD only, QA request) */}
+        {isAdd && !isView && (
+          <div className="flex items-center justify-between pt-8 border-t border-gray-200">
+            <button
+              type="button"
+              onClick={onBack}
+              disabled={saving}
+              className="px-6 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium rounded-lg transition disabled:opacity-50"
+            >
+              Back
+            </button>
+
+            <button
+              type="button"
+              onClick={onCreate}
+              disabled={saving}
+              className="px-6 py-2 bg-emerald-600 text-white hover:bg-emerald-700 font-medium rounded-lg transition disabled:opacity-50"
+            >
+              {saving ? "Creating…" : "Create Employee"}
+            </button>
           </div>
         )}
       </div>

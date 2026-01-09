@@ -1,15 +1,25 @@
-// PersonalDetails.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { FiCamera, FiUser } from "react-icons/fi";
 import { useOutletContext } from "react-router-dom";
 
 export default function PersonalDetails() {
-  const { employee, setEmployee, isView } = useOutletContext();
+  const {
+    employee,
+    setEmployee,
+    isView,
+    isAdd,
+    isEdit,
+    saving,
+    fieldErrors,
+    setFieldErrors,
+    onNext,
+  } = useOutletContext();
+
   const fileInputRef = useRef(null);
+  const [previewImage, setPreviewImage] = useState(
+    employee?.profileImage || null
+  );
 
-  const [previewImage, setPreviewImage] = useState(employee?.profileImage || null);
-
-  // Keep preview in sync when employee loads in edit/view mode
   useEffect(() => {
     setPreviewImage(employee?.profileImage || null);
   }, [employee?.profileImage]);
@@ -28,6 +38,10 @@ export default function PersonalDetails() {
       }));
     };
     reader.readAsDataURL(file);
+  };
+
+  const clearField = (name) => {
+    setFieldErrors?.((p) => ({ ...p, [name]: undefined }));
   };
 
   return (
@@ -91,38 +105,54 @@ export default function PersonalDetails() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              First Name
+              First Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={employee.firstName || ""}
-              onChange={(e) =>
-                setEmployee((prev) => ({ ...prev, firstName: e.target.value }))
-              }
+              onChange={(e) => {
+                clearField("firstName");
+                setEmployee((prev) => ({ ...prev, firstName: e.target.value }));
+              }}
               placeholder="John"
               disabled={isView}
-              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                isView
+                  ? "bg-gray-50 cursor-not-allowed text-gray-600 border-gray-300"
+                  : fieldErrors?.firstName
+                  ? "bg-white border-red-300"
+                  : "bg-white border-gray-300"
               }`}
             />
+            {fieldErrors?.firstName && (
+              <p className="text-xs text-red-600 mt-2">{fieldErrors.firstName}</p>
+            )}
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Last Name
+              Last Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={employee.lastName || ""}
-              onChange={(e) =>
-                setEmployee((prev) => ({ ...prev, lastName: e.target.value }))
-              }
+              onChange={(e) => {
+                clearField("lastName");
+                setEmployee((prev) => ({ ...prev, lastName: e.target.value }));
+              }}
               placeholder="Doe"
               disabled={isView}
-              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                isView
+                  ? "bg-gray-50 cursor-not-allowed text-gray-600 border-gray-300"
+                  : fieldErrors?.lastName
+                  ? "bg-white border-red-300"
+                  : "bg-white border-gray-300"
               }`}
             />
+            {fieldErrors?.lastName && (
+              <p className="text-xs text-red-600 mt-2">{fieldErrors.lastName}</p>
+            )}
           </div>
         </div>
 
@@ -130,45 +160,86 @@ export default function PersonalDetails() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Email
+              Email <span className="text-red-500">*</span>
             </label>
             <input
               type="email"
               value={employee.email || ""}
-              onChange={(e) =>
-                setEmployee((prev) => ({ ...prev, email: e.target.value }))
-              }
+              onChange={(e) => {
+                clearField("email");
+                setEmployee((prev) => ({ ...prev, email: e.target.value }));
+              }}
               placeholder="john@example.com"
               disabled={isView}
-              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                isView
+                  ? "bg-gray-50 cursor-not-allowed text-gray-600 border-gray-300"
+                  : fieldErrors?.email
+                  ? "bg-white border-red-300"
+                  : "bg-white border-gray-300"
               }`}
             />
+            {fieldErrors?.email && (
+              <p className="text-xs text-red-600 mt-2">{fieldErrors.email}</p>
+            )}
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Password
+              Password {isAdd ? <span className="text-red-500">*</span> : null}
             </label>
             <input
               type="password"
               value={employee.password || ""}
-              onChange={(e) =>
-                setEmployee((prev) => ({ ...prev, password: e.target.value }))
+              onChange={(e) => {
+                clearField("password");
+                setEmployee((prev) => ({ ...prev, password: e.target.value }));
+              }}
+              placeholder={
+                isView
+                  ? ""
+                  : isAdd
+                  ? "Enter a password"
+                  : "Leave blank to keep unchanged"
               }
-              placeholder={isView ? "" : "Leave blank to keep unchanged"}
               disabled={isView}
-              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                isView
+                  ? "bg-gray-50 cursor-not-allowed text-gray-600 border-gray-300"
+                  : fieldErrors?.password
+                  ? "bg-white border-red-300"
+                  : "bg-white border-gray-300"
               }`}
             />
-            {!isView && (
+            {!isView && isEdit && (
               <p className="text-xs text-gray-500 mt-2">
                 Leave blank to keep the current password.
               </p>
             )}
+            {!isView && isAdd && (
+              <p className="text-xs text-gray-500 mt-2">
+                Minimum 6 characters.
+              </p>
+            )}
+            {fieldErrors?.password && (
+              <p className="text-xs text-red-600 mt-2">{fieldErrors.password}</p>
+            )}
           </div>
         </div>
+
+        {/* Wizard: Next (ADD only) */}
+        {isAdd && !isView && (
+          <div className="flex justify-end pt-8 border-t border-gray-200">
+            <button
+              type="button"
+              onClick={onNext}
+              disabled={saving}
+              className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 font-medium rounded-lg transition"
+            >
+              {saving ? "Saving…" : "Next"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

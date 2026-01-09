@@ -1,8 +1,8 @@
 import express from "express";
 import {
   addUserByAdmin,
-  updateDeveloperByAdmin,
-  deleteDeveloperByAdmin,
+  updateUserByAdmin,
+  deleteUserByAdmin,
   getAllEmployees,
   getEmployeeById,
   getEmployeesByName
@@ -25,14 +25,14 @@ router.post(
 router.put(
   "/developer/:userId",
   authorize("CEO", "SystemAdmin"),
-  updateDeveloperByAdmin
+  updateUserByAdmin
 );
 
 // Delete developer
 router.delete(
   "/developer/:userId",
   authorize("CEO", "SystemAdmin"),
-  deleteDeveloperByAdmin
+  deleteUserByAdmin
 );
 
 // Get all employees

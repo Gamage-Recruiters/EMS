@@ -2,9 +2,16 @@ import React, { useEffect, useState } from "react";
 import { checkOut , getTodayAttendance} from "../services/attendanceService";
 
 const TimeTrackingCard = ({ checkInTime }) => {
+  const [todayAttendance, setTodayAttendance] = useState(null);
 
   useEffect(()=> {
-    getTodayAttendance()
+    const fetchTodayAttendance = async () => {
+      const result = await getTodayAttendance();
+      if(result.success) {
+        setTodayAttendance(result.data);
+      }
+    };
+    fetchTodayAttendance();
   },[])
   const formatTime = (time) => {
     if (!time) return "- - -";
@@ -16,7 +23,7 @@ const TimeTrackingCard = ({ checkInTime }) => {
     });
   };
   
-  const checkOutTime = getTodayAttendance?.checkOutTime;
+  const checkOutTime = todayAttendance?.checkOutTime;
   console.log(checkOutTime)
   const formattedCheckInTime = formatTime(checkInTime);
   const formattedCheckOutTime = formatTime(checkOutTime);

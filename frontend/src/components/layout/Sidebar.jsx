@@ -1,25 +1,53 @@
-import { NavLink } from "react-router-dom";
 
-const linkStyle = ({ isActive }) => ({
-  display: "block",
-  padding: "10px 12px",
-  margin: "6px 0",
-  borderRadius: 8,
-  textDecoration: "none",
-  color: "#111",
-  background: isActive ? "#e9efff" : "transparent",
-});
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
-export default function Sidebar() {
-  return (
-    <aside style={{ width: 240, background: "#fff", borderRight: "1px solid #eee", padding: 16 }}>
-      <div style={{ fontWeight: 700, marginBottom: 16 }}>EMS</div>
+const navItems = [
+    { name: 'Dashboard', path: '/dashboard', icon: '🏠' },
+    { name: 'Attendance', path: '/attendance', icon: '📅' },
+    { name: 'Leave Management', path: '/leave-management', icon: '✈️' },
+];
 
-      <nav>
-        <NavLink to="/employees" style={linkStyle}>Employees</NavLink>
-        <NavLink to="/hierarchy" style={linkStyle}>Hierarchy</NavLink>
-        <NavLink to="/team-assignment" style={linkStyle}>Team Assignment</NavLink>
-      </nav>
-    </aside>
-  );
-}
+const Sidebar = () => {
+    const location = useLocation();
+    const currentPath = location.pathname;
+
+    return (
+        
+        <div className="flex flex-col w-60 bg-white shadow-lg flex-shrink-0 p-5 border-r border-gray-100">
+            
+           
+            <div className="text-xl font-extrabold text-blue-700 mb-8">
+                EMS Portal
+            </div>
+
+            
+            <nav className="flex-grow space-y-1">
+                {navItems.map(item => {
+                    const isActive = currentPath === item.path || (currentPath === '/' && item.path === '/dashboard');
+                    
+                    const itemClasses = `flex items-center p-3 rounded-lg transition duration-150 ease-in-out text-sm ${
+                        isActive
+                            
+                            ? 'bg-blue-50 text-blue-700 font-bold border-r-4 border-blue-600'
+                            : 'text-gray-600 hover:bg-gray-100 font-medium'
+                    }`;
+
+                    return (
+                        <Link 
+                            key={item.path}
+                            to={item.path}
+                            className={itemClasses}
+                        >
+                            <span className="text-base mr-3">{item.icon}</span>
+                            {item.name}
+                        </Link>
+                    );
+                })}
+            </nav>
+
+        </div>
+    );
+};
+
+export default Sidebar;

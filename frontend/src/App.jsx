@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import PageLayout from "./components/layout/PageLayout";
@@ -12,15 +12,37 @@ import LoginPage from "./pages/auth/Login";
 import DashboardPage from "./pages/DashboardPage";
 import AttendancePage from "./pages/AttendancePage";
 
-
 export default function App() {
   const [checkInTime, setCheckInTime] = useState(null);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
+  const [isLoadingCheckIn, setIsLoadingCheckIn] = useState(true);
+
+  // Load check-in status when app mounts
+  useEffect(() => {
+    const savedCheckInTime = sessionStorage.getItem('checkInTime');
+    const savedIsCheckedIn = sessionStorage.getItem('isCheckedIn');
+    
+    if (savedIsCheckedIn === 'true' && savedCheckInTime) {
+      setCheckInTime(savedCheckInTime);
+      setIsCheckedIn(true);
+    }
+    
+    setIsLoadingCheckIn(false);
+  }, []);
 
   const handleCheckIn = (time) => {
     setCheckInTime(time);
     setIsCheckedIn(true);
+    
+    // Save to sessionStorage so it persists during the session
+    sessionStorage.setItem('checkInTime', time);
+    sessionStorage.setItem('isCheckedIn', 'true');
   };
+
+  // Show loading while checking status
+  if (isLoadingCheckIn) {
+    return null; // or a loading spinner if you prefer
+  }
 
   return (
     <Routes>

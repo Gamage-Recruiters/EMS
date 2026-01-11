@@ -220,19 +220,6 @@ export default function UserManagementPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Team
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Filter by team…"
-                    value={team}
-                    onChange={(e) => setTeam(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Role
                   </label>
                   <input
@@ -248,8 +235,7 @@ export default function UserManagementPage() {
                   <button
                     onClick={() => load()}
                     disabled={loading}
-                    className="w-full px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 disabled:opacity-50 transition flex items-center justify-center gap-2"
-                  >
+                    className="w-full px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 disabled:opacity-50 transition flex items-center justify-center gap-2">
                     <FiRefreshCw
                       className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
                     />

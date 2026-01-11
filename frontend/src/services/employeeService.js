@@ -1,6 +1,7 @@
 import api from "./api";
 
 export const employeeService = {
+
   // Get all employees (admin endpoint)
   // Backend returns: { count, employees }
   list: (params) => api.get("/admin/employees", { params }),
@@ -24,8 +25,13 @@ export const employeeService = {
   // NOTE: backend route is /employees/search and expects query param "name"
   searchByName: (name) => api.get("/admin/employees/search", { params: { name } }),
 
-  // Current user endpoints
+  // User endpoints
   getCurrentUser: () => api.get("/user/me"),
+  getAllUsers: (params) => api.get("/user", { params }),
+  getUserById: (id) => api.get(`/user/${id}`),
   updateProfile: (payload) => api.put("/user/me", payload),
   deleteProfile: () => api.delete("/user/me"),
+
+  // Public endpoints
+  //forgotPassword: (email) => api.post("/forgot-password", { email }),
 };

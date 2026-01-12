@@ -27,8 +27,8 @@ import DashboardPage from "./pages/DashboardPage";
 import AttendancePage from "./pages/AttendancePage";
 
 // Leave module
-import LeaveForm from "./pages/leave/LeaveForm";
-import LeaveApproval from "./pages/leave/LeaveApproval";
+import LeaveForm from "./pages/LeaveForm";
+import LeaveApproval from "./pages/LeaveApproval";
 
 // Management
 import UserManagementPage from "./features/management/pages/UserManagementPage";

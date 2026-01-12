@@ -18,6 +18,8 @@ import UserManagementPage from "./features/management/pages/UserManagementPage";
 import TeamManagementPage from "./features/management/pages/TeamManagementPage";
 import TeamHierarchyPage from "./features/management/pages/TeamHierarchyPage";
 import DailyTaskReviewPage from "./features/management/pages/DailyTaskReviewPage";
+import ComplaintReviewDashboard from "./features/management/pages/ComplaintReviewDashboard";
+import AdminComplaintSubmissionPage from "./features/management/pages/AdminComplaintSubmissionPage";
 
 // Employee profile
 import EmployeeProfile from "./employee profile/EmployeeProfile";
@@ -29,6 +31,8 @@ import JobDetails from "./employee profile/JobDetails";
 // Developer pages
 import DailyTaskFormPage from "./features/developer/pages/DailyTaskFormPage";
 import DailyTaskPage from "./features/developer/pages/DailyTaskPage";
+import DeveloperComplaintForm from "./features/developer/pages/ComplaintSubmissionPage";
+import DeveloperComplaintDashboard from "./features/developer/pages/ComplaintDashboard";
 
 // Other pages
 import UserManagement from "./pages/UserManagement";
@@ -102,9 +106,19 @@ export default function App() {
           {/* Developer */}
           <Route path="/tasks" element={<DailyTaskPage />} />
           <Route path="/tasks/new" element={<DailyTaskFormPage />} />
+          <Route path="/complaints" element={<DeveloperComplaintDashboard />} />
+          <Route path="/complaints/new" element={<DeveloperComplaintForm />} />
 
           {/* Management */}
           <Route path="/tasks/review" element={<DailyTaskReviewPage />} />
+          <Route
+            path="/complaints/review"
+            element={<ComplaintReviewDashboard />}
+          />
+          <Route
+            path="/complaints/new-admin"
+            element={<AdminComplaintSubmissionPage />}
+          />
 
           {/* App fallback */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

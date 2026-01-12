@@ -9,7 +9,9 @@ const Header = () => {
         day: 'numeric'
     });
 
-    const userName = "John Smith";
+    const user = JSON.parse(localStorage.getItem("ems_user"))
+
+    const userName = `${user.firstName} ${user.lastName}`;
     const userInitials = userName.split(' ').map(n => n[0]).join('');
 
     return (

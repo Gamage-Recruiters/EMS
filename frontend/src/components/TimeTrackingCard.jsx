@@ -32,7 +32,10 @@ const TimeTrackingCard = ({ checkInTime }) => {
     // Call check-out API here
     const result = await checkOut();
     if (result.success) {
-      console.log("checkout-result",result);
+    setTodayAttendance((prev) => ({
+      ...prev,
+      checkOutTime: result.data.data.checkOutTime, // backend response
+    }));
     } else {
       alert(result.error || "Failed to check out. Please try again.");
       console.error("Check-out error:", result.error);

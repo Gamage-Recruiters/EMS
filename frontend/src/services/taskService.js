@@ -10,4 +10,8 @@ export const taskService = {
   // Update task status 
   updateStatus: (id, status) =>
     api.patch(`/tasks/${id}/status`, { status }),
+
+  // Get all tasks for Kanban board
+  allTasks: () => api.get("/tasks"),
+
 };

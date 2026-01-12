@@ -1,61 +1,86 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
+import PageLayout from "./components/layout/PageLayout";
+import AttendancePrompt from "./components/AttendancePrompt";
+import PrivateRoute from "./routes/PrivateRoute";
+
+// Auth pages
+import LoginPage from "./pages/auth/Login";
+
+// Main pages
 import DashboardPage from "./pages/DashboardPage";
 import AttendancePage from "./pages/AttendancePage";
-import LeaveForm from "./pages/LeaveForm";
-import LeaveApproval from "./pages/LeaveApproval";
+// import { getTodayAttendance } from "./services/attendanceService";
 
-import AttendancePrompt from "./components/AttendancePrompt";
-import Header from "./components/Header";
-import Sidebar from "./components/Sidebar";
 
-function App() {
+export default function App() {
   const [checkInTime, setCheckInTime] = useState(null);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
+  // const [attendanceChecked, setAttendanceChecked] = useState(false);
+
 
   const handleCheckIn = (time) => {
     setCheckInTime(time);
     setIsCheckedIn(true);
   };
+  
+  // useEffect(() => {
+  //   const attendanceInitStatus = async () => {
+  //     const token = localStorage.getItem("token");
+  //     if (!token) {
+  //       return;
+  //     }
+      
+  //     try {
+  //       const response = await getTodayAttendance();
+  //       if (response.success && response.data?.checkInTime) {
+  //         const checkInDate = new Date(response.data.checkInTime);
+
+  //         const today = new Date();
+  //         const isTodayCheckIn = checkInDate.toDateString() === today.toDateString();
+          
+  //         if (isTodayCheckIn) {
+  //           setCheckInTime(checkInDate);
+  //           setIsCheckedIn(true);
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching today's attendance:", error);
+  //     } finally {
+  //       setAttendanceChecked(true);
+  //     }
+  //   };
+    
+  //   attendanceInitStatus();
+
+  // }, []);
 
   return (
-    <>
-      {isCheckedIn && <AttendancePrompt onCheckIn={handleCheckIn} />}
+    <Routes>
+      {/* ================= PUBLIC ROUTES ================= */}
+      <Route path="/login" element={<LoginPage />} />
 
-      <div className="flex h-screen bg-gray-50">
-        <Sidebar />
-
-        <div className="flex flex-col flex-grow">
-          <Header />
-
-          <div className="flex-grow overflow-y-auto">
-            <Routes>
-              {/* Default */}
-              <Route path="/" element={<Navigate to="/dashboard" />} />
-
-              {/* Core pages */}
-              <Route
-                path="/dashboard"
-                element={<DashboardPage checkInTime={checkInTime} />}
-              />
-              <Route path="/attendance" element={<AttendancePage />} />
-
-              {/* Leave module */}
-              <Route path="/leave-form" element={<LeaveForm />} />
-              <Route path="/leave-approval" element={<LeaveApproval />} />
-
-              {/* 404 */}
-              <Route
-                path="*"
-                element={<div className="p-6 text-red-500">Page not found</div>}
-              />
-            </Routes>
-          </div>
-        </div>
-      </div>
-    </>
+      {/* ================= PROTECTED ROUTES ================= */}
+      <Route element={<PrivateRoute />}>
+        <Route
+          element={
+            <>
+              {!isCheckedIn && (
+                <AttendancePrompt onCheckIn={handleCheckIn} />
+              )}
+              <PageLayout />
+            </>
+          }
+        >
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route
+            path="/dashboard"
+            element={<DashboardPage checkInTime={checkInTime} />}
+          />
+          <Route path="/attendance" element={<AttendancePage />} />
+        </Route>
+      </Route>
+    </Routes>
   );
 }
-
-export default App;

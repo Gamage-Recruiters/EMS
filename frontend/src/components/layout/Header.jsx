@@ -12,11 +12,10 @@ const Header = () => {
     day: "numeric",
   });
 
-  const userName = "John Smith";
-  const userInitials = userName
-    .split(" ")
-    .map((n) => n[0])
-    .join("");
+    const user = JSON.parse(localStorage.getItem("ems_user"))
+
+    const userName = `${user.firstName} ${user.lastName}`;
+    const userInitials = userName.split(' ').map(n => n[0]).join('');
 
   const [status, setStatus] = useState("APPEAR_AWAY");
   const [open, setOpen] = useState(false);
@@ -54,9 +53,9 @@ const Header = () => {
             console.log("Could not set availability to AVAILABLE:", err);
           }
         }
-      } catch (error) {
+      } catch (err) {
         // Silently fail if not authenticated
-        console.log("Not authenticated or unable to fetch availability");
+        console.log("Not authenticated or unable to fetch availability" | err);
       }
     };
     fetchAvailability();

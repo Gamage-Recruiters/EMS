@@ -1,55 +1,23 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api";
-
 const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
 api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        const res = await axios.post(`${API_URL}/auth/refresh-token`, {
-          refreshToken,
-        });
-
-        // Save new tokens
-        localStorage.setItem("accessToken", res.data.accessToken);
-        localStorage.setItem("refreshToken", res.data.refreshToken);
-
-        // Update header and retry original request
-        api.defaults.headers.common[
-          "Authorization"
-        ] = `Bearer ${res.data.accessToken}`;
-        return api(originalRequest);
-      } catch (err) {
-        console.error("Session expired", err);
-        localStorage.clear();
-        window.location.href = "/login";
-      }
+  (res) => res,
+  (err) => {
+    if (err?.response?.status === 401) {
+      // optional: auto logout
+      localStorage.removeItem("token");
     }
-    return Promise.reject(error);
+    return Promise.reject(err);
   }
 );
 

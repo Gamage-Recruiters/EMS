@@ -31,9 +31,9 @@ import LeaveForm from "./pages/LeaveForm";
 import LeaveApproval from "./pages/LeaveApproval";
 
 // Management
-import UserManagementPage from "./features/management/pages/UserManagementPage";
-import TeamManagementPage from "./features/management/pages/TeamManagementPage";
-import TeamHierarchyPage from "./features/management/pages/TeamHierarchyPage";
+import UserManagementPage from "./features/management/pages/UserManagementPage.jsx";
+// import TeamManagementPage from "./features/management/pages/TeamManagementPage.jsx";
+// import TeamHierarchyPage from "./features/management/pages/TeamHierarchyPage.jsx";
 import UserManagement from "./pages/UserManagement";
 import UserProfile from "./pages/UserProfile";
 

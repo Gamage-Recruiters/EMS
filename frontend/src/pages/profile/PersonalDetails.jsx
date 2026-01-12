@@ -8,7 +8,7 @@ const PersonalDetailsPage = () => {
   return (
     <ProfileLayout>
       <div className="flex flex-col items-center">
-        {/* Avatar */}
+        {/* Avatar **/}
         <div className="w-36 h-36 rounded-full bg-[#FFC928] flex items-center justify-center mb-10">
           <span className="text-6xl">🧑🏽‍🎨</span>
         </div>

@@ -24,8 +24,6 @@ connectDB();
 const app = express();
 
 // Middlewares
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // CORS - allow requests from frontend
 app.use(

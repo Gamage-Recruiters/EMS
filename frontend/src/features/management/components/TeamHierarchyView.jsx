@@ -1,7 +1,24 @@
 import React from "react";
 import { FiUsers, FiUserCheck } from "react-icons/fi";
+import { useRequireRole } from "../../../hooks/useRequireRole";
+
 
 function MemberCard({ member }) {
+
+    const { loadinguser, isAuthorized } = useRequireRole([
+    "CEO",
+    "SystemAdmin",
+    "TL",
+    ]);
+  
+    if (loadinguser) {
+      return <div className="p-8">Checking permissions…</div>;
+    }
+  
+    if (!isAuthorized) {
+      return null; 
+    }
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md hover:border-blue-300 transition">
       <div className="flex items-start gap-3">

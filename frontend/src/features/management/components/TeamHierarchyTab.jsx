@@ -16,20 +16,6 @@ export default function TeamHierarchyTab() {
   async function loadTeams() {
 
 
-    const { loadinguser, isAuthorized } = useRequireRole([
-    "CEO",
-    "SystemAdmin",
-    "TL",
-    ]);
-  
-    if (loadinguser) {
-      return <div className="p-8">Checking permissions…</div>;
-    }
-  
-    if (!isAuthorized) {
-      return null; 
-    }
-
     setLoading(true);
     setError(null);
     try {

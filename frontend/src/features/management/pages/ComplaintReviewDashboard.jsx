@@ -7,6 +7,7 @@ import { useAuth } from "../../../context/AuthContext";
 import {
   getDeveloperComplaints,
   getAdminComplaints,
+  getMyComplaints,
   updateComplaintStatus,
 } from "../../../services/complaintService";
 
@@ -43,7 +44,7 @@ export default function ComplaintReviewDashboard() {
         const devRes = await getDeveloperComplaints();
         setDevComplaints(devRes.data.data);
 
-        if (["CEO", "PM"].includes(user.role)) {
+        if (["CEO", "PM", "TL"].includes(user.role)) {
           const adminRes = await getAdminComplaints();
           setAdminComplaints(adminRes.data.data);
         }
@@ -133,7 +134,7 @@ export default function ComplaintReviewDashboard() {
             className="border rounded px-3 py-2 text-sm"
           >
             <option value="developers">Developer Complaints</option>
-            {["CEO", "PM"].includes(user.role) && (
+            {["CEO", "PM", "TL"].includes(user.role) && (
               <option value="admin">Admin Complaints</option>
             )}
           </select>

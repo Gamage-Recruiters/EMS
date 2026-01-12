@@ -32,8 +32,6 @@ import LeaveApproval from "./pages/LeaveApproval";
 
 // Management
 import UserManagementPage from "./features/management/pages/UserManagementPage";
-import TeamManagementPage from "./features/management/pages/TeamManagementPage";
-import TeamHierarchyPage from "./features/management/pages/TeamHierarchyPage";
 import UserManagement from "./pages/UserManagement";
 import UserProfile from "./pages/UserProfile";
 
@@ -140,8 +138,6 @@ export default function App() {
 
           {/* ================= MANAGEMENT ================= */}
           <Route path="/employees" element={<UserManagementPage />} />
-          <Route path="/team-management" element={<TeamManagementPage />} />
-          <Route path="/team-hierarchy" element={<TeamHierarchyPage />} />
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="/user-profile/:id" element={<UserProfile />} />
 

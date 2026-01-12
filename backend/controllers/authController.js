@@ -1,10 +1,8 @@
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 import AppError from '../utils/AppError.js';
 import { OAuth2Client } from 'google-auth-library';
-
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const generateTokens = (id) => {
   const accessToken = jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
@@ -95,6 +93,21 @@ export const loginUser = async (req, res, next) => {
 export const googleAuth = async (req, res, next) => {
   try {
     const { tokenId } = req.body; 
+
+    if (!tokenId || typeof tokenId !== 'string') {
+      return next(new AppError('Missing Google credential token.', 400));
+    }
+
+    if (!process.env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID === 'GOOGLE_CLIENT_ID') {
+      return next(
+        new AppError(
+          'Google Sign-In is not configured on the server (missing GOOGLE_CLIENT_ID).',
+          500,
+        ),
+      );
+    }
+
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
     
     const ticket = await client.verifyIdToken({
       idToken: tokenId,
@@ -102,7 +115,12 @@ export const googleAuth = async (req, res, next) => {
     });
     
     // Google provides given_name and family_name
-    const { given_name, family_name, email, sub: googleId, picture } = ticket.getPayload();
+    const payload = ticket.getPayload();
+    if (!payload) {
+      return next(new AppError('Invalid Google token payload.', 401));
+    }
+
+    const { given_name, family_name, email, sub: googleId, picture } = payload;
 
     let user = await User.findOne({ email });
 
@@ -137,8 +155,12 @@ export const googleAuth = async (req, res, next) => {
     });
 
   } catch (error) {
-    console.error(error); 
-    next(new AppError('Google Authentication Failed', 400));
+    console.error(error);
+    const message =
+      process.env.NODE_ENV === 'production'
+        ? 'Google Authentication Failed'
+        : `Google Authentication Failed: ${error.message}`;
+    next(new AppError(message, 401));
   }
 };
 
@@ -227,9 +249,24 @@ export const updateUserProfile = async (req, res, next) => {
 
     if (user) {
       // Update basic fields
-      user.firstName = req.body.firstName || user.firstName;
-      user.lastName = req.body.lastName || user.lastName;
-      user.email = req.body.email || user.email;
+      if (req.body.firstName !== undefined) user.firstName = req.body.firstName;
+      if (req.body.lastName !== undefined) user.lastName = req.body.lastName;
+      if (req.body.email !== undefined) user.email = req.body.email;
+
+      // Update contact information
+      if (req.body.contactNumber !== undefined) user.contactNumber = req.body.contactNumber;
+      if (req.body.address !== undefined) user.address = req.body.address;
+      if (req.body.city !== undefined) user.city = req.body.city;
+
+      // Update education information
+      if (req.body.education !== undefined) {
+        if (req.body.education.institution !== undefined) user.education.institution = req.body.education.institution;
+        if (req.body.education.department !== undefined) user.education.department = req.body.education.department;
+        if (req.body.education.degree !== undefined) user.education.degree = req.body.education.degree;
+        if (req.body.education.location !== undefined) user.education.location = req.body.education.location;
+        if (req.body.education.startDate !== undefined) user.education.startDate = req.body.education.startDate ? new Date(req.body.education.startDate) : null;
+        if (req.body.education.endDate !== undefined) user.education.endDate = req.body.education.endDate ? new Date(req.body.education.endDate) : null;
+      }
 
       // Handle Password Update
       if (req.body.password) {
@@ -252,6 +289,10 @@ export const updateUserProfile = async (req, res, next) => {
         lastName: updatedUser.lastName,
         email: updatedUser.email,
         role: updatedUser.role,
+        contactNumber: updatedUser.contactNumber,
+        address: updatedUser.address,
+        city: updatedUser.city,
+        education: updatedUser.education,
         accessToken: tokens.accessToken,   
         refreshToken: tokens.refreshToken, 
       });

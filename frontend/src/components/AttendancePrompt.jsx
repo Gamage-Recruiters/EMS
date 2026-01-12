@@ -14,7 +14,6 @@ const AttendancePrompt = ({ onCheckIn }) => {
   });
 
 
-
   // Update the current time every second
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -25,16 +24,14 @@ const AttendancePrompt = ({ onCheckIn }) => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        // MOCK: simulate API call
+  
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        const data = { firstName: "John", lastName: "Smith" };
 
-        // LATER: replace above with actual API call
-        // const response = await fetch(USER_INFO_ENDPOINT);
-        // const data = await response.json();
+        //get user info from local storage for now
+        const user = JSON.parse(localStorage.getItem("ems_user"));
 
         setProfile({
-          name: `${data.firstName} ${data.lastName}`,
+          name: `${user.firstName} ${user.lastName}`,
           isLoading: false,
           error: null,
         });

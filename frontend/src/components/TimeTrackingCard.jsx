@@ -8,7 +8,7 @@ const TimeTrackingCard = ({ checkInTime }) => {
     const fetchTodayAttendance = async () => {
       const result = await getTodayAttendance();
       if(result.success) {
-        setTodayAttendance(result.data);
+        setTodayAttendance(result.data.data);
       }
     };
     fetchTodayAttendance();

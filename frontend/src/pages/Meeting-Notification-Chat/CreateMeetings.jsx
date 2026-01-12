@@ -1,10 +1,22 @@
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
+
+import { useAuth } from "../../context/AuthContext";
+import { createMeeting, getParticipants } from "../../services/meetingService";
+
 import MeetingHeader from "../../components/meeting/MeetingHeader";
 import MeetingForm from "../../components/meeting/MeetingForm";
 import ParticipantsPanel from "../../components/meeting/ParticipantsPanel";
 
 const CreateMeetings = () => {
+  const { user } = useAuth();
+
+  // 🔒 ROLE GUARD
+  if (!user || !["PM", "TL", "CEO"].includes(user.role)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   const [meetingData, setMeetingData] = useState({
     title: "",
     date: "",
@@ -15,38 +27,32 @@ const CreateMeetings = () => {
     meetingLink: "",
   });
 
+  const [users, setUsers] = useState([]);
   const [participants, setParticipants] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  //  HANDLE FORM CHANGE 
+  /* ================= LOAD USERS ================= */
+  useEffect(() => {
+    getParticipants()
+      .then((res) => setUsers(res.data.data))
+      .catch(() => toast.error("Failed to load participants"));
+  }, []);
+
+  /* ================= HANDLERS ================= */
   const handleMeetingChange = (field, value) => {
-    setMeetingData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setMeetingData((prev) => ({ ...prev, [field]: value }));
   };
 
-  //  ADD PARTICIPANT 
-  const handleAddParticipant = (email) => {
-    if (!email) return;
-
-    // prevent duplicate
-    if (participants.some((p) => p.email === email)) {
-      alert("Participant already added");
-      return;
-    }
-
-    setParticipants((prev) => [...prev, { email }]);
+  const toggleParticipant = (user) => {
+    setParticipants((prev) => {
+      const exists = prev.some((p) => p.email === user.email);
+      return exists
+        ? prev.filter((p) => p.email !== user.email)
+        : [...prev, { email: user.email }];
+    });
   };
 
-  //  REMOVE PARTICIPANT 
-  const handleRemoveParticipant = (email) => {
-    setParticipants((prev) =>
-      prev.filter((p) => p.email !== email)
-    );
-  };
-
-  // SUBMIT MEETING 
+  /* ================= SUBMIT ================= */
   const handleSubmit = async () => {
     const {
       title,
@@ -58,7 +64,6 @@ const CreateMeetings = () => {
       meetingLink,
     } = meetingData;
 
-    // Frontend validation 
     if (
       !title ||
       !date ||
@@ -67,43 +72,25 @@ const CreateMeetings = () => {
       !meetingType ||
       !locationType
     ) {
-      alert("Please fill all required fields");
+      toast.error("Please fill all required fields");
       return;
     }
 
     if (locationType === "online" && !meetingLink) {
-      alert("Meeting link is required for online meetings");
+      toast.error("Meeting link is required");
       return;
     }
 
     try {
       setLoading(true);
 
-      await axios.post("/api/meetings",
-        {
-          title,
-          date: new Date(date), 
-          time,
-          duration,
-          meetingType,
-          locationType,
-          meetingLink:
-            locationType === "online" ? meetingLink : "",
+      await createMeeting({
+        ...meetingData,
+        participants,
+      });
 
-          participants: participants.map((p) => ({
-            email: p.email,
-          })),
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      toast.success("Meeting scheduled successfully");
 
-      alert("Meeting created successfully");
-
-      // reset form
       setMeetingData({
         title: "",
         date: "",
@@ -114,18 +101,14 @@ const CreateMeetings = () => {
         meetingLink: "",
       });
       setParticipants([]);
-    } catch (error) {
-      console.error("Create meeting error:", error);
-      alert(
-        error.response?.data?.message ||
-          "Failed to create meeting"
-      );
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to create meeting");
     } finally {
       setLoading(false);
     }
   };
 
-  //  UI 
+  /* ================= UI ================= */
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
@@ -138,7 +121,6 @@ const CreateMeetings = () => {
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-          {/* LEFT FORM */}
           <div className="lg:col-span-2">
             <MeetingForm
               meetingData={meetingData}
@@ -146,11 +128,10 @@ const CreateMeetings = () => {
             />
           </div>
 
-          {/* RIGHT PARTICIPANTS */}
           <ParticipantsPanel
-            participants={participants}
-            onAddParticipant={handleAddParticipant}
-            onRemoveParticipant={handleRemoveParticipant}
+            users={users}
+            selectedParticipants={participants}
+            onToggleParticipant={toggleParticipant}
           />
         </div>
       </div>

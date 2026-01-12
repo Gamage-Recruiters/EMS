@@ -33,9 +33,6 @@ import UserProfile from "./pages/UserProfile";
 import MeetingOverview from "./pages/Meeting-Notification-Chat/MeetingOverview";
 import CreateMeetings from "./pages/Meeting-Notification-Chat/CreateMeetings";
 
-
-
-
 export default function App() {
   const [checkInTime, setCheckInTime] = useState(null);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
@@ -47,7 +44,6 @@ export default function App() {
 
   return (
     <Routes>
-
       {/* ================= PUBLIC ROUTES ================= */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
@@ -57,9 +53,7 @@ export default function App() {
         <Route
           element={
             <>
-              {!isCheckedIn && (
-                <AttendancePrompt onCheckIn={handleCheckIn} />
-              )}
+              {!isCheckedIn && <AttendancePrompt onCheckIn={handleCheckIn} />}
 
               <div
                 className={`min-h-screen bg-gray-50 transition-opacity duration-300 ${
@@ -105,20 +99,17 @@ export default function App() {
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="/user-profile/:id" element={<UserProfile />} />
 
+          {/* Meetings */}
+          <Route path="/meetings" element={<MeetingOverview />} />
+          <Route path="/meetings/create" element={<CreateMeetings />} />
+
           {/* App fallback */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
       </Route>
 
-       {/* Meetings */}
-        <Route path="/meetings" element={<MeetingOverview />} />
-        <Route path="/meetings/create" element={<CreateMeetings />} />
-        
-
-
       {/* ================= GLOBAL FALLBACK ================= */}
       <Route path="*" element={<Navigate to="/login" replace />} />
-
     </Routes>
   );
 }

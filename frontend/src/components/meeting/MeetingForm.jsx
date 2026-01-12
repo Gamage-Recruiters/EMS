@@ -44,11 +44,18 @@ const MeetingForm = ({ meetingData, onChange }) => {
 
       {/* Duration */}
       <div className="mt-4">
-        <label className="text-sm font-medium">Duration</label>
+        <label className="text-sm font-medium">
+          Duration <span className="text-xs text-gray-500">(minutes)</span>
+        </label>
+
         <input
+          type="number" // ✅ numeric only
+          min="1" // ✅ prevents 0 & negatives
+          step="1" // ✅ whole numbers only
           className="w-full px-4 py-2.5 rounded-xl border"
           value={meetingData.duration}
           onChange={(e) => handleChange("duration", e.target.value)}
+          placeholder="Enter duration in minutes"
         />
       </div>
 
@@ -56,22 +63,25 @@ const MeetingForm = ({ meetingData, onChange }) => {
       <div className="mt-4">
         <label className="text-sm font-medium">Meeting Type</label>
         <div className="grid grid-cols-2 gap-3 mt-2">
-          {["Daily Standup", "Sprint Planning", "Code Review", "Special Meeting"].map(
-            (type) => (
-              <button
-                key={type}
-                type="button"
-                className={`px-4 py-2 rounded-xl border ${
-                  meetingData.meetingType === type
-                    ? "bg-blue-600 text-white"
-                    : "bg-white"
-                }`}
-                onClick={() => handleChange("meetingType", type)}
-              >
-                {type}
-              </button>
-            )
-          )}
+          {[
+            "Daily Standup",
+            "Sprint Planning",
+            "Code Review",
+            "Special Meeting",
+          ].map((type) => (
+            <button
+              key={type}
+              type="button"
+              className={`px-4 py-2 rounded-xl border ${
+                meetingData.meetingType === type
+                  ? "bg-blue-600 text-white"
+                  : "bg-white"
+              }`}
+              onClick={() => handleChange("meetingType", type)}
+            >
+              {type}
+            </button>
+          ))}
         </div>
       </div>
 

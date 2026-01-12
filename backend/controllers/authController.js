@@ -249,9 +249,24 @@ export const updateUserProfile = async (req, res, next) => {
 
     if (user) {
       // Update basic fields
-      user.firstName = req.body.firstName || user.firstName;
-      user.lastName = req.body.lastName || user.lastName;
-      user.email = req.body.email || user.email;
+      if (req.body.firstName !== undefined) user.firstName = req.body.firstName;
+      if (req.body.lastName !== undefined) user.lastName = req.body.lastName;
+      if (req.body.email !== undefined) user.email = req.body.email;
+
+      // Update contact information
+      if (req.body.contactNumber !== undefined) user.contactNumber = req.body.contactNumber;
+      if (req.body.address !== undefined) user.address = req.body.address;
+      if (req.body.city !== undefined) user.city = req.body.city;
+
+      // Update education information
+      if (req.body.education !== undefined) {
+        if (req.body.education.institution !== undefined) user.education.institution = req.body.education.institution;
+        if (req.body.education.department !== undefined) user.education.department = req.body.education.department;
+        if (req.body.education.degree !== undefined) user.education.degree = req.body.education.degree;
+        if (req.body.education.location !== undefined) user.education.location = req.body.education.location;
+        if (req.body.education.startDate !== undefined) user.education.startDate = req.body.education.startDate ? new Date(req.body.education.startDate) : null;
+        if (req.body.education.endDate !== undefined) user.education.endDate = req.body.education.endDate ? new Date(req.body.education.endDate) : null;
+      }
 
       // Handle Password Update
       if (req.body.password) {
@@ -274,6 +289,10 @@ export const updateUserProfile = async (req, res, next) => {
         lastName: updatedUser.lastName,
         email: updatedUser.email,
         role: updatedUser.role,
+        contactNumber: updatedUser.contactNumber,
+        address: updatedUser.address,
+        city: updatedUser.city,
+        education: updatedUser.education,
         accessToken: tokens.accessToken,   
         refreshToken: tokens.refreshToken, 
       });

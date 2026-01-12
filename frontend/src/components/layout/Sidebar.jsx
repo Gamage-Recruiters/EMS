@@ -12,13 +12,26 @@ const linkStyle = ({ isActive }) => ({
 
 export default function Sidebar() {
   return (
-    <aside style={{ width: 240, background: "#fff", borderRight: "1px solid #eee", padding: 16 }}>
+    <aside
+      style={{
+        width: 240,
+        background: "#fff",
+        borderRight: "1px solid #eee",
+        padding: 16,
+      }}
+    >
       <div style={{ fontWeight: 700, marginBottom: 16 }}>EMS</div>
 
       <nav>
-        <NavLink to="/employees" style={linkStyle}>Employees</NavLink>
-        <NavLink to="/hierarchy" style={linkStyle}>Hierarchy</NavLink>
-        <NavLink to="/team-assignment" style={linkStyle}>Team Assignment</NavLink>
+        {/* dashboard */}
+        <NavLink to="/dashboard" style={linkStyle}>
+          Dashboard
+        </NavLink>
+
+        {/* list employees */}
+        <NavLink to="/employees" style={linkStyle}>
+          Employees
+        </NavLink>
       </nav>
     </aside>
   );

@@ -24,14 +24,20 @@ connectDB();
 const app = express();
 
 // Middlewares
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// CORS - allow requests from frontend
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
     credentials: true,
   })
 );
 
-app.use(express.json());
+// Body parsers with increased size limits to accomodate image uploads
+app.use(express.json({ limit: process.env.BODY_LIMIT || "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: process.env.BODY_LIMIT || "10mb" }));
 
 // Routes
 app.use('/api/auth', authRoutes);

@@ -1,129 +1,163 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { useState } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 
-import Register from './pages/auth/Register.jsx';
-import Login from './pages/auth/Login.jsx';
-import ForgotPassword from "./pages/auth/ForgotPassword.jsx";
-import VerifyCode from "./pages/auth/VerifyCode.jsx";
-import ResetPassword from "./pages/auth/ResetPassword.jsx";
-import ResetSuccess from "./pages/auth/ResetSuccess.jsx";
+// Layout & Guards
+import PageLayout from "./components/layout/PageLayout";
+import AttendancePrompt from "./components/AttendancePrompt";
+import PrivateRoute from "./routes/PrivateRoute";
+import ProtectedRoute from "./components/ProtectedRoute";
 
-// Profile Pages
-import PersonalDetailsPage from "./pages/profile/PersonalDetails.jsx";
-import ContactDetailsPage from "./pages/profile/ContactDetails.jsx";
-import EducationPage from "./pages/profile/EducationPage.jsx";
-import JobDetailsPage from "./pages/profile/JobDetails.jsx";
+// Auth pages
+import LoginPage from "./pages/auth/Login";
+import RegisterPage from "./pages/auth/Register";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import VerifyCode from "./pages/auth/VerifyCode";
+import ResetPassword from "./pages/auth/ResetPassword";
+import ResetSuccess from "./pages/auth/ResetSuccess";
 
-// Dashboard
-import DashboardOverview from "./pages/dashboard/DashBoardOverview.jsx";
-import CeoDashboard from "./pages/dashboard/CeoDashboard.jsx";
-import DevDashboard from "./pages/dashboard/DevDashboard.jsx";
-import SystemOwnerDashboard from "./pages/dashboard/SystemOwnerDashboard.jsx";
-import TLDashboard from "./pages/dashboard/TLDashboard.jsx";
+// Dashboards (RBAC)
+import DashboardOverview from "./pages/dashboard/DashBoardOverview";
+import CeoDashboard from "./pages/dashboard/CeoDashboard";
+import DevDashboard from "./pages/dashboard/DevDashboard";
+import SystemOwnerDashboard from "./pages/dashboard/SystemOwnerDashboard";
+import TLDashboard from "./pages/dashboard/TLDashboard";
 
-// Components
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
+// Attendance & Core
+import DashboardPage from "./pages/DashboardPage";
+import AttendancePage from "./pages/AttendancePage";
 
-function App() {
+// Management
+import UserManagementPage from "./features/management/pages/UserManagementPage";
+import UserManagement from "./pages/UserManagement";
+import UserProfile from "./pages/UserProfile";
+
+// Employee profile (nested)
+import EmployeeProfile from "./features/management/pages/employee-profile/EmployeeProfile";
+import PersonalDetails from "./features/management/pages/employee-profile/PersonalDetails";
+import ContactDetails from "./features/management/pages/employee-profile/ContactDetails";
+import EducationQualification from "./features/management/pages/employee-profile/EducationQualification";
+import JobDetails from "./features/management/pages/employee-profile/JobDetails";
+
+export default function App() {
+  const [checkInTime, setCheckInTime] = useState(null);
+  const [isCheckedIn, setIsCheckedIn] = useState(false);
+
+  const handleCheckIn = (time) => {
+    setCheckInTime(time);
+    setIsCheckedIn(true);
+  };
+
   return (
     <Routes>
-      {/* Default route - redirect to login */}
+      {/* ================= PUBLIC ROUTES ================= */}
       <Route path="/" element={<Navigate to="/login" replace />} />
-
-       {/* Auth pages route */}
-      <Route path="/register" element={<Register />} />
-      <Route path="/login" element={<Login />} />
-
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/verify-code" element={<VerifyCode />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/reset-success" element={<ResetSuccess />} />
 
-      {/* Profile page routes */}
-      <Route
-        path="/profile/personal"
-        element={
-          <ProtectedRoute>
-            <PersonalDetailsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/profile/contact"
-        element={
-          <ProtectedRoute>
-            <ContactDetailsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/profile/education"
-        element={
-          <ProtectedRoute>
-            <EducationPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/profile/job"
-        element={
-          <ProtectedRoute>
-            <JobDetailsPage />
-          </ProtectedRoute>
-        }
-      />
+      {/* ================= PROTECTED ROUTES ================= */}
+      <Route element={<PrivateRoute />}>
+        <Route
+          element={
+            <>
+              {!isCheckedIn && <AttendancePrompt onCheckIn={handleCheckIn} />}
 
-      {/* Redirect /profile -> /profile/personal */}
-      <Route path="/profile" element={<Navigate to="/profile/personal" replace />} />
+              <div
+                className={`min-h-screen bg-gray-50 transition-opacity duration-300 ${
+                  !isCheckedIn ? "opacity-50 pointer-events-none" : ""
+                }`}
+              >
+                <PageLayout />
+              </div>
+            </>
+          }
+        >
+          {/* Default */}
+          <Route index element={<Navigate to="/dashboard" replace />} />
 
-      {/* Dashboard route */}
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <DashboardOverview />
-          </ProtectedRoute>
-        }
-      />
+          {/* ================= CORE DASHBOARD ================= */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardOverview />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* RBAC dashboards */}
-      <Route
-        path="/dashboard/ceo"
-        element={
-          <ProtectedRoute allowedRoles={["CEO"]}>
-            <CeoDashboard />
-          </ProtectedRoute>
-        }
-      />
+          <Route
+            path="/dashboard/home"
+            element={<DashboardPage checkInTime={checkInTime} />}
+          />
 
-      <Route
-        path="/dashboard/dev"
-        element={
-          <ProtectedRoute allowedRoles={["DEVELOPER"]}>
-            <DevDashboard />
-          </ProtectedRoute>
-        }
-      />
+          <Route path="/attendance" element={<AttendancePage />} />
 
-      <Route
-        path="/dashboard/system-owner"
-        element={
-          <ProtectedRoute allowedRoles={["SYSTEM_OWNER"]}>
-            <SystemOwnerDashboard />
-          </ProtectedRoute>
-        }
-      />
+          {/* ================= RBAC DASHBOARDS ================= */}
+          <Route
+            path="/dashboard/ceo"
+            element={
+              <ProtectedRoute allowedRoles={["CEO"]}>
+                <CeoDashboard />
+              </ProtectedRoute>
+            }
+          />
 
-      <Route
-        path="/dashboard/tl"
-        element={
-          <ProtectedRoute allowedRoles={["TL"]}>
-            <TLDashboard />
-          </ProtectedRoute>
-        }
-      />
+          <Route
+            path="/dashboard/dev"
+            element={
+              <ProtectedRoute allowedRoles={["DEVELOPER"]}>
+                <DevDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dashboard/system-owner"
+            element={
+              <ProtectedRoute allowedRoles={["SYSTEM_OWNER"]}>
+                <SystemOwnerDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dashboard/tl"
+            element={
+              <ProtectedRoute allowedRoles={["TL"]}>
+                <TLDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ================= MANAGEMENT ================= */}
+          <Route path="/employees" element={<UserManagementPage />} />
+          <Route path="/user-management" element={<UserManagement />} />
+          <Route path="/user-profile/:id" element={<UserProfile />} />
+
+          {/* ================= EMPLOYEE PROFILE ================= */}
+          <Route path="/profile" element={<EmployeeProfile />}>
+            <Route index element={<Navigate to="personal-details" replace />} />
+            <Route path="personal-details" element={<PersonalDetails />} />
+            <Route path="contact-details" element={<ContactDetails />} />
+            <Route
+              path="education-qualification"
+              element={<EducationQualification />}
+            />
+            <Route path="job-details" element={<JobDetails />} />
+            <Route path="attendance" element={<AttendancePage />} />
+            <Route path="*" element={<Navigate to="personal-details" replace />} />
+          </Route>
+
+          {/* App fallback */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Route>
+      </Route>
+
+      {/* ================= GLOBAL FALLBACK ================= */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }
-
-export default App;

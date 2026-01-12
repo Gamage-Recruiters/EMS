@@ -1,53 +1,74 @@
 
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from "react-router-dom";
 
 const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: '🏠' },
-    { name: 'Attendance', path: '/attendance', icon: '📅' },
-    { name: 'Leave Management', path: '/leave-management', icon: '✈️' },
+  { name: "Dashboard", path: "/dashboard", icon: "🏠" },
+  { name: "Attendance", path: "/attendance", icon: "📅" },
+  { name: "Leave Form", path: "/leave-form", icon: "📝" },
+  { name: "Leave Approval", path: "/leave-approval", icon: "✅" },
+  { name: "Reports", path: "/reports", icon: "📊" },
+  { name: "Settings", path: "/settings", icon: "⚙️" },
 ];
 
-const Sidebar = () => {
-    const location = useLocation();
-    const currentPath = location.pathname;
+export default function Sidebar() {
+  const { pathname } = useLocation();
 
-    return (
-        
-        <div className="flex flex-col w-60 bg-white shadow-lg flex-shrink-0 p-5 border-r border-gray-100">
-            
-           
-            <div className="text-xl font-extrabold text-blue-700 mb-8">
-                EMS Portal
-            </div>
-
-            
-            <nav className="flex-grow space-y-1">
-                {navItems.map(item => {
-                    const isActive = currentPath === item.path || (currentPath === '/' && item.path === '/dashboard');
-                    
-                    const itemClasses = `flex items-center p-3 rounded-lg transition duration-150 ease-in-out text-sm ${
-                        isActive
-                            
-                            ? 'bg-blue-50 text-blue-700 font-bold border-r-4 border-blue-600'
-                            : 'text-gray-600 hover:bg-gray-100 font-medium'
-                    }`;
-
-                    return (
-                        <Link 
-                            key={item.path}
-                            to={item.path}
-                            className={itemClasses}
-                        >
-                            <span className="text-base mr-3">{item.icon}</span>
-                            {item.name}
-                        </Link>
-                    );
-                })}
-            </nav>
-
+  return (
+    <aside className="w-72 bg-gradient-to-b from-slate-900 to-slate-800 min-h-screen flex flex-col">
+      {/* Brand */}
+      <div className="px-6 py-6 border-b border-slate-700">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 flex items-center justify-center text-white text-lg">
+            👥
+          </div>
+          <div>
+            <h1 className="font-bold text-white">EMS Portal</h1>
+            <p className="text-xs text-slate-400">Employee System</p>
+          </div>
         </div>
-    );
-};
+      </div>
 
-export default Sidebar;
+      {/* Menu */}
+      <nav className="flex-1 px-4 py-6 space-y-1">
+        {navItems.map((item) => (
+          <MenuItem
+            key={item.path}
+            to={item.path}
+            icon={item.icon}
+            label={item.name}
+            active={pathname === item.path || (pathname === "/" && item.path === "/dashboard")}
+          />
+        ))}
+      </nav>
+
+      {/* Profile */}
+      <div className="px-6 py-4 border-t border-slate-700">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold text-sm">
+            JM
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-white">John Mitchell</p>
+            <p className="text-xs text-slate-400">Software Engineer</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function MenuItem({ to, icon, label, active }) {
+  return (
+    <Link
+      to={to}
+      className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+        active
+          ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white"
+          : "text-slate-300 hover:bg-slate-700"
+      }`}
+    >
+      <span className="text-base">{icon}</span>
+      {label}
+    </Link>
+  );
+}

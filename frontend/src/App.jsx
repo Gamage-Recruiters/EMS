@@ -1,33 +1,11 @@
-import { useState } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-
-import PageLayout from "./components/layout/PageLayout";
-import AttendancePrompt from "./components/AttendancePrompt";
-import PrivateRoute from "./routes/PrivateRoute";
-
-// Auth pages
-import LoginPage from "./pages/auth/Login";
-import RegisterPage from "./pages/auth/Register";
-
-// Main pages
-import DashboardPage from "./pages/DashboardPage";
-import AttendancePage from "./pages/AttendancePage";
-
-// Management
-import UserManagementPage from "./features/management/pages/UserManagementPage";
-import TeamManagementPage from "./features/management/pages/TeamManagementPage";
-import TeamHierarchyPage from "./features/management/pages/TeamHierarchyPage";
-
-// Employee profile
-import EmployeeProfile from "./employee profile/EmployeeProfile";
-import PersonalDetails from "./employee profile/PersonalDetails";
-import ContactDetails from "./employee profile/ContactDetails";
-import EducationQualification from "./employee profile/EducationQualification";
-import JobDetails from "./employee profile/JobDetails";
-
-// Other pages
-import UserManagement from "./pages/UserManagement";
-import UserProfile from "./pages/UserProfile";
+// src/App.js
+import React, { useState } from 'react'; 
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import DashboardPage from './pages/DashboardPage';
+import AttendancePage from './pages/AttendancePage'; 
+import AttendancePrompt from './components/AttendancePrompt'; 
+import Header from './components/Header';
+import Sidebar from './components/Sidebar';
 
 export default function App() {
   const [checkInTime, setCheckInTime] = useState(null);
@@ -40,7 +18,6 @@ export default function App() {
 
   return (
     <Routes>
-
       {/* ================= PUBLIC ROUTES ================= */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
@@ -74,6 +51,10 @@ export default function App() {
           />
           <Route path="/attendance" element={<AttendancePage />} />
 
+          {/* Leave module */}
+          <Route path="/leave-form" element={<LeaveForm />} />
+          <Route path="/leave-approval" element={<LeaveApproval />} />
+
           {/* Management */}
           <Route path="/employees" element={<UserManagementPage />} />
           <Route path="/team-management" element={<TeamManagementPage />} />
@@ -105,7 +86,6 @@ export default function App() {
 
       {/* ================= GLOBAL FALLBACK ================= */}
       <Route path="*" element={<Navigate to="/login" replace />} />
-
     </Routes>
   );
 }

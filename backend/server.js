@@ -9,11 +9,12 @@ import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import teamRoutes from './routes/teamRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import authRoutes from "./routes/authRoutes.js";
 
-import errorHandler from './middlewares/errorMiddleware.js';
-import leaveRoutes from './routes/leaveRoutes.js';
+import errorHandler from "./middlewares/errorMiddleware.js";
+import leaveRoutes from "./routes/leaveRoutes.js";
 import AttendanceRoutes from "./routes/AttendanceRoutes.js";
-import availabilityRoutes from './routes/availabilityRoutes.js';
+import availabilityRoutes from "./routes/availabilityRoutes.js";
 
 dotenv.config();
 
@@ -24,13 +25,10 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-app.use(express.json());
-app.use(cors());
-
 // Middlewares
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "http://localhost:5174"],
     credentials: true,
   })
 );
@@ -44,15 +42,16 @@ app.get("/", (req, res) => {
 
 // Serve uploaded images statically
 app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
 
 // Routes
-app.use('/api/auth', authRoutes);
+app.use("/api/auth", authRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/attendance', AttendanceRoutes);
-app.use('/api/leaves', leaveRoutes);
-app.use('/api/availability', availabilityRoutes);
+app.use("/api/attendance", AttendanceRoutes);
+app.use("/api/leaves", leaveRoutes);
+app.use("/api/availability", availabilityRoutes);
 // app.use('/test', testRoutes);
 
 // Global Error Handler

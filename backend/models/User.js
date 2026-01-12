@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 
 const userSchema = new mongoose.Schema({
   // Basic personal details
@@ -8,7 +8,12 @@ const userSchema = new mongoose.Schema({
 
   // Login and authentication
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  password: {
+    type: String,
+    required: function () {
+      return !this.googleId;
+    },
+  },
   refreshToken: { type: String },
   googleId: { type: String },
 

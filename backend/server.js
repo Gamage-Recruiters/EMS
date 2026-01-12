@@ -1,9 +1,12 @@
+import 'dotenv/config';
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import path from "path";
 import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -15,12 +18,12 @@ import leaveRoutes from './routes/leaveRoutes.js';
 import AttendanceRoutes from "./routes/AttendanceRoutes.js";
 import availabilityRoutes from './routes/availabilityRoutes.js';
 
-dotenv.config();
-
 // Connect Database
 connectDB();
 
 const app = express();
+
+// Middlewares
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -35,6 +38,9 @@ app.use(
 // Body parsers with increased size limits to accomodate image uploads
 app.use(express.json({ limit: process.env.BODY_LIMIT || "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: process.env.BODY_LIMIT || "10mb" }));
+
+// Routes
+app.use('/api/auth', authRoutes);
 
 // Base Route
 app.get("/", (req, res) => {
@@ -58,7 +64,7 @@ app.use('/api/availability', availabilityRoutes);
 app.use(errorHandler);
 
 // Start Server
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(` Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });

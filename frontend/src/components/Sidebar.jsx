@@ -1,53 +1,94 @@
+// frontend/src/components/Sidebar.jsx
+import React from "react";
+import { useAuth } from "../context/AuthContext.jsx";
+import { Link, useLocation } from "react-router-dom";
 
-// import React from 'react';
-// import { Link, useLocation } from 'react-router-dom';
+const Sidebar = () => {
+  const { user } = useAuth();
+  const location = useLocation();
 
-// const navItems = [
-//     { name: 'Dashboard', path: '/dashboard', icon: '🏠' },
-//     { name: 'Attendance', path: '/attendance', icon: '📅' },
-//     { name: 'Leave Management', path: '/leave-management', icon: '✈️' },
-// ];
+  // Role-based menu items
+  const menus = {
+    CEO: [
+      { name: "Dashboard", path: "/dashboard/ceo" },
+      { name: "Daily Task Sheet", path: "/dashboard/ceo/daily-task-sheet" },
+      { name: "Daily Task History", path: "/dashboard/ceo/daily-task-history" },
+      { name: "Weekly Progress Overview", path: "/dashboard/ceo/weekly-overview" },
+      { name: "Weekly Progress History", path: "/dashboard/ceo/weekly-history" },
+      { name: "CEO Attendance Summary", path: "/dashboard/ceo/attendance-summary" },
+      { name: "Notice Broadcasting", path: "/dashboard/ceo/notices" },
+      { name: "CEO Meeting Display", path: "/dashboard/ceo/meetings" },
+      { name: "Leave Approval / Display", path: "/dashboard/ceo/leave" },
+    ],
 
-// const Sidebar = () => {
-//     const location = useLocation();
-//     const currentPath = location.pathname;
+    DEVELOPER: [
+      { name: "Dashboard", path: "/dashboard/dev" },
+      { name: "Task Board", path: "/dashboard/dev/task-board" },
+      { name: "Update Task Status", path: "/dashboard/dev/update-task-status" },
+      { name: "Daily Task Update Form", path: "/dashboard/dev/daily-task-update" },
+      { name: "Weekly Work Summary", path: "/dashboard/dev/weekly-summary" },
+      { name: "Issues Form", path: "/dashboard/dev/issues" },
+      { name: "Complaint Submission", path: "/dashboard/dev/complaints" },
+    ],
 
-//     return (
-        
-//         <div className="flex flex-col w-60 bg-white shadow-lg flex-shrink-0 p-5 border-r border-gray-100">
-            
-           
-//             <div className="text-xl font-extrabold text-blue-700 mb-8">
-//                 EMS Portal
-//             </div>
+    SYSTEM_OWNER: [
+      { name: "Dashboard", path: "/dashboard/system-owner" },
+      { name: "Teams", path: "/dashboard/system-owner/teams" },
+      { name: "User Management", path: "/dashboard/system-owner/users" },
+      { name: "Team Hierarchy", path: "/dashboard/system-owner/hierarchy" },
+    ],
 
-            
-//             <nav className="flex-grow space-y-1">
-//                 {navItems.map(item => {
-//                     const isActive = currentPath === item.path || (currentPath === '/' && item.path === '/dashboard');
-                    
-//                     const itemClasses = `flex items-center p-3 rounded-lg transition duration-150 ease-in-out text-sm ${
-//                         isActive
-                            
-//                             ? 'bg-blue-50 text-blue-700 font-bold border-r-4 border-blue-600'
-//                             : 'text-gray-600 hover:bg-gray-100 font-medium'
-//                     }`;
+    TL: [
+      { name: "TL Dashboard", path: "/dashboard/tl" },
+      { name: "Team Formation Editor", path: "/dashboard/tl/team-formation" },
+      { name: "Add Developer to Team", path: "/dashboard/tl/add-developer" },
+      { name: "Schedule Meeting", path: "/dashboard/tl/schedule-meeting" },
+      { name: "Special Notices", path: "/dashboard/tl/notices" },
+      { name: "Developer Progress View", path: "/dashboard/tl/dev-progress" },
+      { name: "Weekly Team Progress", path: "/dashboard/tl/weekly-progress" },
+      { name: "Past Project Details", path: "/dashboard/tl/past-projects" },
+    ],
 
-//                     return (
-//                         <Link 
-//                             key={item.path}
-//                             to={item.path}
-//                             className={itemClasses}
-//                         >
-//                             <span className="text-base mr-3">{item.icon}</span>
-//                             {item.name}
-//                         </Link>
-//                     );
-//                 })}
-//             </nav>
+  };
 
-//         </div>
-//     );
-// };
+  // default role if not logged in (you can change this)
+  const role = user?.role || "DEVELOPER";
+  const menuList = menus[role] || [];
 
-// export default Sidebar;
+  return (
+    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
+      {/* Brand */}
+      <div className="h-16 flex items-center px-6 border-b border-gray-100">
+        <span className="text-lg font-semibold text-blue-600 tracking-wide">
+          EMS
+        </span>
+      </div>
+
+      {/* Menu */}
+      <nav className="flex-1 overflow-y-auto py-4">
+        <ul className="space-y-1">
+          {menuList.map((item) => {
+            const isActive = location.pathname === item.path;
+
+            return (
+              <li key={item.path}>
+                <Link
+                  to={item.path}
+                  className={`block px-5 py-2.5 text-sm rounded-xl transition-colors ${
+                    isActive
+                      ? "bg-[#E6F0FF] text-blue-700 font-medium"
+                      : "text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </aside>
+  );
+};
+
+export default Sidebar;

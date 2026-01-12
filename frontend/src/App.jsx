@@ -29,6 +29,13 @@ import JobDetails from "./employee profile/JobDetails";
 import UserManagement from "./pages/UserManagement";
 import UserProfile from "./pages/UserProfile";
 
+//meeting Pages
+import MeetingOverview from "./pages/Meeting-Notification-Chat/MeetingOverview";
+import CreateMeetings from "./pages/Meeting-Notification-Chat/CreateMeetings";
+
+
+
+
 export default function App() {
   const [checkInTime, setCheckInTime] = useState(null);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
@@ -102,6 +109,12 @@ export default function App() {
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
       </Route>
+
+       {/* Meetings */}
+        <Route path="/meetings" element={<MeetingOverview />} />
+        <Route path="/meetings/create" element={<CreateMeetings />} />
+        
+
 
       {/* ================= GLOBAL FALLBACK ================= */}
       <Route path="*" element={<Navigate to="/login" replace />} />

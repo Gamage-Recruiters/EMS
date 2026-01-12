@@ -59,6 +59,26 @@ export const getMyTasks = async (req, res) => {
   }
 };
 
+// Controller to fetch all tasks 
+export const getAllTasks = async (req, res) => {
+  try {
+    const tasks = await Task.find()
+      .select("_id title status assignedTo priority")
+      .populate("assignedTo", "name email")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: tasks,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch all tasks",
+    });
+  }
+};
+
 // Controller to update task status
 export const updateTaskStatus = async (req, res) => {
   try {

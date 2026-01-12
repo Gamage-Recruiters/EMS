@@ -3,8 +3,26 @@ import { FiUsers, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { employeeService } from "../../../services/employeeService";
 import { teamService } from "../../../services/teamService";
+import { useRequireRole } from "../../../hooks/useRequireRole";
+
 
 export default function TeamCreationTab() {
+
+    const { loadinguser, isAuthorized } = useRequireRole([
+    "CEO",
+    "SystemAdmin",
+    "TL",
+    ]);
+  
+    if (loadinguser) {
+      return <div className="p-8">Checking permissions…</div>;
+    }
+  
+    if (!isAuthorized) {
+      return null; 
+    }
+
+
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 

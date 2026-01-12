@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { FiChevronDown, FiRefreshCw, FiAlertCircle } from "react-icons/fi";
 import { teamService } from "../../../services/teamService";
+import { useRequireRole } from "../../../hooks/useRequireRole";
+
 
 export default function TeamHierarchyTab() {
   const [teams, setTeams] = useState([]);
@@ -12,6 +14,22 @@ export default function TeamHierarchyTab() {
   const [departmentsByTeam, setDepartmentsByTeam] = useState({});
 
   async function loadTeams() {
+
+
+    const { loadinguser, isAuthorized } = useRequireRole([
+    "CEO",
+    "SystemAdmin",
+    "TL",
+    ]);
+  
+    if (loadinguser) {
+      return <div className="p-8">Checking permissions…</div>;
+    }
+  
+    if (!isAuthorized) {
+      return null; 
+    }
+
     setLoading(true);
     setError(null);
     try {

@@ -31,6 +31,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("user", JSON.stringify(userData));
 
       setUser(userData);
+
       toast.success("Login Successful");
       return true;
     } catch (error) {
@@ -96,5 +97,8 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+
+
 
 export default AuthContext;

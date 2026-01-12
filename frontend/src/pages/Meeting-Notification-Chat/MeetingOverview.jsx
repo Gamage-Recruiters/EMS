@@ -1,12 +1,22 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+//import axios from "axios";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { Plus, X } from "lucide-react";
 import MeetingTabs from "../../components/meeting/MeetingTabs";
+import ParticipantsPanel from "../../components/meeting/ParticipantsPanel";
+import { useAuth } from "../../context/AuthContext";
+
 import { useNavigate } from "react-router-dom";
+
+import {
+  getAllMeetings,
+  cancelMeeting,
+  rescheduleMeeting,
+  getMyMeetings
+} from "../../services/meetingService";
 
 const MeetingOverview = () => {
   const navigate = useNavigate();
@@ -16,6 +26,8 @@ const MeetingOverview = () => {
   const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [editData, setEditData] = useState({});
   const [activeTab, setActiveTab] = useState("All");
+  const [editParticipants, setEditParticipants] = useState([]);
+  const { user } = useAuth(); // user.role
 
   //  DURATION 
   const getDurationInMinutes = (duration) => {
@@ -33,40 +45,39 @@ const MeetingOverview = () => {
 
   //  FETCH MEETINGS 
   const fetchMeetings = async () => {
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
+     const res =
+    user.role === "Developer"
+      ? await getMyMeetings()
+      : await getAllMeetings();
 
-      const res = await axios.get("/api/meetings", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+    const formattedEvents = res.data.data.map((meeting) => ({
+      id: meeting.id,
+      title: meeting.title,
+      start: `${meeting.date.split("T")[0]}T${meeting.time}`,
+      end: calculateEndTime(
+        meeting.date,
+        meeting.time,
+        meeting.duration
+      ),
+      backgroundColor:
+        meeting.status === "Cancelled" ? "#ef4444" : "#6366f1",
+      borderColor:
+        meeting.status === "Cancelled" ? "#ef4444" : "#6366f1",
+      textColor: "#ffffff",
+      extendedProps: meeting,
+    }));
 
-      const formattedEvents = res.data.data.map((meeting) => ({
-        id: meeting._id,
-        title: meeting.title,
-        start: `${meeting.date.split("T")[0]}T${meeting.time}`,
-        end: calculateEndTime(
-          meeting.date,
-          meeting.time,
-          meeting.duration
-        ),
-        backgroundColor:
-          meeting.status === "Cancelled" ? "#ef4444" : "#6366f1",
-        borderColor:
-          meeting.status === "Cancelled" ? "#ef4444" : "#6366f1",
-        textColor: "#ffffff",
-        extendedProps: meeting,
-      }));
+    setEvents(formattedEvents);
+  } catch (error) {
+    console.error(error);
+    alert("Failed to load meetings");
+  } finally {
+    setLoading(false);
+  }
+};
 
-      setEvents(formattedEvents);
-    } catch (error) {
-      console.error("Fetch meetings error:", error);
-      alert("Failed to load meetings");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     fetchMeetings();
@@ -84,63 +95,59 @@ const MeetingOverview = () => {
       duration: meeting.duration,
       meetingLink: meeting.meetingLink || "",
     });
+     //  LOAD EXISTING PARTICIPANTS
+  setEditParticipants(
+    meeting.participants.map((p) => ({
+      email: p.user.email, 
+    }))
+  );
   };
 
   //  EDIT MEETING
   const handleEditMeeting = async () => {
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      await axios.put(
-        `/api/meetings/${selectedMeeting._id}`,
-        {
-          title: editData.title,
-          date: new Date(editData.date),
-          time: editData.time,
-          duration: editData.duration,
-          meetingLink: editData.meetingLink,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+    await rescheduleMeeting(selectedMeeting.id, {
+      title: editData.title,
+      date: new Date(editData.date),
+      time: editData.time,
+      duration: editData.duration,
+      meetingLink: editData.meetingLink,
+      participants: editParticipants.map((p) => p.email),
+    });
 
-      alert("Meeting updated successfully");
-      setSelectedMeeting(null);
-      fetchMeetings();
-    } catch (error) {
-      console.error("Edit meeting error:", error);
-      alert("Failed to update meeting");
-    } finally {
-      setLoading(false);
-    }
-  };
+    alert("Meeting updated successfully");
+    setSelectedMeeting(null);
+    fetchMeetings();
+  } catch (error) {
+    console.error("Edit meeting error:", error);
+    alert("Failed to update meeting");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   //  CANCEL MEETING 
   const handleCancelMeeting = async () => {
-    if (!window.confirm("Cancel this meeting?")) return;
+  if (!window.confirm("Cancel this meeting?")) return;
 
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      await axios.delete(`/api/meetings/${selectedMeeting._id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+    await cancelMeeting(selectedMeeting.id);
 
-      alert("Meeting cancelled");
-      setSelectedMeeting(null);
-      fetchMeetings();
-    } catch (error) {
-      console.error("Cancel meeting error:", error);
-      alert("Failed to cancel meeting");
-    } finally {
-      setLoading(false);
-    }
-  };
+    alert("Meeting cancelled");
+    setSelectedMeeting(null);
+    fetchMeetings();
+  } catch (error) {
+    console.error("Cancel meeting error:", error);
+    alert("Failed to cancel meeting");
+  } finally {
+    setLoading(false);
+  }
+};
 
   //  FILTER EVENTS 
   const filteredEvents = events.filter((event) => {
@@ -268,6 +275,19 @@ const MeetingOverview = () => {
                 placeholder="Meeting Link"
               />
             )}
+
+            {/* PARTICIPANTS EDIT */}
+            <ParticipantsPanel
+              participants={editParticipants}
+              onAddParticipant={(email) =>
+                setEditParticipants([...editParticipants, { email }])
+              }
+              onRemoveParticipant={(email) =>
+                setEditParticipants(
+                  editParticipants.filter((p) => p.email !== email)
+                )
+              }
+            />
 
             <div className="flex justify-between pt-4">
               <button

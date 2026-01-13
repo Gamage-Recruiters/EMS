@@ -1,40 +1,58 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../../../context/AuthContext";
+import api from "../../../../services/api";
+import { toast } from "react-hot-toast";
 
-export default function CreateChannelModal({
-  users,
-  currentUser,
-  onCreate,
-  onClose,
-}) {
+export default function CreateChannelModal({ users, onCreate, onClose }) {
+  const { user } = useAuth(); // logged-in user
   const [name, setName] = useState("");
   const [type, setType] = useState("regular");
   const [selected, setSelected] = useState([]);
 
-  // ✅ ALL ACTIVE USERS ARE ASSIGNABLE
+  // ✅ Only active users can be assigned
   const assignableUsers = users.filter((u) => u.status === "Active");
 
-  // Reset modal fields on open
+  // Reset modal when opened
   useEffect(() => {
     setName("");
     setType("regular");
     setSelected([]);
-  }, [users]);
+  }, []);
 
+  // Toggle user selection
   const toggle = (id) => {
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   };
 
-  const create = () => {
-    if (!name.trim()) return;
+  // Create channel
+  const create = async () => {
+    if (!name.trim()) {
+      toast.error("Channel name is required");
+      return;
+    }
 
-    onCreate({
-      name,
-      type,
-      members: type === "regular" ? [...selected, currentUser._id] : [],
-    });
-    onClose(); // close after creation
+    try {
+      const payload = {
+        name,
+        type,
+      };
+
+      // Only send members for regular channels
+      if (type === "regular") {
+        payload.memberIds = selected;
+      }
+
+      const { data } = await api.post("/chat/channels", payload);
+
+      toast.success("Channel created successfully!");
+      onCreate(data.channel); // add channel to UI
+      onClose();
+    } catch (err) {
+      console.error(err.response?.data || err);
+      toast.error(err.response?.data?.message || "Failed to create channel");
+    }
   };
 
   return (
@@ -42,6 +60,7 @@ export default function CreateChannelModal({
       <div className="bg-white w-96 rounded-xl p-5">
         <h3 className="text-lg font-semibold mb-4">Create Channel</h3>
 
+        {/* Channel type */}
         <select
           value={type}
           onChange={(e) => setType(e.target.value)}
@@ -51,6 +70,7 @@ export default function CreateChannelModal({
           <option value="notice">Notice</option>
         </select>
 
+        {/* Channel name */}
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -58,6 +78,7 @@ export default function CreateChannelModal({
           className="w-full mb-3 border px-3 py-2 rounded"
         />
 
+        {/* Assign members only for regular channels */}
         {type === "regular" && (
           <>
             <p className="text-sm font-medium mb-1">Assign Team Members</p>
@@ -87,6 +108,7 @@ export default function CreateChannelModal({
           </>
         )}
 
+        {/* Buttons */}
         <div className="flex justify-end gap-2 mt-4">
           <button
             onClick={onClose}

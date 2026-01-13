@@ -12,11 +12,8 @@ export default function TeamChatPage() {
   const [activeChannelId, setActiveChannelId] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
 
-  const currentUser = JSON.parse(localStorage.getItem("user"));
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
-  /* ----------------------------------
-     LOAD INITIAL DATA
-  ---------------------------------- */
   useEffect(() => {
     loadChannels();
     loadUsers();
@@ -64,16 +61,27 @@ export default function TeamChatPage() {
   ---------------------------------- */
   useEffect(() => {
     socket.on("channel:new", (channel) => {
-      setChannels((prev) => [...prev, channel]);
+      console.log("Received new channel:", channel); // ← DEBUG
+
+      setChannels((prev) => {
+        // Prevent duplicates
+        if (prev.some((c) => c._id === channel._id)) {
+          console.log("Duplicate channel prevented:", channel._id);
+          return prev;
+        }
+        return [...prev, channel];
+      });
     });
 
     socket.on("channel:updated", (updated) => {
+      console.log("Channel updated:", updated);
       setChannels((prev) =>
         prev.map((c) => (c._id === updated._id ? updated : c))
       );
     });
 
     socket.on("channel:deleted", (channelId) => {
+      console.log("Channel deleted:", channelId);
       setChannels((prev) => prev.filter((c) => c._id !== channelId));
       setActiveChannelId((prev) => (prev === channelId ? null : prev));
     });
@@ -84,7 +92,6 @@ export default function TeamChatPage() {
       socket.off("channel:deleted");
     };
   }, []);
-
   /* ----------------------------------
      CREATE CHANNEL
   ---------------------------------- */
@@ -98,8 +105,43 @@ export default function TeamChatPage() {
   };
 
   /* ----------------------------------
-     RENDER
-  ---------------------------------- */
+   UPDATE CHANNEL
+---------------------------------- */
+  const updateChannel = async (updatedData) => {
+    try {
+      const res = await api.put(`/chat/channels/${updatedData._id}`, {
+        name: updatedData.name,
+        memberIds: updatedData.members,
+      });
+
+      const updatedChannel = res.data.channel;
+
+      setChannels((prev) =>
+        prev.map((c) => (c._id === updatedChannel._id ? updatedChannel : c))
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update channel");
+    }
+  };
+
+  /* ----------------------------------
+   DELETE CHANNEL
+---------------------------------- */
+  const deleteChannel = async (channelId) => {
+    try {
+      await api.delete(`/chat/channels/${channelId}`);
+
+      setChannels((prev) => prev.filter((c) => c._id !== channelId));
+      setActiveChannelId((prev) => (prev === channelId ? null : prev));
+
+      socket.emit("channel:delete", channelId);
+    } catch (err) {
+      console.error("Failed to delete channel", err);
+      alert("Failed to delete channel");
+    }
+  };
+
   return (
     <>
       <div className="flex h-[80vh] border rounded-xl overflow-hidden bg-white">
@@ -109,6 +151,9 @@ export default function TeamChatPage() {
           activeId={activeChannelId}
           setActiveId={setActiveChannelId}
           onCreate={() => setShowCreate(true)}
+          onUpdateChannel={updateChannel}
+          onDeleteChannel={deleteChannel}
+          currentUser={currentUser} // ← important!
         />
 
         {activeChannel ? (
@@ -122,7 +167,7 @@ export default function TeamChatPage() {
 
       {showCreate && (
         <CreateChannelModal
-          isOpen={showCreate} // Pass the state
+          isOpen={showCreate}
           users={users}
           currentUser={currentUser}
           onCreate={createChannel}

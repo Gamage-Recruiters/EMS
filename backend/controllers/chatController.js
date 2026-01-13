@@ -1,8 +1,8 @@
 // controllers/chatController.js
-import Channel from '../models/Channel.js';
-import Message from '../models/Message.js';
-import User from '../models/User.js';
-import AppError from '../utils/AppError.js';
+import Channel from "../models/Channel.js";
+import Message from "../models/Message.js";
+import User from "../models/User.js";
+import AppError from "../utils/AppError.js";
 
 // ==================== CHANNEL CONTROLLERS ====================
 
@@ -11,17 +11,17 @@ export const getChannels = async (req, res, next) => {
   try {
     let channels;
 
-    if (req.user.role === 'CEO') {
+    if (req.user.role === "CEO") {
       // CEO can see all channels
       channels = await Channel.find({ isActive: true })
-        .populate('createdBy', 'firstName lastName role')
-        .populate('members', 'firstName lastName email role profileImage')
+        .populate("createdBy", "firstName lastName role")
+        .populate("members", "firstName lastName email role profileImage")
         .sort({ createdAt: -1 });
-    } else if (req.user.role === 'TL' || req.user.role === 'PM') {
+    } else if (req.user.role === "TL" || req.user.role === "PM") {
       // TL/PM can see all channels
       channels = await Channel.find({ isActive: true })
-        .populate('createdBy', 'firstName lastName role')
-        .populate('members', 'firstName lastName email role profileImage')
+        .populate("createdBy", "firstName lastName role")
+        .populate("members", "firstName lastName email role profileImage")
         .sort({ createdAt: -1 });
     } else {
       // Regular employees see only channels they're members of
@@ -29,8 +29,8 @@ export const getChannels = async (req, res, next) => {
         members: req.user._id,
         isActive: true,
       })
-        .populate('createdBy', 'firstName lastName role')
-        .populate('members', 'firstName lastName email role profileImage')
+        .populate("createdBy", "firstName lastName role")
+        .populate("members", "firstName lastName email role profileImage")
         .sort({ createdAt: -1 });
     }
 
@@ -47,19 +47,19 @@ export const getChannels = async (req, res, next) => {
 //Create a new channel
 export const createChannel = async (req, res, next) => {
   try {
-    if (!['CEO', 'TL', 'PM'].includes(req.user.role)) {
-      return next(new AppError('Only CEO, TL, or PM can create channels', 403));
+    if (!["CEO", "TL", "PM"].includes(req.user.role)) {
+      return next(new AppError("Only CEO, TL, or PM can create channels", 403));
     }
 
     const { name, type, memberIds, description } = req.body;
 
     if (!name || !type) {
-      return next(new AppError('Channel name and type are required', 400));
+      return next(new AppError("Channel name and type are required", 400));
     }
 
     // Validate type
-    if (!['regular', 'notice', 'private'].includes(type)) {
-      return next(new AppError('Invalid channel type', 400));
+    if (!["regular", "notice", "private"].includes(type)) {
+      return next(new AppError("Invalid channel type", 400));
     }
 
     // Create channel
@@ -68,12 +68,12 @@ export const createChannel = async (req, res, next) => {
       type,
       createdBy: req.user._id,
       members: memberIds || [req.user._id],
-      description: description || '',
+      description: description || "",
     });
 
     const populatedChannel = await Channel.findById(channel._id)
-      .populate('createdBy', 'firstName lastName role')
-      .populate('members', 'firstName lastName email role profileImage');
+      .populate("createdBy", "firstName lastName role")
+      .populate("members", "firstName lastName email role profileImage");
 
     res.status(201).json({
       success: true,
@@ -90,11 +90,11 @@ export const getChannelById = async (req, res, next) => {
     const { channelId } = req.params;
 
     const channel = await Channel.findById(channelId)
-      .populate('createdBy', 'firstName lastName role')
-      .populate('members', 'firstName lastName email role profileImage');
+      .populate("createdBy", "firstName lastName role")
+      .populate("members", "firstName lastName email role profileImage");
 
     if (!channel) {
-      return next(new AppError('Channel not found', 404));
+      return next(new AppError("Channel not found", 404));
     }
 
     // Check if user has access
@@ -103,13 +103,13 @@ export const getChannelById = async (req, res, next) => {
     );
 
     const canAccess =
-      req.user.role === 'CEO' ||
-      req.user.role === 'TL' ||
-      req.user.role === 'PM' ||
+      req.user.role === "CEO" ||
+      req.user.role === "TL" ||
+      req.user.role === "PM" ||
       isMember;
 
     if (!canAccess) {
-      return next(new AppError('You do not have access to this channel', 403));
+      return next(new AppError("You do not have access to this channel", 403));
     }
 
     res.json({
@@ -124,27 +124,27 @@ export const getChannelById = async (req, res, next) => {
 //Add member to channel
 export const addMemberToChannel = async (req, res, next) => {
   try {
-    if (!['CEO', 'TL', 'PM'].includes(req.user.role)) {
-      return next(new AppError('Only CEO, TL, or PM can add members', 403));
+    if (!["CEO", "TL", "PM"].includes(req.user.role)) {
+      return next(new AppError("Only CEO, TL, or PM can add members", 403));
     }
 
     const { channelId } = req.params;
     const { userId } = req.body;
 
     if (!userId) {
-      return next(new AppError('User ID is required', 400));
+      return next(new AppError("User ID is required", 400));
     }
 
     const channel = await Channel.findById(channelId);
 
     if (!channel) {
-      return next(new AppError('Channel not found', 404));
+      return next(new AppError("Channel not found", 404));
     }
 
     // Check if user exists
     const user = await User.findById(userId);
     if (!user) {
-      return next(new AppError('User not found', 404));
+      return next(new AppError("User not found", 404));
     }
 
     // Add member if not already present
@@ -154,12 +154,12 @@ export const addMemberToChannel = async (req, res, next) => {
     }
 
     const updatedChannel = await Channel.findById(channelId)
-      .populate('createdBy', 'firstName lastName role')
-      .populate('members', 'firstName lastName email role profileImage');
+      .populate("createdBy", "firstName lastName role")
+      .populate("members", "firstName lastName email role profileImage");
 
     res.json({
       success: true,
-      message: 'Member added successfully',
+      message: "Member added successfully",
       channel: updatedChannel,
     });
   } catch (error) {
@@ -170,8 +170,8 @@ export const addMemberToChannel = async (req, res, next) => {
 //Remove member from channel
 export const removeMemberFromChannel = async (req, res, next) => {
   try {
-    if (!['CEO', 'TL', 'PM'].includes(req.user.role)) {
-      return next(new AppError('Only CEO, TL, or PM can remove members', 403));
+    if (!["CEO", "TL", "PM"].includes(req.user.role)) {
+      return next(new AppError("Only CEO, TL, or PM can remove members", 403));
     }
 
     const { channelId, userId } = req.params;
@@ -179,7 +179,7 @@ export const removeMemberFromChannel = async (req, res, next) => {
     const channel = await Channel.findById(channelId);
 
     if (!channel) {
-      return next(new AppError('Channel not found', 404));
+      return next(new AppError("Channel not found", 404));
     }
 
     // Remove member
@@ -190,12 +190,45 @@ export const removeMemberFromChannel = async (req, res, next) => {
     await channel.save();
 
     const updatedChannel = await Channel.findById(channelId)
-      .populate('createdBy', 'firstName lastName role')
-      .populate('members', 'firstName lastName email role profileImage');
+      .populate("createdBy", "firstName lastName role")
+      .populate("members", "firstName lastName email role profileImage");
 
     res.json({
       success: true,
-      message: 'Member removed successfully',
+      message: "Member removed successfully",
+      channel: updatedChannel,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Update channel (name + members)
+export const updateChannel = async (req, res, next) => {
+  try {
+    if (!["CEO", "TL", "PM"].includes(req.user.role)) {
+      return next(new AppError("Not authorized", 403));
+    }
+
+    const { channelId } = req.params;
+    const { name, memberIds } = req.body;
+
+    const channel = await Channel.findById(channelId);
+    if (!channel) {
+      return next(new AppError("Channel not found", 404));
+    }
+
+    if (name) channel.name = name;
+    if (Array.isArray(memberIds)) channel.members = memberIds;
+
+    await channel.save();
+
+    const updatedChannel = await Channel.findById(channelId)
+      .populate("createdBy", "firstName lastName role")
+      .populate("members", "firstName lastName email role profileImage");
+
+    res.json({
+      success: true,
       channel: updatedChannel,
     });
   } catch (error) {
@@ -206,8 +239,8 @@ export const removeMemberFromChannel = async (req, res, next) => {
 //Delete channel
 export const deleteChannel = async (req, res, next) => {
   try {
-    if (req.user.role !== 'CEO') {
-      return next(new AppError('Only CEO can delete channels', 403));
+    if (req.user.role !== "CEO") {
+      return next(new AppError("Only CEO can delete channels", 403));
     }
 
     const { channelId } = req.params;
@@ -215,7 +248,7 @@ export const deleteChannel = async (req, res, next) => {
     const channel = await Channel.findById(channelId);
 
     if (!channel) {
-      return next(new AppError('Channel not found', 404));
+      return next(new AppError("Channel not found", 404));
     }
 
     // Soft delete
@@ -224,7 +257,7 @@ export const deleteChannel = async (req, res, next) => {
 
     res.json({
       success: true,
-      message: 'Channel deleted successfully',
+      message: "Channel deleted successfully",
     });
   } catch (error) {
     next(error);
@@ -242,7 +275,7 @@ export const getMessages = async (req, res, next) => {
     const channel = await Channel.findById(channelId);
 
     if (!channel) {
-      return next(new AppError('Channel not found', 404));
+      return next(new AppError("Channel not found", 404));
     }
 
     // Check if user has access
@@ -251,17 +284,17 @@ export const getMessages = async (req, res, next) => {
     );
 
     const canAccess =
-      req.user.role === 'CEO' ||
-      req.user.role === 'TL' ||
-      req.user.role === 'PM' ||
+      req.user.role === "CEO" ||
+      req.user.role === "TL" ||
+      req.user.role === "PM" ||
       isMember;
 
     if (!canAccess) {
-      return next(new AppError('You do not have access to this channel', 403));
+      return next(new AppError("You do not have access to this channel", 403));
     }
 
     const messages = await Message.find({ channelId })
-      .populate('userId', 'firstName lastName email role profileImage')
+      .populate("userId", "firstName lastName email role profileImage")
       .sort({ createdAt: -1 })
       .limit(parseInt(limit))
       .skip(parseInt(skip));
@@ -283,22 +316,22 @@ export const sendMessage = async (req, res, next) => {
     const { text, attachments } = req.body;
 
     if (!text || !text.trim()) {
-      return next(new AppError('Message text is required', 400));
+      return next(new AppError("Message text is required", 400));
     }
 
     const channel = await Channel.findById(channelId);
 
     if (!channel) {
-      return next(new AppError('Channel not found', 404));
+      return next(new AppError("Channel not found", 404));
     }
 
     // Check permissions
     let canSend = false;
 
-    if (req.user.role === 'CEO') {
+    if (req.user.role === "CEO") {
       // CEO can send to any channel
       canSend = true;
-    } else if (req.user.role === 'TL' || req.user.role === 'PM') {
+    } else if (req.user.role === "TL" || req.user.role === "PM") {
       // TL/PM can send to any channel
       canSend = true;
     } else {
@@ -307,12 +340,15 @@ export const sendMessage = async (req, res, next) => {
       const isMember = channel.members.some(
         (memberId) => memberId.toString() === req.user._id.toString()
       );
-      canSend = isMember && channel.type !== 'notice';
+      canSend = isMember && channel.type !== "notice";
     }
 
     if (!canSend) {
       return next(
-        new AppError('You do not have permission to send messages in this channel', 403)
+        new AppError(
+          "You do not have permission to send messages in this channel",
+          403
+        )
       );
     }
 
@@ -324,8 +360,10 @@ export const sendMessage = async (req, res, next) => {
       attachments: attachments || [],
     });
 
-    const populatedMessage = await Message.findById(message._id)
-      .populate('userId', 'firstName lastName email role profileImage');
+    const populatedMessage = await Message.findById(message._id).populate(
+      "userId",
+      "firstName lastName email role profileImage"
+    );
 
     res.status(201).json({
       success: true,
@@ -343,18 +381,18 @@ export const editMessage = async (req, res, next) => {
     const { text } = req.body;
 
     if (!text || !text.trim()) {
-      return next(new AppError('Message text is required', 400));
+      return next(new AppError("Message text is required", 400));
     }
 
     const message = await Message.findById(messageId);
 
     if (!message) {
-      return next(new AppError('Message not found', 404));
+      return next(new AppError("Message not found", 404));
     }
 
     // Only message owner can edit
     if (message.userId.toString() !== req.user._id.toString()) {
-      return next(new AppError('You can only edit your own messages', 403));
+      return next(new AppError("You can only edit your own messages", 403));
     }
 
     message.text = text.trim();
@@ -362,8 +400,10 @@ export const editMessage = async (req, res, next) => {
     message.editedAt = new Date();
     await message.save();
 
-    const updatedMessage = await Message.findById(messageId)
-      .populate('userId', 'firstName lastName email role profileImage');
+    const updatedMessage = await Message.findById(messageId).populate(
+      "userId",
+      "firstName lastName email role profileImage"
+    );
 
     res.json({
       success: true,
@@ -382,23 +422,25 @@ export const deleteMessage = async (req, res, next) => {
     const message = await Message.findById(messageId);
 
     if (!message) {
-      return next(new AppError('Message not found', 404));
+      return next(new AppError("Message not found", 404));
     }
 
     // Only message owner, TL, PM, or CEO can delete
     const canDelete =
       message.userId.toString() === req.user._id.toString() ||
-      ['CEO', 'TL', 'PM'].includes(req.user.role);
+      ["CEO", "TL", "PM"].includes(req.user.role);
 
     if (!canDelete) {
-      return next(new AppError('You do not have permission to delete this message', 403));
+      return next(
+        new AppError("You do not have permission to delete this message", 403)
+      );
     }
 
     await Message.findByIdAndDelete(messageId);
 
     res.json({
       success: true,
-      message: 'Message deleted successfully',
+      message: "Message deleted successfully",
     });
   } catch (error) {
     next(error);
@@ -410,24 +452,24 @@ export const deleteMessage = async (req, res, next) => {
 // Send a notice
 export const sendNotice = async (req, res, next) => {
   try {
-    if (req.user.role !== 'CEO') {
-      return next(new AppError('Only CEO can send notices', 403));
+    if (req.user.role !== "CEO") {
+      return next(new AppError("Only CEO can send notices", 403));
     }
 
     const { channelId, text } = req.body;
 
     if (!text || !text.trim()) {
-      return next(new AppError('Notice text is required', 400));
+      return next(new AppError("Notice text is required", 400));
     }
 
     if (!channelId) {
-      return next(new AppError('Channel ID is required', 400));
+      return next(new AppError("Channel ID is required", 400));
     }
 
     const channel = await Channel.findById(channelId);
 
-    if (!channel || channel.type !== 'notice') {
-      return next(new AppError('Invalid notice channel', 400));
+    if (!channel || channel.type !== "notice") {
+      return next(new AppError("Invalid notice channel", 400));
     }
 
     // Create notice message
@@ -437,8 +479,10 @@ export const sendNotice = async (req, res, next) => {
       text: text.trim(),
     });
 
-    const populatedMessage = await Message.findById(message._id)
-      .populate('userId', 'firstName lastName email role profileImage');
+    const populatedMessage = await Message.findById(message._id).populate(
+      "userId",
+      "firstName lastName email role profileImage"
+    );
 
     res.status(201).json({
       success: true,
@@ -454,14 +498,16 @@ export const sendNotice = async (req, res, next) => {
 // Get all employees for private chat
 export const getEmployees = async (req, res, next) => {
   try {
-    if (req.user.role !== 'CEO') {
-      return next(new AppError('Only CEO can access employee list', 403));
+    if (req.user.role !== "CEO") {
+      return next(new AppError("Only CEO can access employee list", 403));
     }
 
     const employees = await User.find({
-      role: { $ne: 'CEO' },
-      status: 'Active',
-    }).select('firstName lastName email role profileImage department designation');
+      role: { $ne: "CEO" },
+      status: "Active",
+    }).select(
+      "firstName lastName email role profileImage department designation"
+    );
 
     res.json({
       success: true,
@@ -476,31 +522,33 @@ export const getEmployees = async (req, res, next) => {
 // Send private message
 export const sendPrivateMessage = async (req, res, next) => {
   try {
-    if (req.user.role !== 'CEO') {
-      return next(new AppError('Only CEO can send private messages', 403));
+    if (req.user.role !== "CEO") {
+      return next(new AppError("Only CEO can send private messages", 403));
     }
 
     const { recipientId, text } = req.body;
 
     if (!recipientId || !text || !text.trim()) {
-      return next(new AppError('Recipient ID and message text are required', 400));
+      return next(
+        new AppError("Recipient ID and message text are required", 400)
+      );
     }
 
     const recipient = await User.findById(recipientId);
     if (!recipient) {
-      return next(new AppError('Recipient not found', 404));
+      return next(new AppError("Recipient not found", 404));
     }
 
     // Find or create private channel
     let channel = await Channel.findOne({
-      type: 'private',
+      type: "private",
       members: { $all: [req.user._id, recipientId] },
     });
 
     if (!channel) {
       channel = await Channel.create({
         name: `Private: CEO - ${recipient.firstName} ${recipient.lastName}`,
-        type: 'private',
+        type: "private",
         createdBy: req.user._id,
         members: [req.user._id, recipientId],
       });
@@ -513,8 +561,10 @@ export const sendPrivateMessage = async (req, res, next) => {
       text: text.trim(),
     });
 
-    const populatedMessage = await Message.findById(message._id)
-      .populate('userId', 'firstName lastName email role profileImage');
+    const populatedMessage = await Message.findById(message._id).populate(
+      "userId",
+      "firstName lastName email role profileImage"
+    );
 
     res.status(201).json({
       success: true,
@@ -529,16 +579,16 @@ export const sendPrivateMessage = async (req, res, next) => {
 // Get all private channels
 export const getPrivateChannels = async (req, res, next) => {
   try {
-    if (req.user.role !== 'CEO') {
-      return next(new AppError('Only CEO can access private channels', 403));
+    if (req.user.role !== "CEO") {
+      return next(new AppError("Only CEO can access private channels", 403));
     }
 
     const channels = await Channel.find({
-      type: 'private',
+      type: "private",
       members: req.user._id,
       isActive: true,
     })
-      .populate('members', 'firstName lastName email role profileImage')
+      .populate("members", "firstName lastName email role profileImage")
       .sort({ updatedAt: -1 });
 
     res.json({
@@ -559,19 +609,21 @@ export const searchMessages = async (req, res, next) => {
     const { query, limit = 20 } = req.query;
 
     if (!query || query.trim().length < 2) {
-      return next(new AppError('Search query must be at least 2 characters', 400));
+      return next(
+        new AppError("Search query must be at least 2 characters", 400)
+      );
     }
 
     let searchFilter = {
-      text: { $regex: query.trim(), $options: 'i' },
+      text: { $regex: query.trim(), $options: "i" },
     };
 
     // Restrict search based on role
-    if (!['CEO', 'TL', 'PM'].includes(req.user.role)) {
+    if (!["CEO", "TL", "PM"].includes(req.user.role)) {
       const userChannels = await Channel.find({
         members: req.user._id,
         isActive: true,
-      }).select('_id');
+      }).select("_id");
 
       searchFilter.channelId = {
         $in: userChannels.map((ch) => ch._id),
@@ -579,8 +631,8 @@ export const searchMessages = async (req, res, next) => {
     }
 
     const messages = await Message.find(searchFilter)
-      .populate('userId', 'firstName lastName email role profileImage')
-      .populate('channelId', 'name type')
+      .populate("userId", "firstName lastName email role profileImage")
+      .populate("channelId", "name type")
       .sort({ createdAt: -1 })
       .limit(parseInt(limit));
 

@@ -5,4 +5,12 @@ import tailwindcss from "@tailwindcss/vite";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  server: {
+    port: 5173,
+    host: 'localhost',
+    headers: {
+      // Recommended for OAuth popup flows (e.g., Google Identity Services)
+      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+    },
+  }
 });

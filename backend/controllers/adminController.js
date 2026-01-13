@@ -19,7 +19,11 @@ export const addUserByAdmin = async (req, res, next) => {
       password,
       role,
       designation,
-      department
+      department,
+      contactNumber,
+      address,
+      city,
+      education
     } = req.body;
 
     // Basic validation
@@ -46,6 +50,18 @@ export const addUserByAdmin = async (req, res, next) => {
       role,
       designation,
       department,
+      contactNumber: contactNumber || '',
+      address: address || '',
+      city: city || '',
+      profileImage: req.file ? req.file.filename : '',
+      education: {
+        institution: education?.institution || '',
+        department: education?.department || '',
+        degree: education?.degree || '',
+        location: education?.location || '',
+        startDate: education?.startDate ? new Date(education.startDate) : undefined,
+        endDate: education?.endDate ? new Date(education.endDate) : undefined
+      },
       status: 'Active'
     });
 
@@ -58,7 +74,12 @@ export const addUserByAdmin = async (req, res, next) => {
         email: user.email,
         role: user.role,
         designation: user.designation,
-        department: user.department
+        department: user.department,
+        contactNumber: user.contactNumber,
+        address: user.address,
+        city: user.city,
+        profileImage: user.profileImage,
+        education: user.education
       }
     });
 
@@ -68,8 +89,8 @@ export const addUserByAdmin = async (req, res, next) => {
 };
 
 
-// System owner or CEO update developer profile
-export const updateDeveloperByAdmin = async (req, res, next) => {
+// System owner or CEO update user profile
+export const updateUserByAdmin = async (req, res, next) => {
   try {
     const actorRole = req.user.role;
 
@@ -87,7 +108,11 @@ export const updateDeveloperByAdmin = async (req, res, next) => {
       designation,
       department,
       status,
-      role
+      role,
+      contactNumber,
+      address,
+      city,
+      education
     } = req.body;
 
     const user = await User.findById(userId);
@@ -95,18 +120,27 @@ export const updateDeveloperByAdmin = async (req, res, next) => {
       return next(new AppError("User not found", 404));
     }
 
-    // Optional: restrict updates to developers only
-    if (user.role !== "Developer") {
-      return next(new AppError("Only developer profiles can be updated here", 403));
-    }
-
     // Update fields
-    user.firstName = firstName || user.firstName;
-    user.lastName = lastName || user.lastName;
-    user.email = email || user.email;
-    user.designation = designation || user.designation;
-    user.department = department || user.department;
-    user.status = status || user.status;
+    if (firstName !== undefined) user.firstName = firstName;
+    if (lastName !== undefined) user.lastName = lastName;
+    if (email !== undefined) user.email = email;
+    if (designation !== undefined) user.designation = designation;
+    if (department !== undefined) user.department = department;
+    if (status !== undefined) user.status = status;
+    if (contactNumber !== undefined) user.contactNumber = contactNumber;
+    if (address !== undefined) user.address = address;
+    if (city !== undefined) user.city = city;
+    if (req.file) user.profileImage = req.file.filename;
+    
+    // Update education fields
+    if (education !== undefined) {
+      if (education.institution !== undefined) user.education.institution = education.institution;
+      if (education.department !== undefined) user.education.department = education.department;
+      if (education.degree !== undefined) user.education.degree = education.degree;
+      if (education.location !== undefined) user.education.location = education.location;
+      if (education.startDate !== undefined) user.education.startDate = education.startDate ? new Date(education.startDate) : null;
+      if (education.endDate !== undefined) user.education.endDate = education.endDate ? new Date(education.endDate) : null;
+    }
 
     // Role change (optional)
     if (role) {
@@ -125,7 +159,7 @@ export const updateDeveloperByAdmin = async (req, res, next) => {
     await user.save();
 
     res.status(200).json({
-      message: "Developer profile updated successfully",
+      message: "User profile updated successfully",
       user: {
         _id: user._id,
         firstName: user.firstName,
@@ -134,7 +168,12 @@ export const updateDeveloperByAdmin = async (req, res, next) => {
         role: user.role,
         designation: user.designation,
         department: user.department,
-        status: user.status
+        status: user.status,
+        contactNumber: user.contactNumber,
+        address: user.address,
+        city: user.city,
+        profileImage: user.profileImage,
+        education: user.education
       }
     });
 
@@ -144,8 +183,8 @@ export const updateDeveloperByAdmin = async (req, res, next) => {
 };
 
 
-// System owner or CEO delete developer profile
-export const deleteDeveloperByAdmin = async (req, res, next) => {
+// System owner or CEO delete user profile
+export const deleteUserByAdmin = async (req, res, next) => {
   try {
     const actorRole = req.user.role;
 
@@ -161,15 +200,10 @@ export const deleteDeveloperByAdmin = async (req, res, next) => {
       return next(new AppError("User not found", 404));
     }
 
-    // Safety check
-    if (user.role !== "Developer") {
-      return next(new AppError("Only developers can be deleted using this endpoint", 403));
-    }
-
     await User.deleteOne({ _id: userId });
 
     res.status(200).json({
-      message: "Developer removed successfully"
+      message: "User removed successfully"
     });
 
   } catch (error) {

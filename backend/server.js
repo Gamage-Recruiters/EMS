@@ -1,47 +1,51 @@
-// server.js
+import 'dotenv/config'; // already loads .env
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import { createServer } from "http";
 import connectDB from "./config/db.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
-import authRoutes from "./routes/authRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
-import teamRoutes from "./routes/teamRoutes.js";
-import adminRoutes from "./routes/adminRoutes.js";
 
-import errorHandler from "./middlewares/errorMiddleware.js";
+// Helpers to get __dirname in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Routes
+import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import teamRoutes from './routes/teamRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 import leaveRoutes from "./routes/leaveRoutes.js";
 import AttendanceRoutes from "./routes/AttendanceRoutes.js";
 import availabilityRoutes from "./routes/availabilityRoutes.js";
-
 import chatRoutes from "./routes/ChatRoutes.js";
 import testRoutes from "./routes/testRoutes.js";
 import initializeSocket from "./socketServer.js";
-
 import meetingRoutes from "./routes/meetingRoutes.js";
 
 
-dotenv.config();
+
+// Middlewares
+import errorHandler from "./middlewares/errorMiddleware.js";
 
 // Connect Database
 connectDB();
 
 const app = express();
+
 const httpServer = createServer(app);
 
 // Initialize Socket.IO
 const io = initializeSocket(httpServer);
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Middlewares
+
+// CORS - allow requests from frontend
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "http://localhost:5174"],
     credentials: true,
   })
 );
@@ -63,13 +67,13 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/attendance", AttendanceRoutes);
 app.use("/api/leaves", leaveRoutes);
 app.use("/api/availability", availabilityRoutes);
-
-
 app.use("/api/chat", chatRoutes);
-app.use("/test", testRoutes);
-
 app.use("/api/meetings", meetingRoutes);
-// app.use('/test', testRoutes);
+
+// Base Route
+app.get("/", (req, res) => {
+  res.json({ message: "EMS Backend Running" });
+});
 
 
 // Global Error Handler

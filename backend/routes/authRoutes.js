@@ -20,7 +20,7 @@ router.post('/refresh-token', refreshToken);
 // Profile Image Upload
 router.post('/profile/upload', protect, upload.single('image'), uploadProfileImage);
 
-// Role Assignment (CEO & TL)
-router.put('/assign-role', protect, authorize('CEO', 'TL'), assignRole);
+// Role Assignment (CEO, SystemAdmin & TL)
+router.put('/assign-role', protect, authorize('CEO', 'SystemAdmin', 'TL'), assignRole);
 
 export default router;

@@ -6,12 +6,12 @@ const teamSchema = new mongoose.Schema({
   createdDate: { type: Date, default: Date.now },
   teamLead: { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Employee',
+    ref: 'User',
     required: true 
   },
   members: [{ 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Employee' 
+    ref: 'User' 
   }]
 }, { timestamps: true });
 

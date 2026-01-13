@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 
 const userSchema = new mongoose.Schema({
   // Basic personal details
@@ -8,14 +8,19 @@ const userSchema = new mongoose.Schema({
 
   // Login and authentication
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  password: {
+    type: String,
+    required: function () {
+      return !this.googleId;
+    },
+  },
   refreshToken: { type: String },
   googleId: { type: String },
 
   // Role and permissions
   role: {
     type: String,
-    enum: ['CEO', 'TL', 'ATL', 'PM', 'Developer', 'Unassigned'],
+    enum: ['CEO', 'SystemAdmin', 'TL', 'ATL', 'PM', 'Developer', 'Unassigned'],
     default: 'Unassigned',
   },
 
@@ -33,6 +38,21 @@ const userSchema = new mongoose.Schema({
     enum: ['Active', 'Inactive'], 
     default: 'Active' 
   },
+
+  // Contact information
+  contactNumber: { type: String, default: '' },
+  address: { type: String, default: '' },
+  city: { type: String, default: '' },
+
+  // Education details
+  education: {
+    institution: { type: String, default: '' },
+    department: { type: String, default: '' },
+    degree: { type: String, default: '' },
+    location: { type: String, default: '' },
+    startDate: { type: Date },
+    endDate: { type: Date }
+  }
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);

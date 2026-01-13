@@ -1,14 +1,14 @@
 import mongoose from 'mongoose';
 
 const complaintSchema = new mongoose.Schema({
-  employee: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
-  assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
+  employee: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   description: { type: String, required: true },
   status: { type: String, default: 'Open' }
 }, { timestamps: true });
 
 const badgeSchema = new mongoose.Schema({
-  employee: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
+  employee: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   badgeType: { type: String },
   points: { type: Number },
   awardedDate: { type: Date, default: Date.now }
@@ -16,13 +16,13 @@ const badgeSchema = new mongoose.Schema({
 
 const prTrackingSchema = new mongoose.Schema({
   project: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
-  employee: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
+  employee: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   prLink: { type: String, required: true },
   status: { type: String }
 }, { timestamps: true });
 
 const auditLogSchema = new mongoose.Schema({
-  employee: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
+  employee: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   action: { type: String, required: true },
   timestamp: { type: Date, default: Date.now },
   ipAddress: { type: String }

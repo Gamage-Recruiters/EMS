@@ -1,4 +1,4 @@
-import 'dotenv/config'; // already loads .env
+import "dotenv/config"; // already loads .env
 import express from "express";
 import cors from "cors";
 import { createServer } from "http";
@@ -6,25 +6,21 @@ import connectDB from "./config/db.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
-
 // Helpers to get __dirname in ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Routes
-import authRoutes from './routes/authRoutes.js';
-import userRoutes from './routes/userRoutes.js';
-import teamRoutes from './routes/teamRoutes.js';
-import adminRoutes from './routes/adminRoutes.js';
+import authRoutes from "./routes/authRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+import teamRoutes from "./routes/teamRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 import leaveRoutes from "./routes/leaveRoutes.js";
 import AttendanceRoutes from "./routes/AttendanceRoutes.js";
 import availabilityRoutes from "./routes/availabilityRoutes.js";
 import chatRoutes from "./routes/ChatRoutes.js";
-import testRoutes from "./routes/testRoutes.js";
 import initializeSocket from "./socketServer.js";
 import meetingRoutes from "./routes/meetingRoutes.js";
-
-
 
 // Middlewares
 import errorHandler from "./middlewares/errorMiddleware.js";
@@ -38,7 +34,6 @@ const httpServer = createServer(app);
 
 // Initialize Socket.IO
 const io = initializeSocket(httpServer);
-
 
 // Middlewares
 
@@ -74,7 +69,6 @@ app.use("/api/meetings", meetingRoutes);
 app.get("/", (req, res) => {
   res.json({ message: "EMS Backend Running" });
 });
-
 
 // Global Error Handler
 app.use(errorHandler);

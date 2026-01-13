@@ -1,16 +1,25 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 import ChannelSidebar from "../../components/chat/ChannelSidebar";
 import ChatHeader from "../../components/chat/ChatHeader";
 import ChatMessages from "../../components/chat/ChatMessages";
 import ChatInput from "../../components/chat/ChatInput";
 
-import { channels } from "../../data/channels";
-import { channelMessages } from "../../data/channelMessages";
+import { rooms } from "../../data/rooms";
+import { messagesByRoom } from "../../data/messages";
+import { currentUser } from "../../data/currentUser";
 
 export default function ChatPage() {
-  const [activeChannel, setActiveChannel] = useState(channels[0]);
-  const [messages, setMessages] = useState(channelMessages[channels[0].id]);
+  // Filter rooms Sarith can see
+  const visibleRooms = useMemo(
+    () => rooms.filter((r) => r.members.includes(currentUser.id)),
+    []
+  );
+
+  const [activeChannel, setActiveChannel] = useState(visibleRooms[0]);
+  const [messages, setMessages] = useState(
+    messagesByRoom[visibleRooms[0].id] || []
+  );
   const [input, setInput] = useState("");
 
   const sendMessage = () => {
@@ -18,7 +27,8 @@ export default function ChatPage() {
 
     const newMsg = {
       id: Date.now(),
-      user: "You",
+      userId: currentUser.id,
+      user: currentUser.name,
       text: input,
       time: new Date().toLocaleTimeString([], {
         hour: "2-digit",
@@ -32,20 +42,20 @@ export default function ChatPage() {
 
   const handleChannelChange = (channel) => {
     setActiveChannel(channel);
-    setMessages(channelMessages[channel.id]);
+    setMessages(messagesByRoom[channel.id] || []);
   };
 
+  const isReadOnly = activeChannel.type === "notice";
+
   return (
-    <div className="min-h-screen bg-[#F7FAFC] flex items-center justify-center px-6">
-      <div className="h-[90vh] w-full max-w-7xl bg-[#FFFFFF] rounded-xl overflow-hidden border border-[#E0E0E0] shadow-sm flex">
-        {/* Channel Sidebar */}
+    <div className="min-h-screen bg-[#F7FAFC] flex justify-center px-6">
+      <div className="h-[90vh] w-full max-w-7xl bg-white rounded-xl border flex">
         <ChannelSidebar
-          channels={channels}
+          rooms={visibleRooms}
           activeChannel={activeChannel}
           setActiveChannel={handleChannelChange}
         />
 
-        {/* Chat Area */}
         <div className="flex-1 flex flex-col">
           <ChatHeader channel={activeChannel} />
           <ChatMessages messages={messages} />
@@ -53,6 +63,7 @@ export default function ChatPage() {
             input={input}
             setInput={setInput}
             sendMessage={sendMessage}
+            disabled={isReadOnly}
           />
         </div>
       </div>

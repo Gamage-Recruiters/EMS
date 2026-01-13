@@ -41,6 +41,9 @@ import PersonalDetails from "./features/management/pages/employee-profile/Person
 import ContactDetails from "./features/management/pages/employee-profile/ContactDetails";
 import EducationQualification from "./features/management/pages/employee-profile/EducationQualification";
 import JobDetails from "./features/management/pages/employee-profile/JobDetails";
+//meeting Pages
+import MeetingOverview from "./pages/Meeting-Notification-Chat/MeetingOverview";
+import CreateMeetings from "./pages/Meeting-Notification-Chat/CreateMeetings";
 
 export default function App() {
   const [checkInTime, setCheckInTime] = useState(null);
@@ -154,6 +157,14 @@ export default function App() {
             <Route path="attendance" element={<AttendancePage />} />
             <Route path="*" element={<Navigate to="personal-details" replace />} />
           </Route>
+
+          {/* Other */}
+          <Route path="/user-management" element={<UserManagement />} />
+          <Route path="/user-profile/:id" element={<UserProfile />} />
+
+          {/* Meetings */}
+          <Route path="/meetings" element={<MeetingOverview />} />
+          <Route path="/meetings/create" element={<CreateMeetings />} />
 
           {/* App fallback */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

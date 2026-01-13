@@ -10,7 +10,7 @@ import { clearAvailabilityOnCheckout } from "./availabilityController.js";
 export const checkIn = async (req, res, next) => {
   try {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setUTCHours(0, 0, 0, 0);
 
     // Check if already checked in today
     const existingAttendance = await Attendance.findOne({

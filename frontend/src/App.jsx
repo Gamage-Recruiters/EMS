@@ -32,18 +32,9 @@ import LeaveApproval from "./pages/LeaveApproval";
 
 // Management
 import UserManagementPage from "./features/management/pages/UserManagementPage";
-import TeamManagementPage from "./features/management/pages/TeamManagementPage";
-import TeamHierarchyPage from "./features/management/pages/TeamHierarchyPage";
 import DailyTaskReviewPage from "./features/management/pages/DailyTaskReviewPage";
 import ComplaintReviewDashboard from "./features/management/pages/ComplaintReviewDashboard";
 import AdminComplaintSubmissionPage from "./features/management/pages/AdminComplaintSubmissionPage";
-
-// Employee profile
-import EmployeeProfile from "./employee profile/EmployeeProfile";
-import PersonalDetails from "./employee profile/PersonalDetails";
-import ContactDetails from "./employee profile/ContactDetails";
-import EducationQualification from "./employee profile/EducationQualification";
-import JobDetails from "./employee profile/JobDetails";
 
 // Developer pages
 import DailyTaskFormPage from "./features/developer/pages/DailyTaskFormPage";
@@ -176,7 +167,10 @@ export default function App() {
             />
             <Route path="job-details" element={<JobDetails />} />
             <Route path="attendance" element={<AttendancePage />} />
-            <Route path="*" element={<Navigate to="personal-details" replace />} />
+            <Route
+              path="*"
+              element={<Navigate to="personal-details" replace />}
+            />
           </Route>
 
           {/* Other */}

@@ -21,19 +21,8 @@ export default function Sidebar() {
           Dashboard
         </Link>
 
-        <Link to="/teams" className={linkClass("/teams")}>
-          Teams
-        </Link>
-
-        <Link
-          to="/user-management"
-          className={linkClass("/user-management")}
-        >
+        <Link to="/user-management" className={linkClass("/user-management")}>
           User Management
-        </Link>
-
-        <Link to="/team-hierarchy" className={linkClass("/team-hierarchy")}>
-          Team Hierarchy
         </Link>
       </nav>
     </div>

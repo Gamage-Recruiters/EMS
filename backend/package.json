@@ -8,8 +8,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "seed": "node seed.js"
+    "dev": "nodemon server.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -22,9 +21,11 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^9.0.0",
-    "morgan": "^1.10.1",
+    "morgan": "^1.10,
     "multer": "^2.0.2",
-    "seed": "^0.4.4"
+    "seed": "^0.4.4",
+    "socket.io": "^4.8.1",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"

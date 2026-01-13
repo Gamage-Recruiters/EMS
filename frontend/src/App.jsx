@@ -32,6 +32,26 @@ import LeaveApproval from "./pages/LeaveApproval";
 
 // Management
 import UserManagementPage from "./features/management/pages/UserManagementPage";
+import TeamManagementPage from "./features/management/pages/TeamManagementPage";
+import TeamHierarchyPage from "./features/management/pages/TeamHierarchyPage";
+import DailyTaskReviewPage from "./features/management/pages/DailyTaskReviewPage";
+import ComplaintReviewDashboard from "./features/management/pages/ComplaintReviewDashboard";
+import AdminComplaintSubmissionPage from "./features/management/pages/AdminComplaintSubmissionPage";
+
+// Employee profile
+import EmployeeProfile from "./employee profile/EmployeeProfile";
+import PersonalDetails from "./employee profile/PersonalDetails";
+import ContactDetails from "./employee profile/ContactDetails";
+import EducationQualification from "./employee profile/EducationQualification";
+import JobDetails from "./employee profile/JobDetails";
+
+// Developer pages
+import DailyTaskFormPage from "./features/developer/pages/DailyTaskFormPage";
+import DailyTaskPage from "./features/developer/pages/DailyTaskPage";
+import DeveloperComplaintForm from "./features/developer/pages/ComplaintSubmissionPage";
+import DeveloperComplaintDashboard from "./features/developer/pages/ComplaintDashboard";
+
+// Other pages
 import UserManagement from "./pages/UserManagement";
 import UserProfile from "./pages/UserProfile";
 
@@ -71,6 +91,7 @@ export default function App() {
           element={
             <>
               {!isCheckedIn && <AttendancePrompt onCheckIn={handleCheckIn} />}
+
               <div
                 className={`min-h-screen bg-gray-50 transition-opacity duration-300 ${
                   !isCheckedIn ? "opacity-50 pointer-events-none" : ""
@@ -161,6 +182,22 @@ export default function App() {
           {/* Other */}
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="/user-profile/:id" element={<UserProfile />} />
+          {/* Developer */}
+          <Route path="/tasks" element={<DailyTaskPage />} />
+          <Route path="/tasks/new" element={<DailyTaskFormPage />} />
+          <Route path="/complaints" element={<DeveloperComplaintDashboard />} />
+          <Route path="/complaints/new" element={<DeveloperComplaintForm />} />
+
+          {/* Management */}
+          <Route path="/tasks/review" element={<DailyTaskReviewPage />} />
+          <Route
+            path="/complaints/review"
+            element={<ComplaintReviewDashboard />}
+          />
+          <Route
+            path="/complaints/new-admin"
+            element={<AdminComplaintSubmissionPage />}
+          />
 
           {/* Meetings */}
           <Route path="/meetings" element={<MeetingOverview />} />

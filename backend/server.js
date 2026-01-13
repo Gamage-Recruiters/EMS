@@ -20,9 +20,14 @@ import leaveRoutes from "./routes/leaveRoutes.js";
 import AttendanceRoutes from "./routes/AttendanceRoutes.js";
 import availabilityRoutes from "./routes/availabilityRoutes.js";
 import chatRoutes from "./routes/ChatRoutes.js";
-import testRoutes from "./routes/testRoutes.js";
 import initializeSocket from "./socketServer.js";
 import meetingRoutes from "./routes/meetingRoutes.js";
+import taskRoutes from "./routes/taskRoutes.js";
+import dailyTaskRoutes from "./routes/dailyTaskRoutes.js";
+import complaintRoutes from "./routes/complaintRoutes.js";
+
+import errorHandler from "./middlewares/errorMiddleware.js";
+
 
 
 
@@ -66,14 +71,16 @@ app.use("/api/user", userRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/attendance", AttendanceRoutes);
 app.use("/api/leaves", leaveRoutes);
-app.use("/api/availability", availabilityRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/meetings", meetingRoutes);
-
+app.use("/api/tasks", taskRoutes);
+app.use("/api/daily-tasks", dailyTaskRoutes);
+app.use("/api/complaints", complaintRoutes);
 // Base Route
 app.get("/", (req, res) => {
   res.json({ message: "EMS Backend Running" });
 });
+
 
 
 // Global Error Handler

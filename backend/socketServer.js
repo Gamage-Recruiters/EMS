@@ -611,10 +611,12 @@ const initializeSocket = (httpServer) => {
     // inside io.on("connection", ...)
     socket.on("private:create", async ({ recipientId }, callback) => {
       try {
-        if (socket.user.role !== "CEO") {
+        const ALLOWED_ROLES = ["CEO", "TL", "ATL", "PM"];
+
+        if (!ALLOWED_ROLES.includes(socket.user.role)) {
           return callback({
             success: false,
-            error: "Only CEO can start private chats",
+            error: "You are not allowed to start private chats",
           });
         }
 
@@ -625,10 +627,7 @@ const initializeSocket = (httpServer) => {
           .populate("members", "firstName lastName role email profileImage")
           .populate("createdBy", "firstName lastName role");
 
-        let isNew = false;
-
         if (!channel) {
-          isNew = true;
           const recipient = await User.findById(recipientId);
           if (!recipient) {
             return callback({ success: false, error: "Recipient not found" });
@@ -646,15 +645,16 @@ const initializeSocket = (httpServer) => {
             .populate("createdBy", "firstName lastName role");
         }
 
-        // Join both users
+        // Join rooms
         socket.join(`channel:${channel._id}`);
 
         const recipientSockets = await io
           .in(`user:${recipientId}`)
           .fetchSockets();
+
         recipientSockets.forEach((s) => s.join(`channel:${channel._id}`));
 
-        // SEND TO BOTH — even if channel already existed
+        // Emit channel to BOTH users
         io.to(`user:${socket.user._id}`).emit("channel:new", channel);
         io.to(`user:${recipientId}`).emit("channel:new", channel);
 

@@ -7,7 +7,8 @@ export const protect = async (req, res, next) => {
 
   // TEMPORARY: Skip auth for testing - remove this later
   // Set a mock user for development
-  req.user = { id: "1", role: "CEO" };
+  req.user = { _id: "695390361337f69293c8af57", role: "CEO" };
+
   return next();
 
   if (

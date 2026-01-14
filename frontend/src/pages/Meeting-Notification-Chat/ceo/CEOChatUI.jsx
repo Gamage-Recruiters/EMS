@@ -10,7 +10,7 @@ import NoticeChatComposer from "../../../components/chat/ceo/NoticeChatComposer"
 import NoticeChatList from "../../../components/chat/ceo/NoticeChatList";
 import EmployeeSearch from "../../../components/chat/ceo/EmployeeSearch";
 
-export default function CEODashboard() {
+export default function CEOChatUI() {
   const [tab, setTab] = useState("Send Notice");
   const [activeNoticeRoom, setActiveNoticeRoom] = useState(noticeRooms[0]);
   const [noticeChats, setNoticeChats] = useState(initialNoticeChats);

@@ -1,24 +1,70 @@
-export default function ChatMessages({ messages }) {
+import { useRef, useEffect } from "react";
+
+export default function ChatMessages({ messages = [] }) {
+  const endRef = useRef(null);
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   return (
     <div className="flex-1 overflow-y-auto px-6 py-5 bg-[#F7FAFC] space-y-5">
-      {messages.map((msg) => (
-        <div key={msg.id} className="flex gap-3">
-          <div className="w-9 h-9 rounded-full bg-[#3676E0] text-white flex items-center justify-center font-semibold">
-            {msg.user[0]}
-          </div>
+      {messages.length === 0 ? (
+        <p className="text-center text-gray-500 mt-20">No messages yet.</p>
+      ) : (
+        messages.map((msg) => {
+          if (!msg?._id || !msg?.userId?._id) return null;
 
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-[#1F1F1F]">{msg.user}</span>
-              <span className="text-xs text-[#7A7A7A]">{msg.time}</span>
-            </div>
+          const isMe = msg.userId._id === currentUser._id;
+          const senderName = `${msg.userId.firstName} ${
+            msg.userId.lastName || ""
+          }`;
 
-            <div className="bg-[#FFFFFF] border border-[#E0E0E0] rounded-lg px-4 py-2 mt-1">
-              <p className="text-sm text-[#1F1F1F]">{msg.text}</p>
+          return (
+            <div
+              key={msg._id}
+              className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`max-w-[70%] px-4 py-3 rounded-2xl text-sm shadow-sm
+                  ${
+                    isMe
+                      ? "bg-blue-600 text-white rounded-br-none"
+                      : "bg-white border border-gray-200 rounded-bl-none"
+                  }`}
+              >
+                {!isMe && (
+                  <div className="text-xs font-medium text-blue-600 mb-1">
+                    {senderName}
+                    {msg.userId.role && (
+                      <span className="ml-2 text-gray-500">
+                        ({msg.userId.role})
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <p className="break-words">{msg.text}</p>
+
+                <div className="flex items-center justify-end gap-2 mt-1">
+                  {msg.isEdited && (
+                    <span className="text-xs opacity-70 italic">edited</span>
+                  )}
+                  <span className="text-xs opacity-70">
+                    {new Date(msg.createdAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      ))}
+          );
+        })
+      )}
+
+      <div ref={endRef} />
     </div>
   );
 }

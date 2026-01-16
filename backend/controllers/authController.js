@@ -15,41 +15,70 @@ const generateTokens = (id) => {
 
 export const registerUser = async (req, res, next) => {
   try {
-    const { firstName, lastName, email, password } = req.body;
+    const {
+      firstName,
+      lastName,
+      email,
+      password,
+      confirmPassword,
+      terms,
+    } = req.body;
+
+    // 1️⃣ Basic validation
+    if (!firstName || !lastName || !email || !password || !confirmPassword) {
+      return next(new AppError("All fields are required", 400));
+    }
+
+    // 2️⃣ Password match check
+    if (password !== confirmPassword) {
+      return next(new AppError("Passwords do not match", 400));
+    }
+
+    // 3️⃣ Terms agreement check
+    if (terms !== true) {
+  return next(new AppError("You must accept the terms and conditions", 400));
+}
+
+    // 4️⃣ Existing user check
     const userExists = await User.findOne({ email });
+    if (userExists) {
+      return next(new AppError("User already exists", 400));
+    }
 
-    if (userExists) return next(new AppError('User already exists', 400));
-
+    // 5️⃣ Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // 6️⃣ Create user (DO NOT store confirmPassword / terms)
     const user = await User.create({
       firstName,
       lastName,
       email,
-      password: hashedPassword, 
-      role: 'Unassigned',
+      password: hashedPassword,
+      role: "Unassigned",
     });
 
-    if (user) {
-      const tokens = generateTokens(user._id);
-      user.refreshToken = tokens.refreshToken;
-      await user.save();
+    // 7️⃣ Generate tokens
+    const tokens = generateTokens(user._id);
+    user.refreshToken = tokens.refreshToken;
+    await user.save();
 
-      res.status(201).json({
-        _id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        role: user.role,
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-      });
-    }
+    // 8️⃣ Response
+    res.status(201).json({
+      _id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    });
+
   } catch (error) {
     next(error);
   }
 };
+
 
 
 //  User Login

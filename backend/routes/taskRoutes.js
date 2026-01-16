@@ -7,6 +7,6 @@ const router = express.Router();
 // Only TL/ATL should access
 router.post('/create', protect, createTask);
 router.get("/my", protect, getMyTasks);
-router.patch("/:id/status", protect, updateTaskStatus); // Drag & drop status update
+router.patch("/:id/status", protect, updateTaskStatus); 
 
 export default router;

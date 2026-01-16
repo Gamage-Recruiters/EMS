@@ -2,8 +2,26 @@ import { useEffect, useState } from "react";
 import { FiUsers, FiRefreshCw, FiTrash2, FiAlertCircle, FiEdit2 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { teamService } from "../../../services/teamService";
+import { useRequireRole } from "../../../hooks/useRequireRole";
+
 
 export default function TeamListTab() {
+
+
+  const { loadinguser, isAuthorized } = useRequireRole([
+    "CEO",
+    "SystemAdmin",
+    "TL",
+    ]);
+  
+    if (loadinguser) {
+      return <div className="p-8">Checking permissions…</div>;
+    }
+  
+    if (!isAuthorized) {
+      return null; 
+    }
+
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);

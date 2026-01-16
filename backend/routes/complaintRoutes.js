@@ -21,7 +21,7 @@ router.get("/developers", protect, getDeveloperComplaints);
 // PM / TL / CEO update complaint status
 router.put("/:id/status", protect, updateComplaintStatus);
 
-// Admin create complaint
+// Admin(PM,TL) create complaint
 router.post("/admin", protect, upload.single("image"), createAdminComplaint);
 // CEO / PM view admin complaints (PM, TL, CEO)
 router.get("/admin", protect, getAdminComplaints);

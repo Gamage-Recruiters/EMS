@@ -27,19 +27,32 @@ const Register = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrors({});
-    setIsSubmitting(true);
+  e.preventDefault();
 
-    try {
-      const success = await register(formData);
-      if (success) navigate('/dashboard');
-    } catch (err) {
-      setErrors({ api: "Something went wrong. Please try again." });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const newErrors = {};
+
+  if (!formData.firstName) newErrors.firstName = "First name required";
+  if (!formData.lastName) newErrors.lastName = "Last name required";
+  if (!formData.email) newErrors.email = "Email required";
+  if (!formData.password) newErrors.password = "Password required";
+  if (formData.password !== formData.confirmPassword)
+    newErrors.confirmPassword = "Passwords do not match";
+  if (!formData.terms)
+    newErrors.terms = "You must accept the terms";
+
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors);
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  const success = await register(formData);
+  if (success) navigate("/dashboard");
+
+  setIsSubmitting(false);
+};
+
 
   const inputClass = (fieldName) =>
     `mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${

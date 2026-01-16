@@ -14,8 +14,25 @@ import TeamCreationTab from "../components/TeamCreationTab";
 import TeamListTab from "../components/TeamListTab";
 import TeamHierarchyTab from "../components/TeamHierarchyTab";
 import UserRow from "../components/UserRow";
+import { useRequireRole } from "../../../hooks/useRequireRole";
+
 
 export default function UserManagementPage() {
+
+  const { loadinguser, isAuthorized } = useRequireRole([
+  "CEO",
+  "SystemAdmin",
+  "TL",
+  ]);
+
+  if (loadinguser) {
+    return <div className="p-8">Checking permissions…</div>;
+  }
+
+  if (!isAuthorized) {
+    return null; 
+  }
+  
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 

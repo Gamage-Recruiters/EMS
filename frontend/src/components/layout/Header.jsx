@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   setAvailability,
   getMyAvailability,
-} from "../services/availabilityService";
+} from "../../services/availabilityService";
 
 const Header = () => {
   /* ================= DATE ================= */

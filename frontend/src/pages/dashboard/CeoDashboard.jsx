@@ -1,7 +1,7 @@
 // frontend/src/pages/dashboard/CeoDashboard.jsx
 import React from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
-import Sidebar from "../../components/Sidebar.jsx";
+import Sidebar from "../../components/layout/Sidebar.jsx";
 import { Link } from "react-router-dom";
 
 const CeoDashboard = () => {

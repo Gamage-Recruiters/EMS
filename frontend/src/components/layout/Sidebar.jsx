@@ -1,6 +1,6 @@
 // frontend/src/components/Sidebar.jsx
 import React from "react";
-import { useAuth } from "../context/AuthContext.jsx";
+import { useAuth } from "../../context/AuthContext.jsx";
 import { Link, useLocation } from "react-router-dom";
 
 const Sidebar = () => {

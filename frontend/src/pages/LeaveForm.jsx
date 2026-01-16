@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, FileText, User, Mail, Phone, Users, AlertCircle, Menu, Bell, Search } from 'lucide-react';
 
-import Sidebar from '../components/Sidebar';
-import TopHeader from '../components/TopHeader';
+import Sidebar from '../components/layout/Sidebar';
+import TopHeader from '../components/layout/Header';
 
 
 export default function LeaveForm() {

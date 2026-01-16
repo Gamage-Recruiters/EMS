@@ -35,10 +35,12 @@ import LeaveApproval from "./pages/LeaveApproval";
 import UserManagementPage from "./features/management/pages/UserManagementPage.jsx";
 // import TeamManagementPage from "./features/management/pages/TeamManagementPage.jsx";
 // import TeamHierarchyPage from "./features/management/pages/TeamHierarchyPage.jsx";
-import UserManagement from "./pages/UserManagement";
-import UserProfile from "./pages/UserProfile";
+import DailyTaskReviewPage from "./features/management/pages/DailyTaskReviewPage";
 import ComplaintReviewDashboard from "./features/management/pages/ComplaintReviewDashboard";
 import AdminComplaintSubmissionPage from "./features/management/pages/AdminComplaintSubmissionPage";
+
+import UserManagement from "./pages/UserManagement";
+import UserProfile from "./pages/UserProfile";
 
 // Developer pages
 import DailyTaskFormPage from "./features/developer/pages/DailyTaskFormPage";

@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { getSocket } from "../../components/chat/socket";
 import api from "../../services/api";
 
 import ChannelSidebar from "../../components/chat/ChannelSidebar";
 import ChatHeader from "../../components/chat/ChatHeader";
-import ChatMessages from "../../components/chat/ChatMessages";
+import ChatMessages from "../../components/chat/ChatMessages"; // ← updated component
 import ChatInput from "../../components/chat/ChatInput";
 
 export default function ChatPage() {
@@ -15,16 +15,14 @@ export default function ChatPage() {
 
   const socket = getSocket();
 
-  // Load user's accessible channels
+  // Load channels
   useEffect(() => {
     const loadChannels = async () => {
       try {
         const res = await api.get("/chat/channels");
         const userChannels = res.data.channels || res.data || [];
-
         setChannels(userChannels);
 
-        // Auto-select first channel
         if (userChannels.length > 0) {
           setActiveChannel(userChannels[0]);
         }
@@ -42,7 +40,6 @@ export default function ChatPage() {
   useEffect(() => {
     if (!activeChannel?._id || !socket?.connected) return;
 
-    // Clear old messages or keep them — here we reload
     socket.emit(
       "messages:get",
       { channelId: activeChannel._id, limit: 50, skip: 0 },
@@ -57,7 +54,7 @@ export default function ChatPage() {
     );
   }, [activeChannel?._id, socket?.connected]);
 
-  // Real-time new message
+  // Real-time updates
   useEffect(() => {
     if (!socket) return;
 
@@ -68,25 +65,23 @@ export default function ChatPage() {
       }));
     };
 
-    socket.on("message:new", handleNewMessage);
-
-    // Also listen for private channel creation
-    socket.on("channel:new", (newChannel) => {
+    const handleChannelNew = (newChannel) => {
       setChannels((prev) => {
         if (prev.some((ch) => ch._id === newChannel._id)) return prev;
         return [...prev, newChannel];
       });
-      // Auto-select if no active channel
       if (!activeChannel) setActiveChannel(newChannel);
-    });
+    };
+
+    socket.on("message:new", handleNewMessage);
+    socket.on("channel:new", handleChannelNew);
 
     return () => {
       socket.off("message:new", handleNewMessage);
-      socket.off("channel:new");
+      socket.off("channel:new", handleChannelNew);
     };
   }, [socket, activeChannel]);
 
-  // Send message handler
   const sendMessage = (text) => {
     if (!activeChannel?._id || !text.trim() || !socket?.connected) return;
 
@@ -97,7 +92,7 @@ export default function ChatPage() {
   };
 
   const isNoticeChannel = activeChannel?.type === "notice";
-  const canSend = !isNoticeChannel; // Employees cannot send in notice channels
+  const canSend = !isNoticeChannel;
 
   if (loading) {
     return (
@@ -110,19 +105,20 @@ export default function ChatPage() {
   return (
     <div className="min-h-screen bg-[#F7FAFC] flex justify-center px-6">
       <div className="h-[90vh] w-full max-w-7xl bg-white rounded-xl border flex overflow-hidden">
-        {/* Sidebar - all accessible channels */}
         <ChannelSidebar
           rooms={channels}
           activeChannel={activeChannel}
           setActiveChannel={setActiveChannel}
         />
 
-        {/* Main chat area */}
         <div className="flex-1 flex flex-col">
           {activeChannel ? (
             <>
               <ChatHeader channel={activeChannel} />
-              <ChatMessages messages={messages[activeChannel._id] || []} />
+              <ChatMessages
+                messages={messages[activeChannel._id] || []}
+                socket={socket} // ← pass socket
+              />
               <ChatInput
                 sendMessage={sendMessage}
                 disabled={!canSend}

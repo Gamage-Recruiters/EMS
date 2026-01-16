@@ -38,6 +38,12 @@ import UserManagementPage from "./features/management/pages/UserManagementPage.j
 import UserManagement from "./pages/UserManagement";
 import UserProfile from "./pages/UserProfile";
 
+// Developer pages
+import DailyTaskFormPage from "./features/developer/pages/DailyTaskFormPage";
+import DailyTaskPage from "./features/developer/pages/DailyTaskPage";
+import DeveloperComplaintForm from "./features/developer/pages/ComplaintSubmissionPage";
+import DeveloperComplaintDashboard from "./features/developer/pages/ComplaintDashboard";
+
 // Employee Profile (Nested)
 import EmployeeProfile from "./features/management/pages/employee-profile/EmployeeProfile";
 import PersonalDetails from "./features/management/pages/employee-profile/PersonalDetails";
@@ -74,7 +80,7 @@ export default function App() {
           element={
             <>
               {!isCheckedIn && <AttendancePrompt onCheckIn={handleCheckIn} />}
-          
+
               <div
                 className={`min-h-screen bg-gray-50 transition-opacity duration-300 ${
                   !isCheckedIn ? "opacity-50 pointer-events-none" : ""

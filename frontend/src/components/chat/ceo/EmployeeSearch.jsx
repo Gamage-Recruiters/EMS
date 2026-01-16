@@ -1,18 +1,27 @@
 import { Search } from "lucide-react";
+import { useState, useEffect } from "react";
 
 export default function EmployeeSearch({ value, onChange }) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => onChange(debouncedValue), 300);
+    return () => clearTimeout(timer);
+  }, [debouncedValue]);
+
   return (
-    <div className="mb-3">
-      <div className="flex items-center gap-2 border border-[#E0E0E0] rounded px-3 py-2 bg-[#FFFFFF]">
-        <Search size={16} className="text-[#7A7A7A]" />
-        <input
-          type="text"
-          placeholder="Search employees..."
-          className="flex-1 text-sm outline-none text-[#1F1F1F] placeholder-[#7A7A7A]"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      </div>
+    <div className="relative mb-4">
+      <Search
+        size={16}
+        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+      />
+      <input
+        type="text"
+        placeholder="Search..."
+        className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+        value={debouncedValue}
+        onChange={(e) => setDebouncedValue(e.target.value)}
+      />
     </div>
   );
 }

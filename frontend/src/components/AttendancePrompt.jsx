@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 
+import { checkIn } from "../services/attendanceService";
+
 // Replace this with the actual backend endpoint later
 const USER_INFO_ENDPOINT = "/api/user/profile";
 
@@ -11,6 +13,7 @@ const AttendancePrompt = ({ onCheckIn }) => {
     error: null,
   });
 
+
   // Update the current time every second
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -21,16 +24,14 @@ const AttendancePrompt = ({ onCheckIn }) => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        // MOCK: simulate API call
+  
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        const data = { firstName: "John", lastName: "Smith" };
 
-        // LATER: replace above with actual API call
-        // const response = await fetch(USER_INFO_ENDPOINT);
-        // const data = await response.json();
+        //get user info from local storage for now
+        const user = JSON.parse(localStorage.getItem("ems_user"));
 
         setProfile({
-          name: `${data.firstName} ${data.lastName}`,
+          name: `${user.firstName} ${user.lastName}`,
           isLoading: false,
           error: null,
         });
@@ -46,6 +47,16 @@ const AttendancePrompt = ({ onCheckIn }) => {
 
     fetchUserProfile();
   }, []);
+
+  const handleCheckInClick = async () => {
+    const result = await checkIn();
+    if (result.success) {
+      onCheckIn(currentTime);
+       console.log("Check-in result:", result);
+    } else {
+      alert(result.error || "Failed to check in. Please try again.");
+    }
+  };
 
   const getGreeting = () => {
     const hour = currentTime.getHours();
@@ -88,7 +99,7 @@ const AttendancePrompt = ({ onCheckIn }) => {
         </div>
 
         <button
-          onClick={() => onCheckIn(currentTime)}
+          onClick={handleCheckInClick}
           disabled={profile.isLoading || profile.error}
           className={`w-full py-3 text-white text-lg font-bold rounded-lg shadow-lg transition duration-200 ease-in-out ${
             profile.isLoading || profile.error

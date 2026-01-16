@@ -42,26 +42,25 @@ const Login = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrors({});
-    setIsSubmitting(true);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  setErrors({});
 
-    try {
-      const success = await login(formData.email, formData.password);
-
-      if (!success) {
-        setErrors({ api: "Invalid email or password" });
-        return;
-      }
-
-      navigate("/dashboard"); 
-    } catch (err) {
-      setErrors({ api: "Something went wrong. Please try again." });
-    } finally {
-      setIsSubmitting(false);
+  try {
+    const success = await login(formData.email, formData.password);
+    if (success) {
+      navigate("/dashboard");
+    } else {
+      setErrors({ api: "Login failed. Please check your credentials." });
     }
-  };
+  } catch (error) {
+    setErrors({ api: "Login failed. Please try again." });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   const inputClass = (field) =>
     `mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${

@@ -15,17 +15,18 @@ import VerifyCode from "./pages/auth/VerifyCode";
 import ResetPassword from "./pages/auth/ResetPassword";
 import ResetSuccess from "./pages/auth/ResetSuccess";
 
-// Dashboards (RBAC)
+// Dashboards
 import DashboardOverview from "./pages/dashboard/DashBoardOverview";
+import DashboardPage from "./pages/DashboardPage";
+
+// RBAC Dashboards
 import CeoDashboard from "./pages/dashboard/CeoDashboard";
 import DevDashboard from "./pages/dashboard/DevDashboard";
 import SystemOwnerDashboard from "./pages/dashboard/SystemOwnerDashboard";
 import TLDashboard from "./pages/dashboard/TLDashboard";
 
-// Attendance & Core
-import DashboardPage from "./pages/DashboardPage";
+// Attendance
 import AttendancePage from "./pages/AttendancePage";
-
 // Leave module
 import LeaveForm from "./pages/LeaveForm";
 import LeaveApproval from "./pages/LeaveApproval";
@@ -37,12 +38,15 @@ import UserManagementPage from "./features/management/pages/UserManagementPage.j
 import UserManagement from "./pages/UserManagement";
 import UserProfile from "./pages/UserProfile";
 
-// Employee profile (nested)
+// Employee Profile (Nested)
 import EmployeeProfile from "./features/management/pages/employee-profile/EmployeeProfile";
 import PersonalDetails from "./features/management/pages/employee-profile/PersonalDetails";
 import ContactDetails from "./features/management/pages/employee-profile/ContactDetails";
 import EducationQualification from "./features/management/pages/employee-profile/EducationQualification";
 import JobDetails from "./features/management/pages/employee-profile/JobDetails";
+//meeting Pages
+import MeetingOverview from "./pages/Meeting-Notification-Chat/MeetingOverview";
+import CreateMeetings from "./pages/Meeting-Notification-Chat/CreateMeetings";
 
 export default function App() {
   const [checkInTime, setCheckInTime] = useState(null);
@@ -70,6 +74,7 @@ export default function App() {
           element={
             <>
               {!isCheckedIn && <AttendancePrompt onCheckIn={handleCheckIn} />}
+          
               <div
                 className={`min-h-screen bg-gray-50 transition-opacity duration-300 ${
                   !isCheckedIn ? "opacity-50 pointer-events-none" : ""
@@ -80,10 +85,10 @@ export default function App() {
             </>
           }
         >
-          {/* Default */}
+          {/* Default after login */}
           <Route index element={<Navigate to="/dashboard" replace />} />
 
-          {/* ================= CORE DASHBOARD ================= */}
+          {/* ================= DASHBOARD ================= */}
           <Route
             path="/dashboard"
             element={
@@ -92,17 +97,20 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/dashboard/home"
             element={<DashboardPage checkInTime={checkInTime} />}
           />
+
+          {/* ================= ATTENDANCE ================= */}
           <Route path="/attendance" element={<AttendancePage />} />
 
-          {/* ================= LEAVE MODULE ================= */}
+          {/* ================= LEAVE ================= */}
           <Route path="/leave-form" element={<LeaveForm />} />
           <Route path="/leave-approval" element={<LeaveApproval />} />
 
-          {/* ================= RBAC DASHBOARDS ================= */}
+          {/* ================= ROLE BASED DASHBOARDS ================= */}
           <Route
             path="/dashboard/ceo"
             element={
@@ -129,6 +137,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/dashboard/tl"
             element={
@@ -140,12 +149,10 @@ export default function App() {
 
           {/* ================= MANAGEMENT ================= */}
           <Route path="/employees" element={<UserManagementPage />} />
-          <Route path="/team-management" element={<TeamManagementPage />} />
-          <Route path="/team-hierarchy" element={<TeamHierarchyPage />} />
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="/user-profile/:id" element={<UserProfile />} />
 
-          {/* ================= EMPLOYEE PROFILE ================= */}
+          {/* ================= EMPLOYEE PROFILE (NESTED) ================= */}
           <Route path="/profile" element={<EmployeeProfile />}>
             <Route index element={<Navigate to="personal-details" replace />} />
             <Route path="personal-details" element={<PersonalDetails />} />
@@ -156,8 +163,31 @@ export default function App() {
             />
             <Route path="job-details" element={<JobDetails />} />
             <Route path="attendance" element={<AttendancePage />} />
-            <Route path="*" element={<Navigate to="personal-details" replace />} />
+            <Route
+              path="*"
+              element={<Navigate to="personal-details" replace />}
+            />
           </Route>
+          {/* Developer */}
+          <Route path="/tasks" element={<DailyTaskPage />} />
+          <Route path="/tasks/new" element={<DailyTaskFormPage />} />
+          <Route path="/complaints" element={<DeveloperComplaintDashboard />} />
+          <Route path="/complaints/new" element={<DeveloperComplaintForm />} />
+
+          {/* Management */}
+          <Route path="/tasks/review" element={<DailyTaskReviewPage />} />
+          <Route
+            path="/complaints/review"
+            element={<ComplaintReviewDashboard />}
+          />
+          <Route
+            path="/complaints/new-admin"
+            element={<AdminComplaintSubmissionPage />}
+          />
+
+          {/* Meetings */}
+          <Route path="/meetings" element={<MeetingOverview />} />
+          <Route path="/meetings/create" element={<CreateMeetings />} />
 
           {/* App fallback */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

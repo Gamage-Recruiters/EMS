@@ -5,7 +5,7 @@ import { authorize, protect } from '../middlewares/authMiddleware.js';
 const router = express.Router();
 
 // Employee routes (protected)
-router.post('/checkin', protect,checkIn);
+router.post('/checkin',protect,checkIn);
 router.put('/checkout',protect ,checkOut);
 router.get('/',protect,authorize('CEO','TL','PM'),getAllAttendance);
 router.get('/myAttendance',protect,getMyAttendance);

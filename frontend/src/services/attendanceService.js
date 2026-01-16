@@ -1,14 +1,60 @@
-export const getEmployees = async () => {
-    // MOCK DATA for now
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve([
-                { id: 1, name: 'John Doe', team: 'Marketing', checkIn: '09:00 AM', checkOut: '05:00 PM', status: 'active', leaveReason: '' },
-                { id: 2, name: 'Jane Smith', team: 'Development', checkIn: '', checkOut: '', status: 'leave', leaveReason: 'Medical' },
-            ]);
-        }, 500); 
-    });
+import api from "../api/api";
 
-    // LATER: replace with real API call
-    // return axios.get('/api/employees').then(res => res.data);
-};
+export const checkIn =  async () => {
+   try {
+    const response = await api.post("/attendance/checkIn");
+    return {
+        success: true,
+        data: response.data,
+    };
+   }catch (error) {
+    return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to check in',
+    };
+   }
+}
+export const checkOut = async () => {
+    try {
+        const response = await api.put("/attendance/checkout");
+        return {
+            success: true,
+            data: response.data,
+        };
+    }catch (error) {
+        return {
+            success: false,
+            error: error.response?.data?.message || 'Failed to check out',
+        };
+
+    }
+}
+export const getTodayAttendance = async () => {
+   try {
+    const response = await api.get("/attendance/todayAttendance");
+    return {
+        success: true,
+        data: response.data,
+    };
+   }catch (error) {
+    return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to fetch today\'s attendance',
+    };
+   }
+}
+
+export const getAllAttendance = async () => {
+   try {
+    const response = await api.get("/attendance");
+    return {
+        success: true,
+        data: response.data,
+    };
+   }catch (error) {
+    return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to fetch attendance records',
+    };
+   }
+}

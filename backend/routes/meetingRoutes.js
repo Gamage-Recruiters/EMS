@@ -18,7 +18,7 @@ router.post("/", protect, createMeeting);
 router.get("/participants", protect, getUsersForParticipants);
 // Get all meetings with participants
 router.get("/", protect, getAllMeetings);
-router.delete("/:id", protect, cancelMeeting);
+router.put("/:id/cancel", protect, cancelMeeting);
 router.put("/:id", protect, rescheduleMeeting);
 
 // Get meetings assigned to logged-in user

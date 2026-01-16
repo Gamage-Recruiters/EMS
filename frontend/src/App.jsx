@@ -28,13 +28,22 @@ import TLDashboard from "./pages/dashboard/TLDashboard";
 // Attendance
 import AttendancePage from "./pages/AttendancePage";
 // Leave module
-import LeaveForm from "./pages/leave/LeaveForm";
-import LeaveApproval from "./pages/leave/LeaveApproval";
+import LeaveForm from "./pages/LeaveForm";
+import LeaveApproval from "./pages/LeaveApproval";
 
 // Management
 import UserManagementPage from "./features/management/pages/UserManagementPage";
-import TeamManagementPage from "./features/management/pages/TeamManagementPage";
-import TeamHierarchyPage from "./features/management/pages/TeamHierarchyPage";
+import DailyTaskReviewPage from "./features/management/pages/DailyTaskReviewPage";
+import ComplaintReviewDashboard from "./features/management/pages/ComplaintReviewDashboard";
+import AdminComplaintSubmissionPage from "./features/management/pages/AdminComplaintSubmissionPage";
+
+// Developer pages
+import DailyTaskFormPage from "./features/developer/pages/DailyTaskFormPage";
+import DailyTaskPage from "./features/developer/pages/DailyTaskPage";
+import DeveloperComplaintForm from "./features/developer/pages/ComplaintSubmissionPage";
+import DeveloperComplaintDashboard from "./features/developer/pages/ComplaintDashboard";
+
+// Other pages
 import UserManagement from "./pages/UserManagement";
 import UserProfile from "./pages/UserProfile";
 
@@ -44,6 +53,9 @@ import PersonalDetails from "./features/management/pages/employee-profile/Person
 import ContactDetails from "./features/management/pages/employee-profile/ContactDetails";
 import EducationQualification from "./features/management/pages/employee-profile/EducationQualification";
 import JobDetails from "./features/management/pages/employee-profile/JobDetails";
+//meeting Pages
+import MeetingOverview from "./pages/Meeting-Notification-Chat/MeetingOverview";
+import CreateMeetings from "./pages/Meeting-Notification-Chat/CreateMeetings";
 
 export default function App() {
   const [checkInTime, setCheckInTime] = useState(null);
@@ -71,7 +83,7 @@ export default function App() {
           element={
             <>
               {!isCheckedIn && <AttendancePrompt onCheckIn={handleCheckIn} />}
-              
+          
               <div
                 className={`min-h-screen bg-gray-50 transition-opacity duration-300 ${
                   !isCheckedIn ? "opacity-50 pointer-events-none" : ""
@@ -146,8 +158,6 @@ export default function App() {
 
           {/* ================= MANAGEMENT ================= */}
           <Route path="/employees" element={<UserManagementPage />} />
-          <Route path="/team-management" element={<TeamManagementPage />} />
-          <Route path="/team-hierarchy" element={<TeamHierarchyPage />} />
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="/user-profile/:id" element={<UserProfile />} />
 
@@ -162,10 +172,33 @@ export default function App() {
             />
             <Route path="job-details" element={<JobDetails />} />
             <Route path="attendance" element={<AttendancePage />} />
-            <Route path="*" element={<Navigate to="personal-details" replace />} />
+            <Route
+              path="*"
+              element={<Navigate to="personal-details" replace />}
+            />
           </Route>
+          {/* Developer */}
+          <Route path="/tasks" element={<DailyTaskPage />} />
+          <Route path="/tasks/new" element={<DailyTaskFormPage />} />
+          <Route path="/complaints" element={<DeveloperComplaintDashboard />} />
+          <Route path="/complaints/new" element={<DeveloperComplaintForm />} />
 
-          {/* Protected fallback */}
+          {/* Management */}
+          <Route path="/tasks/review" element={<DailyTaskReviewPage />} />
+          <Route
+            path="/complaints/review"
+            element={<ComplaintReviewDashboard />}
+          />
+          <Route
+            path="/complaints/new-admin"
+            element={<AdminComplaintSubmissionPage />}
+          />
+
+          {/* Meetings */}
+          <Route path="/meetings" element={<MeetingOverview />} />
+          <Route path="/meetings/create" element={<CreateMeetings />} />
+
+          {/* App fallback */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
       </Route>

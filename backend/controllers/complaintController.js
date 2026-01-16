@@ -239,12 +239,12 @@ export const createAdminComplaint = async (req, res) => {
 /**
  * @desc    Get complaints created by PM / TL / CEO
  * @route   GET /api/complaints/admin
- * @access  Private (CEO / PM only)
+ * @access  Private (CEO / PM/TL only)
  */
 export const getAdminComplaints = async (req, res) => {
   try {
     // Role check
-    if (!["CEO", "PM"].includes(req.user.role)) {
+    if (!["CEO", "PM", "TL"].includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: "Access denied",

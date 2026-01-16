@@ -1,96 +1,104 @@
-import { createContext, useState, useEffect,useContext } from 'react';
-import api from '../../services/api';
-import { toast } from 'react-hot-toast';
+import { createContext, useState, useEffect, useContext } from "react";
+import api from "../../services/api";
+import { toast } from "react-hot-toast";
 
 const AuthContext = createContext();
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Check if user is logged in on app start
+  // Restore session
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
+    const storedUser = localStorage.getItem("user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
     setLoading(false);
   }, []);
 
-  // Login Function
+  // Login
   const login = async (email, password) => {
     try {
-      const { data } = await api.post('/auth/login', { email, password });
-      
-      localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
-      localStorage.setItem('user', JSON.stringify(data));
-      
-      setUser(data);
-      toast.success('Login Successful');
+      const { data } = await api.post("/auth/login", { email, password });
+
+      const { accessToken, refreshToken, ...userData } = data;
+
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      setUser(userData);
+
+      toast.success("Login Successful");
       return true;
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Login Failed');
+      toast.error(error.response?.data?.message || "Login Failed");
       return false;
     }
   };
 
-  // Register Function
+  // Register
   const register = async (userData) => {
     try {
-      const { data } = await api.post('/auth/register', userData);
-      
-      localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
-      localStorage.setItem('user', JSON.stringify(data));
+      const { data } = await api.post("/auth/register", userData);
 
-      setUser(data);
-      toast.success('Registration Successful');
+      const { accessToken, refreshToken, ...userInfo } = data;
+
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+      localStorage.setItem("user", JSON.stringify(userInfo));
+
+      setUser(userInfo);
+      toast.success("Registration Successful");
       return true;
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Registration Failed');
+      toast.error(error.response?.data?.message || "Registration Failed");
       return false;
     }
   };
 
-  // Google Login Function
+  // Google Login
   const googleLogin = async (credentialResponse) => {
     try {
-      const { data } = await api.post('/auth/google', {
+      const { data } = await api.post("/auth/google", {
         tokenId: credentialResponse.credential,
       });
 
-      localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
-      localStorage.setItem('user', JSON.stringify(data));
+      const { accessToken, refreshToken, ...userData } = data;
 
-      setUser(data);
-      toast.success('Google Login Successful');
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      setUser(userData);
+      toast.success("Google Login Successful");
       return true;
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Google Login Failed');
+      toast.error(error.response?.data?.message || "Google Login Failed");
       return false;
     }
   };
 
-  // Logout Function
+  // Logout
   const logout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
+    localStorage.clear();
     setUser(null);
-    toast.success('Logged Out');
+    toast.success("Logged Out");
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, googleLogin, logout, loading }}>
+    <AuthContext.Provider
+      value={{ user, login, register, googleLogin, logout, loading }}
+    >
       {!loading && children}
     </AuthContext.Provider>
   );
 };
+
+
+
 
 export default AuthContext;

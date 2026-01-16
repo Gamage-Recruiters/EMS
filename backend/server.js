@@ -1,4 +1,4 @@
-import "dotenv/config"; // already loads .env
+import 'dotenv/config'; //loads .env
 import express from "express";
 import cors from "cors";
 import { createServer } from "http";
@@ -47,6 +47,10 @@ app.use(
     credentials: true,
   })
 );
+
+// Body parsers with increased size limits
+app.use(express.json({ limit: process.env.BODY_LIMIT || "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: process.env.BODY_LIMIT || "10mb" }));
 app.use(express.json());
 
 // Base Route
@@ -69,6 +73,7 @@ app.use("/api/meetings", meetingRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/daily-tasks", dailyTaskRoutes);
 app.use("/api/complaints", complaintRoutes);
+app.use("/api/availability", availabilityRoutes);
 // Base Route
 app.get("/", (req, res) => {
   res.json({ message: "EMS Backend Running" });

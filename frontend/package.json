@@ -17,6 +17,7 @@
     "@react-oauth/google": "^0.12.2",
     "@tailwindcss/vite": "^4.1.17",
     "axios": "^1.13.2",
+    "framer-motion": "^12.23.26",
     "dotenv": "^17.2.3",
     "lucide-react": "^0.562.0",
     "jspdf": "^4.0.0",

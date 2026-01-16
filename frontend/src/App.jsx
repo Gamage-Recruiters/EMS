@@ -15,17 +15,18 @@ import VerifyCode from "./pages/auth/VerifyCode";
 import ResetPassword from "./pages/auth/ResetPassword";
 import ResetSuccess from "./pages/auth/ResetSuccess";
 
-// Dashboards (RBAC)
+// Dashboards
 import DashboardOverview from "./pages/dashboard/DashBoardOverview";
+import DashboardPage from "./pages/DashboardPage";
+
+// RBAC Dashboards
 import CeoDashboard from "./pages/dashboard/CeoDashboard";
 import DevDashboard from "./pages/dashboard/DevDashboard";
 import SystemOwnerDashboard from "./pages/dashboard/SystemOwnerDashboard";
 import TLDashboard from "./pages/dashboard/TLDashboard";
 
-// Attendance & Core
-import DashboardPage from "./pages/DashboardPage";
+// Attendance
 import AttendancePage from "./pages/AttendancePage";
-
 // Leave module
 import LeaveForm from "./pages/LeaveForm";
 import LeaveApproval from "./pages/LeaveApproval";
@@ -46,7 +47,7 @@ import DeveloperComplaintDashboard from "./features/developer/pages/ComplaintDas
 import UserManagement from "./pages/UserManagement";
 import UserProfile from "./pages/UserProfile";
 
-// Employee profile (nested)
+// Employee Profile (Nested)
 import EmployeeProfile from "./features/management/pages/employee-profile/EmployeeProfile";
 import PersonalDetails from "./features/management/pages/employee-profile/PersonalDetails";
 import ContactDetails from "./features/management/pages/employee-profile/ContactDetails";
@@ -82,7 +83,7 @@ export default function App() {
           element={
             <>
               {!isCheckedIn && <AttendancePrompt onCheckIn={handleCheckIn} />}
-
+          
               <div
                 className={`min-h-screen bg-gray-50 transition-opacity duration-300 ${
                   !isCheckedIn ? "opacity-50 pointer-events-none" : ""
@@ -93,10 +94,10 @@ export default function App() {
             </>
           }
         >
-          {/* Default */}
+          {/* Default after login */}
           <Route index element={<Navigate to="/dashboard" replace />} />
 
-          {/* ================= CORE DASHBOARD ================= */}
+          {/* ================= DASHBOARD ================= */}
           <Route
             path="/dashboard"
             element={
@@ -105,17 +106,20 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/dashboard/home"
             element={<DashboardPage checkInTime={checkInTime} />}
           />
+
+          {/* ================= ATTENDANCE ================= */}
           <Route path="/attendance" element={<AttendancePage />} />
 
-          {/* ================= LEAVE MODULE ================= */}
+          {/* ================= LEAVE ================= */}
           <Route path="/leave-form" element={<LeaveForm />} />
           <Route path="/leave-approval" element={<LeaveApproval />} />
 
-          {/* ================= RBAC DASHBOARDS ================= */}
+          {/* ================= ROLE BASED DASHBOARDS ================= */}
           <Route
             path="/dashboard/ceo"
             element={
@@ -142,6 +146,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/dashboard/tl"
             element={
@@ -156,7 +161,7 @@ export default function App() {
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="/user-profile/:id" element={<UserProfile />} />
 
-          {/* ================= EMPLOYEE PROFILE ================= */}
+          {/* ================= EMPLOYEE PROFILE (NESTED) ================= */}
           <Route path="/profile" element={<EmployeeProfile />}>
             <Route index element={<Navigate to="personal-details" replace />} />
             <Route path="personal-details" element={<PersonalDetails />} />
@@ -172,10 +177,6 @@ export default function App() {
               element={<Navigate to="personal-details" replace />}
             />
           </Route>
-
-          {/* Other */}
-          <Route path="/user-management" element={<UserManagement />} />
-          <Route path="/user-profile/:id" element={<UserProfile />} />
           {/* Developer */}
           <Route path="/tasks" element={<DailyTaskPage />} />
           <Route path="/tasks/new" element={<DailyTaskFormPage />} />

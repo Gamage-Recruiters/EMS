@@ -37,6 +37,8 @@ import UserManagementPage from "./features/management/pages/UserManagementPage.j
 // import TeamHierarchyPage from "./features/management/pages/TeamHierarchyPage.jsx";
 import UserManagement from "./pages/UserManagement";
 import UserProfile from "./pages/UserProfile";
+import ComplaintReviewDashboard from "./features/management/pages/ComplaintReviewDashboard";
+import AdminComplaintSubmissionPage from "./features/management/pages/AdminComplaintSubmissionPage";
 
 // Developer pages
 import DailyTaskFormPage from "./features/developer/pages/DailyTaskFormPage";

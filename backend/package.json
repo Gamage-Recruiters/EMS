@@ -24,7 +24,7 @@
     "morgan": "^1.10",
     "multer": "^2.0.2",
     "seed": "^0.4.4",
-    "socket.io": "^4.8.1",
+    "socket.io": "^4.8.3",
     "uuid": "^10.0.0"
   },
   "devDependencies": {

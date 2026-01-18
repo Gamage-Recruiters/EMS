@@ -497,6 +497,7 @@ import JobDetails from "./features/management/pages/employee-profile/JobDetails"
 // Meetings
 import MeetingOverview from "./pages/Meeting-Notification-Chat/MeetingOverview";
 import CreateMeetings from "./pages/Meeting-Notification-Chat/CreateMeetings";
+import UnassignedDashboard from "./pages/dashboard/UnassignedDashboard.jsx";
 
 export default function App() {
   const [checkInTime, setCheckInTime] = useState(null);
@@ -542,7 +543,7 @@ export default function App() {
           <Route path="/dashboard/overview" element={<DashboardOverview />} />
           <Route path="/dashboard/attendance" element={<AttendancePage />} />
           <Route path="/dashboard/meetings" element={<MeetingOverview />} />
-          
+          <Route path="/dashboard/unassigned" element={<UnassignedDashboard />} />
           <Route path="/dashboard/leave-form" element={<LeaveForm />} />
 
           {/* ================= CEO ================= */}

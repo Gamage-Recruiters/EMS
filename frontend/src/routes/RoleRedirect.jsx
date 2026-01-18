@@ -21,7 +21,7 @@ export default function RoleRedirect() {
     case "Developer":
       return <Navigate to="/dashboard/dev" replace />;
     case "Unassigned":
-      return <Navigate to="/dashboard" replace />; // generic fallback
+      return <Navigate to="/dashboard/unassigned" replace />; // generic fallback
     default:
       return <Navigate to="/dashboard" replace />;
   }

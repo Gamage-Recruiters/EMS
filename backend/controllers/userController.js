@@ -43,17 +43,17 @@ export const forgotPassword = async (req, res, next) => {
  * @route  GET /api/user/me
  * @access Private
  */
-export const getCurrentUser = async (req, res, next) => {
-  try {
-    if (!req.user) {
-      return next(new AppError("User not found in request", 401));
-    }
+  export const getCurrentUser = async (req, res, next) => {
+    try {
+      if (!req.user) {
+        return next(new AppError("User not found in request", 401));
+      }
 
-    res.status(200).json(req.user);
-  } catch (error) {
-    next(error);
-  }
-};
+      res.status(200).json(req.user);
+    } catch (error) {
+      next(error);
+    }
+  };
 
 /**
  * @desc   Get all users

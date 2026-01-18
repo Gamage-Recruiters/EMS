@@ -1,8 +1,15 @@
+// 
+
+
+
+
 import React, { useState, useEffect } from "react";
 import {
   setAvailability,
   getMyAvailability,
 } from "../../services/availabilityService";
+import { useNavigate } from "react-router-dom";
+
 
 const Header = () => {
   /* ================= DATE ================= */
@@ -13,8 +20,11 @@ const Header = () => {
     day: "numeric",
   });
 
+
+  const navigate = useNavigate();
+
   /* ================= USER ================= */
-  const storedUser = localStorage.getItem("ems_user");
+  const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
 
   const userName = user
@@ -30,7 +40,8 @@ const Header = () => {
 
   /* ================= STATE ================= */
   const [status, setStatus] = useState("APPEAR_AWAY");
-  const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [statusOpen, setStatusOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const statuses = [
@@ -56,7 +67,6 @@ const Header = () => {
         if (data?.status) {
           setStatus(data.status);
         } else {
-          // Auto-set AVAILABLE on first login
           await setAvailability("AVAILABLE");
           setStatus("AVAILABLE");
         }
@@ -65,8 +75,8 @@ const Header = () => {
       }
     };
 
-    fetchAvailability();
-  }, []);
+    if (user) fetchAvailability();
+  }, [user]);
 
   /* ================= UPDATE STATUS ================= */
   const handleStatusChange = async (newStatus) => {
@@ -80,7 +90,7 @@ const Header = () => {
     try {
       await setAvailability(newStatus);
       setStatus(newStatus);
-      setOpen(false);
+      setStatusOpen(false);
     } catch (error) {
       console.error("Failed to update availability:", error);
       alert(
@@ -93,6 +103,12 @@ const Header = () => {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("accessToken");
+    window.location.reload(); // simple reload, can replace with navigate if using react-router
+  };
+
   const currentStatus = statuses.find((s) => s.label === status);
 
   /* ================= UI ================= */
@@ -100,43 +116,85 @@ const Header = () => {
     <header className="flex justify-between items-center px-6 py-3 bg-white border-b border-gray-100 shadow-sm sticky top-0 z-10">
       <div className="text-sm font-normal text-gray-500">{today}</div>
 
-      <div className="flex items-center space-x-4 relative">
-        <div
-          className="flex items-center space-x-2 cursor-pointer p-1 rounded-full hover:bg-gray-50 transition duration-150"
-          onClick={() => setOpen((prev) => !prev)}
-        >
-          <span className="font-semibold text-gray-800 text-sm hidden sm:inline">
-            {userName}
-          </span>
+      {user && (
+        <div className="relative flex items-center space-x-4">
+          {/* User badge */}
+          <div
+            className="flex items-center space-x-2 cursor-pointer p-1 rounded-full hover:bg-gray-50 transition duration-150"
+            onClick={() => setMenuOpen((prev) => !prev)}
+          >
+            <span className="font-semibold text-gray-800 text-sm hidden sm:inline">
+              {userName}
+            </span>
 
-          <div className="relative w-8 h-8 rounded-full bg-blue-500 text-white flex justify-center items-center font-bold text-xs shadow-sm">
-            {userInitials || "U"}
-            <span
-              className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white ${
-                currentStatus?.color || "bg-gray-400"
-              }`}
-            />
-          </div>
-        </div>
-
-        {open && (
-          <div className="absolute right-0 top-12 w-44 bg-white border border-gray-100 rounded-xl shadow-lg overflow-hidden z-50">
-            {statuses.map((s) => (
-              <button
-                key={s.label}
-                onClick={() => handleStatusChange(s.label)}
-                disabled={loading}
-                className={`flex items-center w-full px-4 py-2 text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed ${
-                  status === s.label ? "bg-blue-50" : ""
+            <div className="relative w-8 h-8 rounded-full bg-blue-500 text-white flex justify-center items-center font-bold text-xs shadow-sm">
+              {userInitials || "U"}
+              <span
+                className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white ${
+                  currentStatus?.color || "bg-gray-400"
                 }`}
-              >
-                <span className={`w-2 h-2 rounded-full mr-2 ${s.color}`} />
-                {s.displayName}
-              </button>
-            ))}
+              />
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* Dropdown menu */}
+          
+          {menuOpen && (
+            <div className="absolute right-0 top-12 w-48 bg-white border border-gray-100 rounded-xl shadow-lg overflow-hidden z-50">
+            {/* Profile button */}
+              <button
+                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
+                onClick={() => {
+                  if (user?._id) {
+                    navigate(`/user-profile/${user._id}`);
+                  }
+                  setMenuOpen(false);
+                }}
+              >
+                Profile
+              </button>
+
+
+              {/* Update status toggle with arrow */}
+              <button
+                className="w-full flex justify-between items-center px-4 py-2 text-sm hover:bg-gray-50"
+                onClick={() => setStatusOpen((prev) => !prev)}
+              >
+                <span>Update Status</span>
+                <span className={`transform transition-transform duration-200 ${statusOpen ? "rotate-90" : ""}`}>&gt;</span>
+              </button>
+
+              {/* Logout */}
+              <button
+                className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-50"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+
+              {/* Status options */}
+              {statusOpen && (
+                <div className="mt-1 border-t border-gray-100">
+                  {statuses.map((s) => (
+                    <button
+                      key={s.label}
+                      onClick={() => handleStatusChange(s.label)}
+                      disabled={loading}
+                      className={`flex items-center w-full px-4 py-2 text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed ${
+                        status === s.label ? "bg-blue-50" : ""
+                      }`}
+                    >
+                      <span className={`w-2 h-2 rounded-full mr-2 ${s.color}`} />
+                      {s.displayName}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+        </div>
+      )}
     </header>
   );
 };

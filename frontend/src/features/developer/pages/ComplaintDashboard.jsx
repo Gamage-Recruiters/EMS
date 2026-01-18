@@ -52,7 +52,7 @@ export default function ComplaintDashboard() {
         <h1 className="text-2xl font-semibold">My Complaints</h1>
 
         <button
-          onClick={() => navigate("/complaints/new")}
+          onClick={() => navigate("/dashboard/complaints/new")}
           className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
         >
           <FiPlus /> New Complaint

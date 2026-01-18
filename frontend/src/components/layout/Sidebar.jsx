@@ -11,24 +11,26 @@ const Sidebar = () => {
   const menus = {
     CEO: [
       { name: "Dashboard", path: "/dashboard/ceo" },
+      { name: "Employee Details", path: "employees" },
       { name: "Daily Task Sheet", path: "/dashboard/ceo/daily-task-sheet" },
-      { name: "Daily Task History", path: "/dashboard/ceo/daily-task-history" },
+      { name: "Daily Task History", path: "/dashboard/dev/weekly-summary" },
       { name: "Weekly Progress Overview", path: "/dashboard/ceo/weekly-overview" },
       { name: "Weekly Progress History", path: "/dashboard/ceo/weekly-history" },
-      { name: "CEO Attendance Summary", path: "/dashboard/ceo/attendance-summary" },
+      { name: "CEO Attendance Summary", path: "/dashboard/attendance" },
       { name: "Notice Broadcasting", path: "/dashboard/ceo/notices" },
-      { name: "CEO Meeting Display", path: "/dashboard/ceo/meetings" },
+      { name: "CEO Meeting Display", path: "/dashboard/meetings" },
       { name: "Leave Approval / Display", path: "/dashboard/ceo/leave" },
     ],
 
-    DEVELOPER: [
+    Developer: [
       { name: "Dashboard", path: "/dashboard/dev" },
       { name: "Task Board", path: "/dashboard/dev/task-board" },
       { name: "Update Task Status", path: "/dashboard/dev/update-task-status" },
       { name: "Daily Task Update Form", path: "/dashboard/dev/daily-task-update" },
       { name: "Weekly Work Summary", path: "/dashboard/dev/weekly-summary" },
       { name: "Issues Form", path: "/dashboard/dev/issues" },
-      { name: "Complaint Submission", path: "/dashboard/dev/complaints" },
+      { name: "Leave Form", path: "/dashboard/leave-form" },
+      { name: "Complaint Submission", path: "/dashboard/complaints" },
     ],
 
     SYSTEM_OWNER: [
@@ -42,7 +44,7 @@ const Sidebar = () => {
       { name: "TL Dashboard", path: "/dashboard/tl" },
       { name: "Team Formation Editor", path: "/dashboard/tl/team-formation" },
       { name: "Add Developer to Team", path: "/dashboard/tl/add-developer" },
-      { name: "Schedule Meeting", path: "/dashboard/tl/schedule-meeting" },
+      { name: "Schedule Meeting", path: "/dashboard/meetings" },
       { name: "Special Notices", path: "/dashboard/tl/notices" },
       { name: "Developer Progress View", path: "/dashboard/tl/dev-progress" },
       { name: "Weekly Team Progress", path: "/dashboard/tl/weekly-progress" },
@@ -56,7 +58,7 @@ const Sidebar = () => {
   const menuList = menus[role] || [];
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
+    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col h-screen">
       {/* Brand */}
       <div className="h-16 flex items-center px-6 border-b border-gray-100">
         <span className="text-lg font-semibold text-blue-600 tracking-wide">

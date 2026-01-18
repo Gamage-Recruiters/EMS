@@ -100,8 +100,7 @@ const TLDashboard = () => {
 
   return (
     <div className="min-h-screen flex bg-[#F5F7FB]">
-      {/* Left role-based sidebar */}
-      <Sidebar />
+
 
       {/* Right main area */}
       <main className="flex-1 flex flex-col">
@@ -117,9 +116,9 @@ const TLDashboard = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-4">
+         {/* <div className="flex items-center gap-4"> */}
             {/* Search box */}
-            <div className="relative hidden md:block">
+            {/* <div className="relative hidden md:block">
               <input
                 type="text"
                 placeholder="Search..."
@@ -128,21 +127,35 @@ const TLDashboard = () => {
               <span className="absolute left-3 top-1.5 text-gray-400 text-sm">
                 🔍
               </span>
-            </div>
+            </div> */}
 
             {/* Notification bell */}
-            <button className="relative w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
+            {/* <button className="relative w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
               <span className="text-lg">🔔</span>
               <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500" />
-            </button>
+            </button> */}
             {/* Avatar placeholder */}
-            <Link
+            {/* <Link
               to="/profile/personal"
               className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-xs font-semibold text-white hover:opacity-90"
             >
               {user?.email ? user.email[0].toUpperCase() : "C"}
             </Link>
+          </div> */}
+
+<div className="flex items-center gap-4">
+            {/* Check-in/out button */}
+            <button className="rounded-md bg-slate-900 text-white text-xs font-medium px-4 py-2 flex items-center gap-2 shadow-sm">
+              <span>⭐</span>
+              <span>Check In/Out</span>
+            </button>
+
+            {/* Notification & avatar */}
+            <button className="relative w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
+              <span className="text-lg">🔔</span>
+            </button>
           </div>
+
         </header>
 
         {/* Main content area */}

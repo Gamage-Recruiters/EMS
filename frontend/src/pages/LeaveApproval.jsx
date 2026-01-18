@@ -6,47 +6,6 @@ import { Search, Download, Filter, Check, X, Eye, Calendar, Clock, User, Mail, B
 
 // Mock Sidebar and TopHeader components
 // Sidebar component
-function Sidebar() {
-  return (
-    <aside className="w-72 bg-gradient-to-b from-slate-900 to-slate-800 min-h-screen flex flex-col hidden lg:flex">
-      {/* Brand */}
-      <div className="px-6 py-6 border-b border-slate-700">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 flex items-center justify-center text-white text-lg">
-            👥
-          </div>
-          <div>
-            <h1 className="font-bold text-white">HRMS Portal</h1>
-            <p className="text-xs text-slate-400">Leave Management</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Menu */}
-      <nav className="flex-1 px-4 py-6 space-y-1">
-        <MenuItem label="Dashboard" />
-        <MenuItem label="Leave Approval" active />
-        <MenuItem label="Employee Directory" />
-        <MenuItem label="Reports" />
-        <MenuItem label="Settings" />
-      </nav>
-
-      {/* Profile */}
-      <div className="px-6 py-4 border-t border-slate-700">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold text-sm">
-            AU
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-white">Admin User</p>
-            <p className="text-xs text-slate-400">Manager</p>
-          </div>
-        </div>
-      </div>
-    </aside>
-  );
-}
-
 function MenuItem({ label, active }) {
   return (
     <div className={`px-4 py-2.5 rounded-xl text-sm font-medium cursor-pointer transition-all ${active ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white" : "text-slate-300 hover:bg-slate-700"}`}>
@@ -67,19 +26,6 @@ function TopHeader() {
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Leave Approval Management</h1>
             <p className="text-sm text-slate-600 mt-0.5">Review and process employee leave requests</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button className="relative p-2.5 text-slate-600 hover:bg-slate-50 rounded-xl transition-colors">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
-          <button className="p-2.5 text-slate-600 hover:bg-slate-50 rounded-xl transition-colors">
-            <Search className="w-5 h-5" />
-          </button>
-          <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-lg shadow-indigo-200 cursor-pointer">
-            AU
           </div>
         </div>
       </div>
@@ -220,7 +166,7 @@ export default function LeaveApproval() {
 
   return (
     <div className="min-h-screen bg-slate-100 flex">
-      <Sidebar />
+     
 
       <main className="flex-1 p-8">
         <TopHeader />

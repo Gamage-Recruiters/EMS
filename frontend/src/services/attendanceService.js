@@ -1,8 +1,8 @@
-import api from "../api/api";
+import api from "../api/api.js";
 
 export const checkIn =  async () => {
    try {
-    const response = await api.post("/attendance/checkIn");
+    const response = await api.post("/attendance/checkin");
     return {
         success: true,
         data: response.data,

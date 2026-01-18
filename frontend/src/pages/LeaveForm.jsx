@@ -43,10 +43,10 @@ export default function LeaveForm() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex">
-      <Sidebar />
+   
 
       <main className="flex-1 p-6 md:p-8 lg:p-10">
-        <TopHeader />
+      
 
         {/* Form Container */}
         <div className="max-w-5xl mx-auto">

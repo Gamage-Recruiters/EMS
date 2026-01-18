@@ -28,8 +28,7 @@ const DevDashboard = () => {
 
   return (
     <div className="min-h-screen flex bg-[#F5F7FB]">
-      {/* Shared role-based sidebar */}
-      <Sidebar />
+
 
       {/* MAIN CONTENT */}
       <main className="flex-1 flex flex-col">
@@ -55,12 +54,6 @@ const DevDashboard = () => {
             <button className="relative w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
               <span className="text-lg">🔔</span>
             </button>
-              <Link
-                to="/profile/personal"
-                className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-xs font-semibold text-white hover:opacity-90"
-              >
-                {user?.email ? user.email[0].toUpperCase() : "C"}
-              </Link>
           </div>
         </header>
 

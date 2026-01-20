@@ -54,14 +54,18 @@ const Sidebar = () => {
       { name: "Add Developer to Team", path: "/dashboard/tl/add-developer" },
       { name: "Schedule Meeting", path: "/dashboard/meetings" },
       { name: "Special Notices", path: "/dashboard/tl/notices" },
-      { name: "Developer Progress View", path: "/dashboard/tl/dev-progress" },
+      {
+        name: "Developer Progress View",
+        path: "/dashboard/ceo/daily-task-sheet",
+      },
       { name: "Weekly Team Progress", path: "/dashboard/tl/weekly-progress" },
       { name: "Past Project Details", path: "/dashboard/tl/past-projects" },
     ],
   };
 
   // default role if not logged in (you can change this)
-  const role = user?.role || "DEVELOPER";
+  let role = user?.role || "DEVELOPER";
+  if (role == "PM") role = "TL"; // Map PM to TL for sidebar menu
   const menuList = menus[role] || [];
 
   return (

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Pencil, Trash2, Check, X, Loader2 } from "lucide-react";
+import { Pencil, Trash2, Check, X, Loader2, Smile, Clock } from "lucide-react";
 
 export default function ChatMessages({
   messages: initialMessages = [],
@@ -12,23 +12,23 @@ export default function ChatMessages({
   const endRef = useRef(null);
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
-  // Sync incoming messages
+  // Sync parent messages
   useEffect(() => {
     setMessages(initialMessages);
   }, [initialMessages]);
 
-  // Auto-scroll
+  // Auto-scroll to latest
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Real-time edit/delete listeners
+  // Real-time updates
   useEffect(() => {
     if (!socket) return;
 
     const onEdited = (updatedMsg) => {
       setMessages((prev) =>
-        prev.map((m) => (m._id === updatedMsg._id ? updatedMsg : m))
+        prev.map((m) => (m._id === updatedMsg._id ? updatedMsg : m)),
       );
       if (editingId === updatedMsg._id) {
         setEditingId(null);
@@ -54,191 +54,254 @@ export default function ChatMessages({
     };
   }, [socket, editingId]);
 
-  // Permissions (only sender can edit/delete)
-  const canEditOrDelete = (msg) => msg.userId._id === currentUser._id;
+  // Permissions
+  const canEdit = (msg) => msg.userId._id === currentUser._id;
+  const canDelete = (msg) =>
+    msg.userId._id === currentUser._id ||
+    ["CEO", "TL", "PM"].includes(currentUser.role);
 
-  // Start editing
   const startEditing = (msg) => {
-    if (!canEditOrDelete(msg)) return;
+    if (!canEdit(msg)) return;
     setEditingId(msg._id);
     setEditText(msg.text);
     setSavingId(null);
   };
 
-  // Cancel
   const cancelEditing = () => {
     setEditingId(null);
     setEditText("");
     setSavingId(null);
   };
 
-  // Save edit (optimistic)
   const saveEdit = (msg) => {
-    if (!editText.trim() || editText.trim() === msg.text.trim()) {
+    const trimmed = editText.trim();
+    if (!trimmed || trimmed === msg.text.trim()) {
       cancelEditing();
       return;
     }
 
     setSavingId(msg._id);
 
-    // Optimistic update
-    const optimistic = { ...msg, text: editText.trim(), isEdited: true };
+    // Optimistic UI
     setMessages((prev) =>
-      prev.map((m) => (m._id === msg._id ? optimistic : m))
+      prev.map((m) =>
+        m._id === msg._id ? { ...m, text: trimmed, isEdited: true } : m,
+      ),
     );
 
     socket.emit(
       "message:edit",
-      { messageId: msg._id, text: editText.trim() },
+      { messageId: msg._id, text: trimmed },
       (res) => {
         setSavingId(null);
         if (!res?.success) {
-          alert(res?.error || "Failed to edit");
+          alert(res?.error || "Couldn't save edit. Try again.");
           setMessages((prev) => prev.map((m) => (m._id === msg._id ? msg : m)));
         } else {
           cancelEditing();
         }
-      }
+      },
     );
   };
 
-  // Delete
   const handleDelete = (msg) => {
-    if (!canEditOrDelete(msg)) return;
+    if (!canDelete(msg)) return;
 
-    if (!confirm("Delete this message? This cannot be undone.")) return;
+    if (!window.confirm("Delete this message? This can't be undone.")) return;
 
     socket.emit("message:delete", { messageId: msg._id }, (res) => {
       if (!res?.success) {
-        alert(res?.error || "Failed to delete");
+        alert(res?.error || "Couldn't delete message.");
       }
     });
   };
 
+  // Role badge styling
+  const getRoleBadge = (role) => {
+    if (!role) return null;
+    const styles = {
+      CEO: "bg-indigo-100 text-indigo-700",
+      TL: "bg-teal-100 text-teal-700",
+      PM: "bg-purple-100 text-purple-700",
+      ATL: "bg-cyan-100 text-cyan-700",
+      Developer: "bg-amber-100 text-amber-700",
+    };
+    return (
+      <span
+        className={`ml-2 px-2.5 py-0.5 text-xs font-medium rounded-full ${
+          styles[role] || "bg-gray-100 text-gray-600"
+        }`}
+      >
+        {role}
+      </span>
+    );
+  };
+
   return (
-    <div className="flex-1 overflow-y-auto px-6 py-6 bg-gray-50/60 space-y-6">
+    <div className="flex-1 overflow-y-auto px-5 py-6 bg-gradient-to-b from-gray-50 to-white space-y-6">
       {messages.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-full text-gray-500">
-          <p className="text-lg font-medium">No messages yet</p>
-          <p className="text-sm mt-2">Be the first to say something</p>
+          <Smile size={48} className="text-blue-400 mb-4 opacity-80" />
+          <p className="text-xl font-semibold text-gray-700">No messages yet</p>
+          <p className="text-sm mt-3 text-gray-500 max-w-md text-center">
+            Be the first to say something — start the conversation!
+          </p>
         </div>
       ) : (
         messages.map((msg) => {
           if (!msg?._id || !msg?.userId?._id) return null;
 
           const isMe = msg.userId._id === currentUser._id;
-          const canAction = canEditOrDelete(msg);
           const isEditing = editingId === msg._id;
           const isSaving = savingId === msg._id;
-
+          const senderName = `${msg.userId.firstName} ${msg.userId.lastName || ""}`;
           const senderInitial = msg.userId.firstName?.[0] || "?";
-          const senderName = `${msg.userId.firstName} ${
-            msg.userId.lastName || ""
-          }`;
 
           return (
             <div
               key={msg._id}
-              className={`group flex animate-fade-in ${
+              className={`group flex animate-fade-in-up ${
                 isMe ? "justify-end" : "justify-start"
               }`}
             >
-              {/* Message */}
+              {/* Avatar (left for others, right for self) */}
               <div
-                className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm shadow-sm relative
+                className={`w-11 h-11 rounded-full flex items-center justify-center text-white font-bold shadow-md flex-shrink-0
                   ${
                     isMe
-                      ? "bg-blue-600 text-white rounded-br-none"
-                      : "bg-white border border-gray-200 rounded-bl-none"
+                      ? "ml-3 order-2 bg-gradient-to-br from-blue-500 to-indigo-500"
+                      : "mr-3 order-1 bg-gradient-to-br from-indigo-400 to-purple-500"
                   }`}
+                title={isMe ? "You" : senderName}
               >
-                {/* Sender name (for others) */}
+                {isMe ? currentUser.firstName?.[0] || "?" : senderInitial}
+              </div>
+
+              {/* Message bubble */}
+              <div
+                className={`max-w-[78%] px-5 py-3.5 rounded-2xl text-[15px] shadow-md relative transition-all duration-200
+                  ${
+                    isMe
+                      ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-none"
+                      : "bg-white border border-gray-200/80 rounded-bl-none shadow-sm"
+                  } ${isEditing ? "ring-2 ring-blue-400 ring-opacity-60" : ""}`}
+              >
+                {/* Sender info (only for others) */}
                 {!isMe && (
-                  <div className="text-xs font-medium text-blue-600 mb-1.5">
-                    {senderName}
+                  <div className="flex items-center gap-2.5 mb-1.5">
+                    <span className="font-semibold text-gray-900 text-[15px]">
+                      {senderName}
+                    </span>
+                    {getRoleBadge(msg.userId.role)}
                   </div>
                 )}
 
-                {/* Editable content */}
+                {/* Content */}
                 {isEditing ? (
-                  <div className="space-y-2">
-                    <textarea
-                      value={editText}
-                      onChange={(e) => setEditText(e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg text-sm resize-none min-h-[60px] focus:outline-none focus:ring-2
-                        ${
-                          isMe
-                            ? "border-blue-400 focus:ring-blue-500 bg-blue-700/10 text-white"
-                            : "border-gray-300 focus:ring-blue-500"
-                        }`}
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          saveEdit(msg);
-                        }
-                        if (e.key === "Escape") cancelEditing();
-                      }}
-                    />
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <textarea
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        className={`w-full px-4 py-3 border rounded-xl text-[15px] resize-none min-h-[90px] focus:outline-none focus:ring-2 transition-all duration-200 leading-relaxed
+                          ${
+                            isMe
+                              ? "bg-blue-800/10 border-blue-300 text-white placeholder-blue-200"
+                              : "bg-white border-blue-300 text-gray-900 placeholder-gray-400"
+                          }`}
+                        autoFocus
+                        placeholder="Edit your message..."
+                        maxLength={2000}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            saveEdit(msg);
+                          }
+                          if (e.key === "Escape") cancelEditing();
+                        }}
+                      />
+                      <span className="absolute bottom-2 right-3 text-xs opacity-70">
+                        {editText.length}/2000
+                      </span>
+                    </div>
 
-                    <div className="flex gap-2 justify-end">
+                    {/* Save / Cancel */}
+                    <div className="flex justify-end gap-3">
                       <button
                         onClick={cancelEditing}
-                        className="p-1.5 rounded hover:bg-gray-200/50 text-gray-600 hover:text-gray-900"
+                        disabled={isSaving}
+                        className="px-5 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition flex items-center gap-2 shadow-sm"
                       >
                         <X size={16} />
+                        Cancel
                       </button>
+
                       <button
                         onClick={() => saveEdit(msg)}
                         disabled={isSaving || !editText.trim()}
-                        className="p-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 flex items-center gap-1"
+                        className="px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition flex items-center gap-2 shadow-md"
                       >
                         {isSaving ? (
-                          <Loader2 size={16} className="animate-spin" />
+                          <>
+                            <Loader2 size={16} className="animate-spin" />
+                            Saving...
+                          </>
                         ) : (
-                          <Check size={16} />
+                          <>
+                            <Check size={16} />
+                            Save Changes
+                          </>
                         )}
                       </button>
                     </div>
                   </div>
                 ) : (
                   <>
-                    <p className="break-words leading-relaxed">{msg.text}</p>
+                    <p className="leading-relaxed break-words">{msg.text}</p>
 
-                    <div className="flex items-center justify-end gap-2 mt-1.5 text-xs opacity-80">
-                      {msg.isEdited && <span className="italic">edited</span>}
-                      <span>
-                        {new Date(msg.createdAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
+                    {/* Footer */}
+                    <div className="flex items-center justify-between text-xs mt-2 opacity-80">
+                      <div className="flex items-center gap-3">
+                        {msg.isEdited && (
+                          <span className="italic text-blue-200/90 flex items-center gap-1">
+                            <Pencil size={12} /> edited
+                          </span>
+                        )}
+                        <span className="flex items-center gap-1.5">
+                          <Clock size={12} className="opacity-70" />
+                          {new Date(msg.createdAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+
+                      {/* Hover actions */}
+                      {(canEdit(msg) || canDelete(msg)) && (
+                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          {canEdit(msg) && (
+                            <button
+                              onClick={() => startEditing(msg)}
+                              className="p-2 rounded-full bg-white/95 shadow hover:bg-blue-50 text-blue-600 hover:text-blue-700 transition-all transform hover:scale-110"
+                              title="Edit this message"
+                            >
+                              <Pencil size={16} />
+                            </button>
+                          )}
+
+                          {canDelete(msg) && (
+                            <button
+                              onClick={() => handleDelete(msg)}
+                              className="p-2 rounded-full bg-white/95 shadow hover:bg-red-50 text-red-600 hover:text-red-700 transition-all transform hover:scale-110"
+                              title="Delete this message"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </>
-                )}
-
-                {/* Edit/Delete controls – only sender */}
-                {!isEditing && canAction && (
-                  <div
-                    className={`absolute -top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity
-                      ${isMe ? "-mr-2" : "-mr-10"}`}
-                  >
-                    <button
-                      onClick={() => startEditing(msg)}
-                      className="p-1.5 rounded-full bg-white/90 shadow hover:bg-white text-gray-700 hover:text-blue-600"
-                      title="Edit"
-                    >
-                      <Pencil size={14} />
-                    </button>
-
-                    <button
-                      onClick={() => handleDelete(msg)}
-                      className="p-1.5 rounded-full bg-white/90 shadow hover:bg-white text-gray-700 hover:text-red-600"
-                      title="Delete"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
                 )}
               </div>
             </div>

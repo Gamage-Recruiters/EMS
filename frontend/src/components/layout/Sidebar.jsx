@@ -38,7 +38,7 @@ const Sidebar = () => {
       { name: "Weekly Work Summary", path: "/dashboard/dev/weekly-summary" },
       { name: "Issues Form", path: "/dashboard/dev/issues" },
       { name: "Leave Form", path: "/dashboard/leave-form" },
-      { name: "Complaint Submission", path: "/dashboard/complaints" },
+      { name: "Complaint Submission", path: "/dashboard/dev/complaints" },
     ],
 
     SYSTEM_OWNER: [

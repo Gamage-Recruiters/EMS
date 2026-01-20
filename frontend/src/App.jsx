@@ -617,11 +617,15 @@ export default function App() {
 
           {/* ================= COMPLAINTS ================= */}
           <Route
-            path="/dashboard/complaints"
-            element={<DeveloperComplaintDashboard />}
+            path="/dashboard/dev/complaints"
+            element={
+              <ProtectedRoute allowedRoles={["Developer"]}>
+                <DeveloperComplaintDashboard />
+              </ProtectedRoute>
+            }
           />
           <Route
-            path="/dashboard/complaints/new"
+            path="/dashboard/dev/complaints/new"
             element={
               <ProtectedRoute allowedRoles={["Developer"]}>
                 <DeveloperComplaintForm />

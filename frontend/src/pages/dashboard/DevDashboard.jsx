@@ -223,8 +223,11 @@ const QuickActionsCard = ({ navigate }) => (
       Create Daily New Task
     </button>
 
-    <button className="w-full rounded-md bg-white border border-blue-600 text-blue-600 text-xs font-semibold py-2.5 hover:bg-blue-50">
-      My Meetings
+    <button
+      className="w-full rounded-md bg-white border border-blue-600 text-blue-600 text-xs font-semibold py-2.5 hover:bg-blue-50"
+      onClick={() => navigate("/dashboard/dev/complaints/new")}
+    >
+      Create Complaint
     </button>
   </section>
 );

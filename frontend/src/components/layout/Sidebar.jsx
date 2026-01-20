@@ -12,8 +12,10 @@ const Sidebar = () => {
     CEO: [
       { name: "Dashboard", path: "/dashboard/ceo" },
       { name: "Employee Details", path: "/dashboard/employees" },
-      { name: "Daily Task Sheet", path: "/dashboard/ceo/daily-task-sheet" },
-      { name: "Daily Task History", path: "/dashboard/dev/weekly-summary" },
+      {
+        name: "Developer Progress View",
+        path: "/dashboard/ceo/daily-task-sheet",
+      },
       {
         name: "Weekly Progress Overview",
         path: "/dashboard/ceo/weekly-overview",

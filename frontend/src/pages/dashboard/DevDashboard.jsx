@@ -2,10 +2,11 @@
 import React from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import Sidebar from "../../components/layout/Sidebar.jsx";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const DevDashboard = () => {
   const { user } = useAuth() || {};
+  const navigate = useNavigate();
 
   const recentTasks = [
     {
@@ -28,8 +29,6 @@ const DevDashboard = () => {
 
   return (
     <div className="min-h-screen flex bg-[#F5F7FB]">
-
-
       {/* MAIN CONTENT */}
       <main className="flex-1 flex flex-col">
         {/* Top bar */}
@@ -130,7 +129,7 @@ const DevDashboard = () => {
           {/* Right column: calendar + quick actions */}
           <div className="w-80 flex flex-col gap-6">
             <CalendarCard />
-            <QuickActionsCard />
+            <QuickActionsCard navigate={navigate} />
           </div>
         </div>
       </main>
@@ -146,7 +145,9 @@ const DevKpiCard = ({ label, value, subtitle, accent }) => (
       <span className="text-3xl font-semibold text-slate-900">{value}</span>
       <p className="mt-1 text-sm text-gray-600">{label}</p>
       {subtitle && (
-        <p className={`mt-1 text-xs font-medium ${accent || "text-emerald-500"}`}>
+        <p
+          className={`mt-1 text-xs font-medium ${accent || "text-emerald-500"}`}
+        >
           {subtitle}
         </p>
       )}
@@ -211,22 +212,20 @@ const CalendarCard = () => (
   </section>
 );
 
-const QuickActionsCard = () => (
+const QuickActionsCard = ({ navigate }) => (
   <section className="bg-white rounded-3xl shadow-sm p-5 space-y-3">
     <h2 className="text-sm font-semibold text-slate-900">Quick Actions</h2>
 
-    <button className="w-full rounded-md bg-blue-600 text-white text-xs font-semibold py-2.5 hover:bg-blue-700">
+    <button
+      className="w-full rounded-md bg-blue-600 text-white text-xs font-semibold py-2.5 hover:bg-blue-700"
+      onClick={() => navigate("/dashboard/dev/daily-task-form")}
+    >
       Create Daily New Task
     </button>
 
     <button className="w-full rounded-md bg-white border border-blue-600 text-blue-600 text-xs font-semibold py-2.5 hover:bg-blue-50">
-      Update Daily Task
+      My Meetings
     </button>
-
-    <div className="mt-2 rounded-md bg-[#FFF5E5] border border-[#FFE0A3] px-3 py-2 text-[11px] text-[#B06000] flex items-center gap-2">
-      <span>⚠️</span>
-      <span>Pending Actions – 2 Tasks are pending.</span>
-    </div>
   </section>
 );
 

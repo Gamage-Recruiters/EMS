@@ -2,7 +2,6 @@
 // import { Routes, Route, Navigate } from "react-router-dom";
 // import RoleRedirect from "./routes/RoleRedirect.jsx";
 
-
 // // Layout & Guards
 // import PageLayout from "./components/layout/PageLayout";
 // import AttendancePrompt from "./components/AttendancePrompt";
@@ -80,7 +79,6 @@
 //       <Route path="/reset-password" element={<ResetPassword />} />
 //       <Route path="/reset-success" element={<ResetSuccess />} />
 
-    
 //       <Route element={<PrivateRoute />}>
 //         <Route
 //         path="/"
@@ -98,7 +96,6 @@
 //             </>
 //           }
 
-          
 //         >
 //         <Route index element={<RoleRedirect />} />
 
@@ -182,7 +179,7 @@
 //               element={<Navigate to="personal-details" replace />}
 //             />
 //           </Route>
-          
+
 //           {/* Developer */}
 //           <Route path="/tasks" element={<DailyTaskPage />} />
 //           <Route path="/tasks/new" element={<DailyTaskFormPage />} />
@@ -214,8 +211,6 @@
 //     </Routes>
 //   );
 // }
-
-
 
 // import { useState } from "react";
 // import { Routes, Route, Navigate } from "react-router-dom";
@@ -385,7 +380,6 @@
 //           <Route path="user-management" element={<UserManagement />} />
 //           </ProtectedRoute>
 
-
 //           <Route path="user-profile/:id" element={<UserProfile />} />
 
 //             <ProtectedRoute allowedRoles={["CEO", "SystemAdmin"]}>
@@ -440,7 +434,6 @@
 //     </Routes>
 //   );
 // }
-
 
 import { useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
@@ -539,11 +532,17 @@ export default function App() {
           <Route path="/dashboard" element={<RoleRedirect />} />
 
           {/* ================= COMMON ================= */}
-          <Route path="/dashboard/home" element={<DashboardPage checkInTime={checkInTime} />} />
+          <Route
+            path="/dashboard/home"
+            element={<DashboardPage checkInTime={checkInTime} />}
+          />
           <Route path="/dashboard/overview" element={<DashboardOverview />} />
           <Route path="/dashboard/attendance" element={<AttendancePage />} />
           <Route path="/dashboard/meetings" element={<MeetingOverview />} />
-          <Route path="/dashboard/unassigned" element={<UnassignedDashboard />} />
+          <Route
+            path="/dashboard/unassigned"
+            element={<UnassignedDashboard />}
+          />
           <Route path="/dashboard/leave-form" element={<LeaveForm />} />
 
           {/* ================= CEO ================= */}
@@ -566,25 +565,29 @@ export default function App() {
           <Route
             path="/dashboard/ceo/daily-task-sheet"
             element={
-              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL"]}>
+              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL", "PM"]}>
                 <DailyTaskReviewPage />
               </ProtectedRoute>
             }
           />
 
-
-          <Route path="/dashboard/meetings/create" element={
-            <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL"]}>
-            <CreateMeetings />
-            </ProtectedRoute>
-          } />
-
-          <Route path="/dashboard/meetings/create" element={
+          <Route
+            path="/dashboard/meetings/create"
+            element={
               <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL"]}>
-            <CreateMeetings />
-             </ProtectedRoute>
+                <CreateMeetings />
+              </ProtectedRoute>
             }
-            />
+          />
+
+          <Route
+            path="/dashboard/meetings/create"
+            element={
+              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL"]}>
+                <CreateMeetings />
+              </ProtectedRoute>
+            }
+          />
 
           {/* ================= DEVELOPER ================= */}
           <Route
@@ -596,7 +599,7 @@ export default function App() {
             }
           />
           <Route
-            path="/dashboard/dev/daily-task-update"
+            path="/dashboard/dev/daily-task-form"
             element={
               <ProtectedRoute allowedRoles={["Developer"]}>
                 <DailyTaskFormPage />
@@ -606,7 +609,7 @@ export default function App() {
           <Route
             path="/dashboard/dev/weekly-summary"
             element={
-              <ProtectedRoute allowedRoles={["Developer", "TL", "CEO"]}>
+              <ProtectedRoute allowedRoles={["Developer"]}>
                 <DailyTaskPage />
               </ProtectedRoute>
             }
@@ -628,7 +631,7 @@ export default function App() {
           <Route
             path="/dashboard/complaints/review"
             element={
-              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL"]}>
+              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL", "PM"]}>
                 <ComplaintReviewDashboard />
               </ProtectedRoute>
             }
@@ -636,7 +639,7 @@ export default function App() {
           <Route
             path="/dashboard/complaints/new-admin"
             element={
-              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin"]}>
+              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL", "PM"]}>
                 <AdminComplaintSubmissionPage />
               </ProtectedRoute>
             }
@@ -665,7 +668,10 @@ export default function App() {
             <Route index element={<Navigate to="personal-details" replace />} />
             <Route path="personal-details" element={<PersonalDetails />} />
             <Route path="contact-details" element={<ContactDetails />} />
-            <Route path="education-qualification" element={<EducationQualification />} />
+            <Route
+              path="education-qualification"
+              element={<EducationQualification />}
+            />
             <Route path="job-details" element={<JobDetails />} />
             <Route path="attendance" element={<AttendancePage />} />
           </Route>
@@ -682,7 +688,7 @@ export default function App() {
           <Route
             path="/dashboard/tl"
             element={
-              <ProtectedRoute allowedRoles={["TL"]}>
+              <ProtectedRoute allowedRoles={["TL", "PM"]}>
                 <TLDashboard />
               </ProtectedRoute>
             }

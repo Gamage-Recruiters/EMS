@@ -41,6 +41,7 @@ import DailyTaskFormPage from "./features/developer/pages/DailyTaskFormPage";
 import DailyTaskPage from "./features/developer/pages/DailyTaskPage";
 import DeveloperComplaintForm from "./features/developer/pages/ComplaintSubmissionPage";
 import DeveloperComplaintDashboard from "./features/developer/pages/ComplaintDashboard";
+import TaskBoardPage from "./features/developer/pages/TaskBoardPage"; 
 
 // Other pages
 import UserManagement from "./pages/UserManagement";
@@ -181,6 +182,7 @@ export default function App() {
           <Route path="/tasks/new" element={<DailyTaskFormPage />} />
           <Route path="/complaints" element={<DeveloperComplaintDashboard />} />
           <Route path="/complaints/new" element={<DeveloperComplaintForm />} />
+          <Route path="/task-board" element={<TaskBoardPage />} />
 
           {/* Management */}
           <Route path="/tasks/review" element={<DailyTaskReviewPage />} />

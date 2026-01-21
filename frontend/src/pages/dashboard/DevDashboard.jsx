@@ -1,11 +1,14 @@
 // frontend/src/pages/dashboard/DevDashboard.jsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import Sidebar from "../../components/layout/Sidebar.jsx";
 import { Link } from "react-router-dom";
+import { checkIn, getTodayAttendance, checkOut } from "../../services/attendanceService";
 
 const DevDashboard = () => {
   const { user } = useAuth() || {};
+  const [todayAttendance, setTodayAttendance] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const recentTasks = [
     {
@@ -26,6 +29,50 @@ const DevDashboard = () => {
     },
   ];
 
+  useEffect(() => {
+    if(user) {
+      fetchTodayAttendance();
+    }
+  }, [user]);
+
+  const fetchTodayAttendance = async () => {
+    const result = await getTodayAttendance();
+    if (result.success) {
+      setTodayAttendance(result.data.data);
+    }
+  };
+
+  const handleCheckIn = async () => {
+    setLoading(true);
+    const result = await checkIn();
+    if (result.success) {
+      setTodayAttendance(result.data.data);
+      alert("Successfully checked in!");
+    } else {
+      alert(result.error || "Failed to check in. Please try again.");
+    }
+    setLoading(false);
+  };
+
+  const handleCheckOut = async () => {
+    setLoading(true);
+    const result = await checkOut();
+    if (result.success) {
+      setTodayAttendance((prev) => ({
+        ...prev,
+        checkOutTime: result.data.data.checkOutTime,
+      }));
+      alert("Successfully checked out!");
+    } else {
+      alert(result.error || "Failed to check out. Please try again.");
+    }
+    setLoading(false);
+  };
+
+  const isCheckedIn = todayAttendance?.checkInTime && !todayAttendance?.checkOutTime;
+  const isCheckedOut = todayAttendance?.checkInTime && todayAttendance?.checkOutTime;
+  const notCheckedIn = !todayAttendance?.checkInTime;
+
   return (
     <div className="min-h-screen flex bg-[#F5F7FB]">
 
@@ -43,12 +90,36 @@ const DevDashboard = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-4">
-            {/* Check-in/out button */}
-            <button className="rounded-md bg-slate-900 text-white text-xs font-medium px-4 py-2 flex items-center gap-2 shadow-sm">
-              <span>⭐</span>
-              <span>Check In/Out</span>
-            </button>
+           <div className="flex items-center gap-4">
+            {/* Check-in/out button - Dynamic based on attendance status */}
+            {notCheckedIn && (
+              <button
+                onClick={handleCheckIn}
+                disabled={loading}
+                className="rounded-md bg-green-600 text-white text-xs font-medium px-4 py-2 flex items-center gap-2 shadow-sm hover:bg-green-700 transition disabled:opacity-50"
+              >
+                <span>✓</span>
+                <span>{loading ? "Checking In..." : "Check In"}</span>
+              </button>
+            )}
+
+            {isCheckedIn && (
+              <button
+                onClick={handleCheckOut}
+                disabled={loading}
+                className="rounded-md bg-red-600 text-white text-xs font-medium px-4 py-2 flex items-center gap-2 shadow-sm hover:bg-red-700 transition disabled:opacity-50"
+              >
+                <span>⏰</span>
+                <span>{loading ? "Checking Out..." : "Check Out"}</span>
+              </button>
+            )}
+
+            {isCheckedOut && (
+              <div className="rounded-md bg-gray-200 text-gray-600 text-xs font-medium px-4 py-2 flex items-center gap-2">
+                <span>✓</span>
+                <span>Attendance Complete</span>
+              </div>
+            )}
 
             {/* Notification & avatar */}
             <button className="relative w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">

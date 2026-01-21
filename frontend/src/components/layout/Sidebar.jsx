@@ -28,6 +28,8 @@ const Sidebar = () => {
       { name: "Notice Broadcasting", path: "/dashboard/ceo/notices" },
       { name: "CEO Meeting Display", path: "/dashboard/meetings" },
       { name: "Leave Approval / Display", path: "/dashboard/ceo/leave" },
+      { name: "Complaint Review Dashboard", path: "/dashboard/complaints/review" },
+
     ],
 
     Developer: [
@@ -62,6 +64,7 @@ const Sidebar = () => {
       },
       { name: "Weekly Team Progress", path: "/dashboard/tl/weekly-progress" },
       { name: "Past Project Details", path: "/dashboard/tl/past-projects" },
+      { name: "Complaint Review Dashboard", path: "/dashboard/complaints/review" },
     ],
   };
 

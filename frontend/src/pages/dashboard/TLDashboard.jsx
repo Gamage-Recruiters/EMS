@@ -1,12 +1,18 @@
 // frontend/src/pages/dashboard/TLDashboard.jsx
-import Reactm,{useEffect,useState} from "react";
+import Reactm, { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import Sidebar from "../../components/layout/Sidebar.jsx";
-import { Link } from "react-router-dom";
-import { checkIn, getTodayAttendance, checkOut } from "../../services/attendanceService";
+import { Link, Navigate } from "react-router-dom";
+import {
+  checkIn,
+  getTodayAttendance,
+  checkOut,
+} from "../../services/attendanceService";
+import { useNavigate } from "react-router-dom";
 
 const TLDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [todayAttendance, setTodayAttendance] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -101,54 +107,56 @@ const TLDashboard = () => {
     },
   ];
 
-   useEffect(() => {
-      if(user) {
-        fetchTodayAttendance();
-      }
-    }, [user]);
-  
-    const fetchTodayAttendance = async () => {
-      const result = await getTodayAttendance();
-      if (result.success) {
-        setTodayAttendance(result.data.data);
-      }
-    };
-  
-    const handleCheckIn = async () => {
-      setLoading(true);
-      const result = await checkIn();
-      if (result.success) {
-        setTodayAttendance(result.data.data);
-        alert("Successfully checked in!");
-      } else {
-        alert(result.error || "Failed to check in. Please try again.");
-      }
-      setLoading(false);
-    };
-  
-    const handleCheckOut = async () => {
-      setLoading(true);
-      const result = await checkOut();
-      if (result.success) {
-        setTodayAttendance((prev) => ({
-          ...prev,
-          checkOutTime: result.data.data.checkOutTime,
-        }));
-        alert("Successfully checked out!");
-      } else {
-        alert(result.error || "Failed to check out. Please try again.");
-      }
-      setLoading(false);
-    };
-  
-    const isCheckedIn = todayAttendance?.checkInTime && !todayAttendance?.checkOutTime;
-    const isCheckedOut = todayAttendance?.checkInTime && todayAttendance?.checkOutTime;
-    const notCheckedIn = !todayAttendance?.checkInTime;
+  useEffect(() => {
+    if (user) {
+      fetchTodayAttendance(); // if user is available fetch attendance
+    }
+  }, [user]);
+
+  const fetchTodayAttendance = async () => {
+    const result = await getTodayAttendance();
+    if (result.success) {
+      setTodayAttendance(result.data.data);
+    }
+  };
+  // handle Check-In
+  const handleCheckIn = async () => {
+    setLoading(true);
+    const result = await checkIn();
+    if (result.success) {
+      setTodayAttendance(result.data.data);
+      alert("Successfully checked in!");
+    } else {
+      alert(result.error || "Failed to check in. Please try again.");
+    }
+    setLoading(false);
+  };
+
+  // Handle Check-Out
+  const handleCheckOut = async () => {
+    setLoading(true);
+    const result = await checkOut();
+    if (result.success) {
+      setTodayAttendance((prev) => ({
+        ...prev,
+        checkOutTime: result.data.data.checkOutTime,
+      }));
+      alert("Successfully checked out!");
+      setTimeout(() => {
+        navigate("dashboard/tl/daily-task-update"); // navigate daily task update page
+      }, 100);
+    } else {
+      alert(result.error || "Failed to check out. Please try again.");
+    }
+    setLoading(false);
+  };
+
+  const isCheckedIn = todayAttendance?.checkInTime && !todayAttendance?.checkOutTime; // user checked in but not yet checked out
+  const isCheckedOut = todayAttendance?.checkInTime && todayAttendance?.checkOutTime; // user checked in and checked out
+  const notCheckedIn = !todayAttendance?.checkInTime; // user has not checked in yet
 
   return (
     <div className="min-h-screen flex bg-[#F5F7FB]">
-
-
       {/* Right main area */}
       <main className="flex-1 flex flex-col">
         {/* Top header */}
@@ -158,14 +166,15 @@ const TLDashboard = () => {
               Dashboard Overview
             </h1>
             <p className="text-xs md:text-sm text-gray-500">
-              Welcome back, {user?.email ? user.email.split("@")[0] : "Team Lead"}. Here's your team
-              status.
+              Welcome back,{" "}
+              {user?.email ? user.email.split("@")[0] : "Team Lead"}. Here's
+              your team status.
             </p>
           </div>
 
-         {/* <div className="flex items-center gap-4"> */}
-            {/* Search box */}
-            {/* <div className="relative hidden md:block">
+          {/* <div className="flex items-center gap-4"> */}
+          {/* Search box */}
+          {/* <div className="relative hidden md:block">
               <input
                 type="text"
                 placeholder="Search..."
@@ -176,13 +185,13 @@ const TLDashboard = () => {
               </span>
             </div> */}
 
-            {/* Notification bell */}
-            {/* <button className="relative w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
+          {/* Notification bell */}
+          {/* <button className="relative w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
               <span className="text-lg">🔔</span>
               <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500" />
             </button> */}
-            {/* Avatar placeholder */}
-            {/* <Link
+          {/* Avatar placeholder */}
+          {/* <Link
               to="/profile/personal"
               className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-xs font-semibold text-white hover:opacity-90"
             >
@@ -190,7 +199,7 @@ const TLDashboard = () => {
             </Link>
           </div> */}
 
-<div className="flex items-center gap-4">
+          <div className="flex items-center gap-4">
             {/* Check-in/out button - Dynamic based on attendance status */}
             {notCheckedIn && (
               <button
@@ -226,7 +235,6 @@ const TLDashboard = () => {
               <span className="text-lg">🔔</span>
             </button>
           </div>
-
         </header>
 
         {/* Main content area */}
@@ -324,16 +332,16 @@ const TLDashboard = () => {
 
 const KpiCard = ({ icon, iconBg, label, value, badge, badgeColor }) => (
   <div className="bg-white rounded-3xl shadow-sm px-5 py-4 flex flex-col gap-2">
-    <div className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center text-lg`}>
+    <div
+      className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center text-lg`}
+    >
       {icon}
     </div>
     <p className="text-xs text-gray-500 mt-1">{label}</p>
     <p className="text-2xl font-semibold text-slate-900 leading-tight">
       {value}
     </p>
-    {badge && (
-      <p className={`text-[11px] mt-1 ${badgeColor}`}>{badge}</p>
-    )}
+    {badge && <p className={`text-[11px] mt-1 ${badgeColor}`}>{badge}</p>}
   </div>
 );
 
@@ -347,7 +355,9 @@ const NotificationItem = ({ notification }) => {
     notification.type === "danger" ? "bg-[#F97373]" : "bg-[#3B82F6]";
 
   return (
-    <div className={`flex items-center gap-3 rounded-2xl border px-4 py-3 ${base}`}>
+    <div
+      className={`flex items-center gap-3 rounded-2xl border px-4 py-3 ${base}`}
+    >
       <div
         className={`w-8 h-8 rounded-full ${iconBg} flex items-center justify-center text-white text-sm`}
       >
@@ -387,9 +397,7 @@ const ProjectProgress = ({ project }) => (
   <div className="rounded-2xl border border-gray-100 bg-[#F9FBFF] px-4 py-3">
     <div className="flex items-center justify-between mb-2">
       <div>
-        <p className="text-sm font-semibold text-slate-900">
-          {project.name}
-        </p>
+        <p className="text-sm font-semibold text-slate-900">{project.name}</p>
         <p className="text-[11px] text-gray-500">{project.team}</p>
       </div>
       <span
@@ -426,9 +434,7 @@ const UpcomingDeadlines = ({ deadlines }) => (
           className={`flex items-center gap-4 rounded-2xl border border-gray-100 px-4 py-3 ${d.bg}`}
         >
           <div className="w-12 text-center">
-            <p className="text-lg font-semibold text-slate-900">
-              {d.day}
-            </p>
+            <p className="text-lg font-semibold text-slate-900">{d.day}</p>
             <p className="text-[11px] text-gray-600">{d.month}</p>
           </div>
           <div>

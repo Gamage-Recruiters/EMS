@@ -75,7 +75,7 @@ export default function AdminComplaintSubmissionPage() {
       setSubmitting(true);
       await createAdminComplaint(formData);
       toast.success("Admin complaint submitted");
-      navigate("/complaints/review");
+      navigate("/dashboard/complaints/review");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to submit complaint");
     } finally {
@@ -92,12 +92,7 @@ export default function AdminComplaintSubmissionPage() {
             Logged in as {user.firstName} {user.lastName} ({user.role})
           </p>
         </div>
-        <button
-          onClick={() => navigate("/complaints/review")}
-          className="inline-flex items-center gap-2 border px-4 py-2 rounded text-sm hover:bg-slate-50"
-        >
-          <FiArrowLeft /> Back
-        </button>
+        
       </div>
 
       <form
@@ -203,7 +198,7 @@ export default function AdminComplaintSubmissionPage() {
         <div className="flex justify-end gap-3">
           <button
             type="button"
-            onClick={() => navigate("/complaints/review")}
+            onClick={() => navigate("dashboard/complaints/review")}
             className="border px-4 py-2 rounded text-sm hover:bg-slate-50"
           >
             Cancel

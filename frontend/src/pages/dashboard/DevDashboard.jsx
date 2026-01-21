@@ -4,11 +4,14 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import Sidebar from "../../components/layout/Sidebar.jsx";
 import { Link } from "react-router-dom";
 import { checkIn, getTodayAttendance, checkOut } from "../../services/attendanceService";
+import { useNavigate } from "react-router-dom";
 
 const DevDashboard = () => {
   const { user } = useAuth() || {};
+  const navigate = useNavigate();
   const [todayAttendance, setTodayAttendance] = useState(null);
   const [loading, setLoading] = useState(false);
+
 
   const recentTasks = [
     {
@@ -31,7 +34,7 @@ const DevDashboard = () => {
 
   useEffect(() => {
     if(user) {
-      fetchTodayAttendance();
+      fetchTodayAttendance(); // if user is available fetch attendance
     }
   }, [user]);
 
@@ -41,7 +44,7 @@ const DevDashboard = () => {
       setTodayAttendance(result.data.data);
     }
   };
-
+  // handle Check-In
   const handleCheckIn = async () => {
     setLoading(true);
     const result = await checkIn();
@@ -54,6 +57,7 @@ const DevDashboard = () => {
     setLoading(false);
   };
 
+ // handle Check-Out
   const handleCheckOut = async () => {
     setLoading(true);
     const result = await checkOut();
@@ -63,15 +67,18 @@ const DevDashboard = () => {
         checkOutTime: result.data.data.checkOutTime,
       }));
       alert("Successfully checked out!");
+      setTimeout(() => {
+      navigate("/dashboard/dev/daily-task-update");  // navigate daily task update page
+    }, 100);
     } else {
       alert(result.error || "Failed to check out. Please try again.");
     }
     setLoading(false);
   };
 
-  const isCheckedIn = todayAttendance?.checkInTime && !todayAttendance?.checkOutTime;
-  const isCheckedOut = todayAttendance?.checkInTime && todayAttendance?.checkOutTime;
-  const notCheckedIn = !todayAttendance?.checkInTime;
+  const isCheckedIn = todayAttendance?.checkInTime && !todayAttendance?.checkOutTime; // user checked in but not yet checked out
+  const isCheckedOut = todayAttendance?.checkInTime && todayAttendance?.checkOutTime; // user checked in and checked out
+  const notCheckedIn = !todayAttendance?.checkInTime; // user has not checked in yet
 
   return (
     <div className="min-h-screen flex bg-[#F5F7FB]">
@@ -117,7 +124,7 @@ const DevDashboard = () => {
             {isCheckedOut && (
               <div className="rounded-md bg-gray-200 text-gray-600 text-xs font-medium px-4 py-2 flex items-center gap-2">
                 <span>✓</span>
-                <span>Attendance Complete</span>
+                <span>checkin/checkout</span>
               </div>
             )}
 

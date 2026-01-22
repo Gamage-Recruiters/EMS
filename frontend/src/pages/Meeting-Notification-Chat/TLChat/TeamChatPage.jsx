@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import api from "../../../services/api";
+import api from "../../../api/api";
 import socket from "../../../components/chat/socket";
 
 import TeamSidebar from "../../../components/chat/tlchat/TeamSidebar";
@@ -69,7 +69,7 @@ export default function TeamChatPage() {
 
     socket.on("channel:updated", (updated) => {
       setChannels((prev) =>
-        prev.map((c) => (c._id === updated._id ? updated : c))
+        prev.map((c) => (c._id === updated._id ? updated : c)),
       );
     });
 

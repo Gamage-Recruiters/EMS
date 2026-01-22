@@ -7,15 +7,24 @@ const Sidebar = () => {
   const { user } = useAuth();
   const location = useLocation();
 
-  // Role-based menu items
+  const role = user?.role || "Developer";
+
+  // Role-based menu items (WITH CHAT)
   const menus = {
     CEO: [
       { name: "Dashboard", path: "/dashboard/ceo" },
+      { name: "CEO Chat", path: "/chat/ceo" }, // ✅ CEO CHAT
       { name: "Employee Details", path: "/dashboard/employees" },
       { name: "Daily Task Sheet", path: "/dashboard/ceo/daily-task-sheet" },
       { name: "Daily Task History", path: "/dashboard/dev/weekly-summary" },
-      { name: "Weekly Progress Overview", path: "/dashboard/ceo/weekly-overview" },
-      { name: "Weekly Progress History", path: "/dashboard/ceo/weekly-history" },
+      {
+        name: "Weekly Progress Overview",
+        path: "/dashboard/ceo/weekly-overview",
+      },
+      {
+        name: "Weekly Progress History",
+        path: "/dashboard/ceo/weekly-history",
+      },
       { name: "CEO Attendance Summary", path: "/dashboard/attendance" },
       { name: "Notice Broadcasting", path: "/dashboard/ceo/notices" },
       { name: "CEO Meeting Display", path: "/dashboard/meetings" },
@@ -24,9 +33,13 @@ const Sidebar = () => {
 
     Developer: [
       { name: "Dashboard", path: "/dashboard/dev" },
+      { name: "Employee Chat", path: "/chat/employee" }, // ✅ EMPLOYEE CHAT
       { name: "Task Board", path: "/dashboard/dev/task-board" },
       { name: "Update Task Status", path: "/dashboard/dev/update-task-status" },
-      { name: "Daily Task Update Form", path: "/dashboard/dev/daily-task-update" },
+      {
+        name: "Daily Task Update Form",
+        path: "/dashboard/dev/daily-task-update",
+      },
       { name: "Weekly Work Summary", path: "/dashboard/dev/weekly-summary" },
       { name: "Issues Form", path: "/dashboard/dev/issues" },
       { name: "Leave Form", path: "/dashboard/leave-form" },
@@ -42,6 +55,7 @@ const Sidebar = () => {
 
     TL: [
       { name: "TL Dashboard", path: "/dashboard/tl" },
+      { name: "Team Chat", path: "/chat/tl" }, // ✅ TL CHAT
       { name: "Team Formation Editor", path: "/dashboard/tl/team-formation" },
       { name: "Add Developer to Team", path: "/dashboard/tl/add-developer" },
       { name: "Schedule Meeting", path: "/dashboard/meetings" },
@@ -50,11 +64,8 @@ const Sidebar = () => {
       { name: "Weekly Team Progress", path: "/dashboard/tl/weekly-progress" },
       { name: "Past Project Details", path: "/dashboard/tl/past-projects" },
     ],
-
   };
 
-  // default role if not logged in (you can change this)
-  const role = user?.role || "DEVELOPER";
   const menuList = menus[role] || [];
 
   return (
@@ -70,7 +81,7 @@ const Sidebar = () => {
       <nav className="flex-1 overflow-y-auto py-4">
         <ul className="space-y-1">
           {menuList.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive = location.pathname.startsWith(item.path);
 
             return (
               <li key={item.path}>

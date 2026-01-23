@@ -7,8 +7,6 @@ const Sidebar = () => {
   const { user } = useAuth();
   const location = useLocation();
 
-  const role = user?.role || "Developer";
-
   // Role-based menu items (WITH CHAT)
   const menus = {
     CEO: [
@@ -66,6 +64,9 @@ const Sidebar = () => {
     ],
   };
 
+  // default role if not logged in (you can change this)
+  let role = user?.role || "DEVELOPER";
+  if (role == "PM") role = "TL"; // Map PM to TL for sidebar menu
   const menuList = menus[role] || [];
 
   return (

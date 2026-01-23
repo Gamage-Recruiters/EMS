@@ -492,6 +492,9 @@ import MeetingOverview from "./pages/Meeting-Notification-Chat/MeetingOverview";
 import CreateMeetings from "./pages/Meeting-Notification-Chat/CreateMeetings";
 import UnassignedDashboard from "./pages/dashboard/UnassignedDashboard.jsx";
 
+//kanban
+import TaskBoardPage from "./pages/kanban/TaskBoardPage.jsx";
+
 export default function App() {
   const [checkInTime, setCheckInTime] = useState(null);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
@@ -588,6 +591,9 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          {/* ================= Kanban ================= */}
+           <Route path="/dashboard/kanban" element={<TaskBoardPage />} />
+
 
           {/* ================= DEVELOPER ================= */}
           <Route

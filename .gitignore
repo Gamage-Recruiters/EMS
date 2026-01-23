@@ -19,7 +19,6 @@ logs/
 *.log
 
 # Environment Variables
-.env
 frontend/.env
 backend/.env
 
@@ -28,7 +27,6 @@ backend/.env
 Thumbs.db
 
 # IDE Files
-.vscode/
 .idea/
 *.swp
 
@@ -42,3 +40,4 @@ coverage/
 # Uploads (optional)
 uploads/
 public/uploads/
+config.bat

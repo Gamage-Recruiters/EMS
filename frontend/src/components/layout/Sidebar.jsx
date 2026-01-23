@@ -42,6 +42,7 @@ const Sidebar = () => {
       { name: "Issues Form", path: "/dashboard/dev/issues" },
       { name: "Leave Form", path: "/dashboard/leave-form" },
       { name: "Complaint Submission", path: "/dashboard/complaints" },
+      { name: "My Meetings", path: "/dashboard/meetings" },
     ],
 
     SYSTEM_OWNER: [

@@ -5,7 +5,7 @@ export default function RoleRedirect() {
   const { user } = useAuth();
 
   if (!user) return <Navigate to="/login" replace />;
-  console.log(user.role)
+  console.log(user.role);
 
   switch (user.role) {
     case "CEO":
@@ -17,7 +17,7 @@ export default function RoleRedirect() {
     case "ATL":
       return <Navigate to="/dashboard/atl" replace />;
     case "PM":
-      return <Navigate to="/dashboard/pm" replace />;
+      return <Navigate to="/dashboard/tl" replace />;
     case "Developer":
       return <Navigate to="/dashboard/dev" replace />;
     case "Unassigned":

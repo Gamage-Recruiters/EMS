@@ -12,25 +12,37 @@ const Sidebar = () => {
     CEO: [
       { name: "Dashboard", path: "/dashboard/ceo" },
       { name: "Employee Details", path: "/dashboard/employees" },
-      { name: "Daily Task Sheet", path: "/dashboard/ceo/daily-task-sheet" },
-      { name: "Daily Task History", path: "/dashboard/dev/weekly-summary" },
-      { name: "Weekly Progress Overview", path: "/dashboard/ceo/weekly-overview" },
-      { name: "Weekly Progress History", path: "/dashboard/ceo/weekly-history" },
+      {
+        name: "Developer Progress View",
+        path: "/dashboard/ceo/daily-task-sheet",
+      },
+      {
+        name: "Weekly Progress Overview",
+        path: "/dashboard/ceo/weekly-overview",
+      },
+      {
+        name: "Weekly Progress History",
+        path: "/dashboard/ceo/weekly-history",
+      },
       { name: "CEO Attendance Summary", path: "/dashboard/attendance" },
       { name: "Notice Broadcasting", path: "/dashboard/ceo/notices" },
       { name: "CEO Meeting Display", path: "/dashboard/meetings" },
       { name: "Leave Approval / Display", path: "/dashboard/ceo/leave" },
+      { name: "Complaint Review Dashboard", path: "/dashboard/complaints/review" },
+
     ],
 
     Developer: [
       { name: "Dashboard", path: "/dashboard/dev" },
       { name: "Task Board", path: "/dashboard/dev/task-board" },
-      { name: "Update Task Status", path: "/dashboard/dev/update-task-status" },
-      { name: "Daily Task Update Form", path: "/dashboard/dev/daily-task-update" },
+      {
+        name: "Daily Task Form",
+        path: "/dashboard/dev/daily-task-form",
+      },
       { name: "Weekly Work Summary", path: "/dashboard/dev/weekly-summary" },
       { name: "Issues Form", path: "/dashboard/dev/issues" },
       { name: "Leave Form", path: "/dashboard/leave-form" },
-      { name: "Complaint Submission", path: "/dashboard/complaints" },
+      { name: "Complaint Submission", path: "/dashboard/dev/complaints" },
     ],
 
     SYSTEM_OWNER: [
@@ -46,15 +58,19 @@ const Sidebar = () => {
       { name: "Add Developer to Team", path: "/dashboard/tl/add-developer" },
       { name: "Schedule Meeting", path: "/dashboard/meetings" },
       { name: "Special Notices", path: "/dashboard/tl/notices" },
-      { name: "Developer Progress View", path: "/dashboard/tl/dev-progress" },
+      {
+        name: "Developer Progress View",
+        path: "/dashboard/ceo/daily-task-sheet",
+      },
       { name: "Weekly Team Progress", path: "/dashboard/tl/weekly-progress" },
       { name: "Past Project Details", path: "/dashboard/tl/past-projects" },
+      { name: "Complaint Review Dashboard", path: "/dashboard/complaints/review" },
     ],
-
   };
 
   // default role if not logged in (you can change this)
-  const role = user?.role || "DEVELOPER";
+  let role = user?.role || "DEVELOPER";
+  if (role == "PM") role = "TL"; // Map PM to TL for sidebar menu
   const menuList = menus[role] || [];
 
   return (

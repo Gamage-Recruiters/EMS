@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, useContext } from "react";
-import api from "../../services/api";
+import api from "../api/api.js";
 import { toast } from "react-hot-toast";
 
 const AuthContext = createContext();
@@ -31,6 +31,9 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("user", JSON.stringify(userData));
 
       setUser(userData);
+
+       console.log("Logged in user:", userData);
+    console.log("User role:", userData.role);
 
       toast.success("Login Successful");
       return true;

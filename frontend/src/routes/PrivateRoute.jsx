@@ -2,13 +2,17 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function PrivateRoute() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
-  // ❌ Not logged in
+  if (loading) return null; // or spinner
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  // ✅ Logged in → allow access
   return <Outlet />;
 }
+
+
+
+

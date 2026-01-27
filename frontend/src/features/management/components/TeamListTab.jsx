@@ -70,7 +70,7 @@ export default function TeamListTab() {
     // IMPORTANT: change this path if your tabs are not controlled via query params.
     // Typical pattern:
     // - Employees page reads ?tab=team-creation and renders <TeamCreationTab />
-    navigate(`/employees?tab=team-creation&mode=edit&id=${id}`);
+    navigate(`/dashboard/employees?tab=team-creation&mode=edit&id=${id}`);
   }
 
   return (

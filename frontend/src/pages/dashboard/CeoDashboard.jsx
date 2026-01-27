@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 
 const CeoDashboard = () => {
   const { user } = useAuth() || {};
+  console.log(user)
 
   const ongoingProjects = [
     {
@@ -28,7 +29,7 @@ const CeoDashboard = () => {
   return (
     <div className="min-h-screen flex bg-[#F5F7FB]">
       {/* Shared role-based sidebar */}
-      <Sidebar />
+
 
       {/* MAIN CONTENT */}
       <main className="flex-1 flex flex-col">
@@ -38,25 +39,12 @@ const CeoDashboard = () => {
             <h1 className="text-xl font-semibold text-slate-900">
               CEO Dashboard
             </h1>
-            <p className="text-sm text-gray-500">
-              Welcome {user?.role === "CEO" ? "CEO" : user?.email || "back"}!
+            <p className="text-sm text-gray-500 pt-1">
+              Welcome {user?.firstName || "User"}!
             </p>
           </div>
 
-          <div className="flex items-center gap-4">
-            {/* Notification bell */}
-            <button className="relative w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
-              <span className="text-lg">🔔</span>
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500" />
-            </button>
-            {/* Avatar placeholder */}
-            <Link
-              to="/profile/personal"
-              className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-xs font-semibold text-white hover:opacity-90"
-            >
-              {user?.email ? user.email[0].toUpperCase() : "C"}
-            </Link>
-          </div>
+
         </header>
 
         {/* Content layout */}

@@ -152,7 +152,7 @@ const MeetingOverview = () => {
 
           {["PM", "TL", "CEO"].includes(user.role) && (
             <button
-              onClick={() => navigate("/meetings/create")}
+              onClick={() => navigate("/dashboard/meetings/create")}
               className="bg-blue-600 text-white px-5 py-2 rounded-lg flex items-center gap-2"
             >
               <Plus size={18} /> Schedule

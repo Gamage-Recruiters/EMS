@@ -299,10 +299,10 @@ export default function UserManagementPage() {
                       key={e._id ?? e.id}
                       user={e}
                       onView={(id) =>
-                        navigate(`/profile/personal-details?mode=view&id=${id}`)
+                        navigate(`/dashboard/profile/personal-details?mode=view&id=${id}`)
                       }
                       onEdit={(id) =>
-                        navigate(`/profile/personal-details?mode=edit&id=${id}`)
+                        navigate(`/dashboard/profile/personal-details?mode=edit&id=${id}`)
                       }
                       onDelete={(id) => setDeleteId(id)}
                     />

@@ -37,3 +37,5 @@ export const getTeamAvailability = async () => {
     throw error.response?.data?.message || "Failed to fetch team availability";
   }
 };
+
+

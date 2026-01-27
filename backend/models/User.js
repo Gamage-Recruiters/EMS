@@ -33,10 +33,10 @@ const userSchema = new mongoose.Schema({
   joinedDate: { type: Date, default: Date.now },
 
   // Account state
-  status: { 
-    type: String, 
-    enum: ['Active', 'Inactive'], 
-    default: 'Active' 
+  status: {
+    type: String,
+    enum: ['Active', 'Inactive'],
+    default: 'Active'
   },
 
   // Contact information

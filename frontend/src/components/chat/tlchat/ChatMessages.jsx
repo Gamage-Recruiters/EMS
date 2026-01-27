@@ -12,12 +12,12 @@ export default function ChatMessages({
   const endRef = useRef(null);
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
-  // Sync messages from parent
+  // Sync from parent (channel switch / initial load)
   useEffect(() => {
     setMessages(initialMessages);
   }, [initialMessages]);
 
-  // Auto-scroll to bottom
+  // Auto-scroll
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -26,7 +26,11 @@ export default function ChatMessages({
   useEffect(() => {
     if (!socket) return;
 
-    const onEdited = (updatedMsg) => {
+    const handleNewMessage = (newMsg) => {
+      setMessages((prev) => [...prev, newMsg]);
+    };
+
+    const handleEdited = (updatedMsg) => {
       setMessages((prev) =>
         prev.map((m) => (m._id === updatedMsg._id ? updatedMsg : m)),
       );
@@ -37,7 +41,7 @@ export default function ChatMessages({
       }
     };
 
-    const onDeleted = ({ messageId }) => {
+    const handleDeleted = ({ messageId }) => {
       setMessages((prev) => prev.filter((m) => m._id !== messageId));
       if (editingId === messageId) {
         setEditingId(null);
@@ -45,16 +49,19 @@ export default function ChatMessages({
       }
     };
 
-    socket.on("message:edited", onEdited);
-    socket.on("message:deleted", onDeleted);
+    socket.on("message:new", handleNewMessage);
+    socket.on("message:edited", handleEdited);
+    socket.on("message:deleted", handleDeleted);
 
     return () => {
-      socket.off("message:edited", onEdited);
-      socket.off("message:deleted", onDeleted);
+      socket.off("message:new", handleNewMessage);
+      socket.off("message:edited", handleEdited);
+      socket.off("message:deleted", handleDeleted);
     };
   }, [socket, editingId]);
 
   const startEditing = (msg) => {
+    if (msg.userId._id !== currentUser._id) return;
     setEditingId(msg._id);
     setEditText(msg.text);
     setSavingId(null);
@@ -76,10 +83,9 @@ export default function ChatMessages({
     setSavingId(msg._id);
 
     // Optimistic update
+    const optimistic = { ...msg, text: trimmed, isEdited: true };
     setMessages((prev) =>
-      prev.map((m) =>
-        m._id === msg._id ? { ...m, text: trimmed, isEdited: true } : m,
-      ),
+      prev.map((m) => (m._id === msg._id ? optimistic : m)),
     );
 
     socket.emit(
@@ -88,7 +94,7 @@ export default function ChatMessages({
       (res) => {
         setSavingId(null);
         if (!res?.success) {
-          alert(res?.error || "Failed to edit message");
+          alert(res?.error || "Failed to edit");
           setMessages((prev) => prev.map((m) => (m._id === msg._id ? msg : m)));
         } else {
           cancelEditing();
@@ -98,22 +104,33 @@ export default function ChatMessages({
   };
 
   const handleDelete = (msg) => {
+    if (
+      msg.userId._id !== currentUser._id &&
+      !["CEO", "TL", "PM"].includes(currentUser.role)
+    ) {
+      alert("You don't have permission to delete this message");
+      return;
+    }
+
     if (!confirm("Delete this message?")) return;
+
+    // Optimistic removal
+    setMessages((prev) => prev.filter((m) => m._id !== msg._id));
 
     socket.emit("message:delete", { messageId: msg._id }, (res) => {
       if (!res?.success) {
         alert(res?.error || "Failed to delete");
+        // Rollback on failure
+        setMessages((prev) => [...prev, msg]);
       }
     });
   };
 
-  // Permission helpers
   const canEdit = (msg) => msg.userId._id === currentUser._id;
   const canDelete = (msg) =>
     msg.userId._id === currentUser._id ||
     ["CEO", "TL", "PM"].includes(currentUser.role);
 
-  // Role badge color mapping
   const getRoleBadge = (role) => {
     if (!role) return null;
     const colors = {
@@ -163,7 +180,6 @@ export default function ChatMessages({
                 isMe ? "justify-end" : "justify-start"
               }`}
             >
-              {/* Left avatar (for others) */}
               {!isMe && (
                 <div
                   className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold shadow-sm flex-shrink-0 mr-3"
@@ -173,7 +189,6 @@ export default function ChatMessages({
                 </div>
               )}
 
-              {/* Message container */}
               <div
                 className={`max-w-[78%] px-5 py-3.5 rounded-2xl text-base shadow-md relative transition-all duration-200
                   ${
@@ -182,7 +197,6 @@ export default function ChatMessages({
                       : "bg-white border border-gray-200/80 rounded-bl-none shadow-sm"
                   } ${isEditing ? "ring-2 ring-blue-400 ring-opacity-50" : ""}`}
               >
-                {/* Sender info */}
                 {!isMe && (
                   <div className="flex items-center gap-2 mb-1.5">
                     <span className="font-semibold text-gray-900 text-[15px]">
@@ -192,7 +206,6 @@ export default function ChatMessages({
                   </div>
                 )}
 
-                {/* Content */}
                 {isEditing ? (
                   <div className="space-y-3">
                     <textarea
@@ -215,12 +228,11 @@ export default function ChatMessages({
                       }}
                     />
 
-                    {/* Edit controls */}
                     <div className="flex justify-end gap-3">
                       <button
                         onClick={cancelEditing}
                         disabled={isSaving}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition flex items-center gap-2"
+                        className="px-5 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition flex items-center gap-2 shadow-sm"
                       >
                         <X size={16} />
                         Cancel
@@ -229,7 +241,7 @@ export default function ChatMessages({
                       <button
                         onClick={() => saveEdit(msg)}
                         disabled={isSaving || !editText.trim()}
-                        className="px-5 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition flex items-center gap-2 shadow-sm"
+                        className="px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition flex items-center gap-2 shadow-md"
                       >
                         {isSaving ? (
                           <>
@@ -251,10 +263,11 @@ export default function ChatMessages({
                       {msg.text}
                     </p>
 
-                    {/* Footer with timestamp & edited tag */}
                     <div className="flex items-center justify-end gap-3 text-xs mt-2 opacity-80">
                       {msg.isEdited && (
-                        <span className="italic text-blue-200/90">edited</span>
+                        <span className="italic text-blue-200/90 flex items-center gap-1">
+                          <Pencil size={12} /> edited
+                        </span>
                       )}
                       <span className="flex items-center gap-1.5">
                         <Clock size={12} className="opacity-70" />
@@ -267,7 +280,6 @@ export default function ChatMessages({
                   </>
                 )}
 
-                {/* Hover actions */}
                 {!isEditing && (canEdit(msg) || canDelete(msg)) && (
                   <div
                     className={`absolute -top-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200
@@ -296,7 +308,6 @@ export default function ChatMessages({
                 )}
               </div>
 
-              {/* My avatar (right side) */}
               {isMe && (
                 <div
                   className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold shadow-sm flex-shrink-0 ml-3"

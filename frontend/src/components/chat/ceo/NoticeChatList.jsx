@@ -6,15 +6,16 @@ export default function NoticeChatList({
   socket,
 }) {
   const [messages, setMessages] = useState(initialMessages);
-  const [editingMessageId, setEditingMessageId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
+  const [savingId, setSavingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null); // ← NEW: track deleting state
   const endRef = useRef(null);
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
   const isCEO = currentUser.role === "CEO";
 
-  // Sync messages from parent
+  // Sync messages
   useEffect(() => {
     setMessages(initialMessages);
   }, [initialMessages]);
@@ -24,7 +25,7 @@ export default function NoticeChatList({
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Real-time updates
+  // Real-time listeners
   useEffect(() => {
     if (!socket) return;
 
@@ -32,19 +33,17 @@ export default function NoticeChatList({
       setMessages((prev) =>
         prev.map((m) => (m._id === updatedMsg._id ? updatedMsg : m)),
       );
-      // Clear editing state if this was the edited message
-      if (editingMessageId === updatedMsg._id) {
-        setEditingMessageId(null);
+      if (editingId === updatedMsg._id) {
+        setEditingId(null);
         setEditText("");
-        setIsSaving(false);
+        setSavingId(null);
       }
     };
 
     const handleDeleted = ({ messageId }) => {
       setMessages((prev) => prev.filter((m) => m._id !== messageId));
-      if (editingMessageId === messageId) {
-        setEditingMessageId(null);
-        setIsSaving(false);
+      if (deletingId === messageId) {
+        setDeletingId(null);
       }
     };
 
@@ -55,66 +54,78 @@ export default function NoticeChatList({
       socket.off("message:edited", handleEdited);
       socket.off("message:deleted", handleDeleted);
     };
-  }, [socket, editingMessageId]);
+  }, [socket, editingId, deletingId]);
 
-  // Start editing
+  // Start editing (unchanged)
   const startEdit = (msg) => {
     if (!isCEO) return;
-    setEditingMessageId(msg._id);
+    setEditingId(msg._id);
     setEditText(msg.text);
-    setIsSaving(false);
+    setSavingId(null);
   };
 
-  // Cancel edit
   const cancelEdit = () => {
-    setEditingMessageId(null);
+    setEditingId(null);
     setEditText("");
-    setIsSaving(false);
+    setSavingId(null);
   };
 
-  // Save edited message
   const saveEdit = (msg) => {
     if (!editText.trim() || editText.trim() === msg.text.trim()) {
       cancelEdit();
       return;
     }
 
-    setIsSaving(true);
+    setSavingId(msg._id);
 
-    // Optimistic update
+    const optimisticMsg = { ...msg, text: editText.trim(), isEdited: true };
     setMessages((prev) =>
-      prev.map((m) =>
-        m._id === msg._id ? { ...m, text: editText.trim(), isEdited: true } : m,
-      ),
+      prev.map((m) => (m._id === msg._id ? optimisticMsg : m)),
     );
 
     socket.emit(
       "message:edit",
       { messageId: msg._id, text: editText.trim() },
       (res) => {
-        setIsSaving(false);
+        setSavingId(null);
         if (!res?.success) {
           alert(res?.error || "Failed to edit message");
-          // Revert optimistic update on failure
           setMessages((prev) => prev.map((m) => (m._id === msg._id ? msg : m)));
         } else {
-          // Success: backend already broadcasts update
           cancelEdit();
         }
       },
     );
   };
 
-  // Delete
+  // FIXED DELETE FUNCTION – now safe & user-friendly
   const handleDelete = (msg) => {
-    if (!isCEO) return alert("Only CEO can delete notices");
+    if (!isCEO) {
+      alert("Only CEO can delete notices");
+      return;
+    }
+
+    // Prevent deleting temporary/optimistic messages (they don't exist on server yet)
+    if (typeof msg._id === "string" && msg._id.startsWith("temp-")) {
+      alert("This message is still sending — wait until it appears fully.");
+      return;
+    }
 
     if (!confirm("Delete this message permanently?")) return;
 
+    setDeletingId(msg._id); // Show deleting state
+
+    // Optimistic delete: remove from UI immediately
+    setMessages((prev) => prev.filter((m) => m._id !== msg._id));
+
     socket.emit("message:delete", { messageId: msg._id }, (res) => {
+      setDeletingId(null);
       if (!res?.success) {
         alert(res?.error || "Failed to delete message");
+        // Restore message on failure
+        setMessages((prev) => [...prev, msg]);
       }
+      // On success: backend already broadcasts delete → UI stays updated
     });
   };
 
@@ -130,21 +141,22 @@ export default function NoticeChatList({
           if (!msg?._id || !msg?.userId?._id) return null;
 
           const isFromCEO = msg.userId.role === "CEO";
-          const senderName = `${msg.userId.firstName} ${
-            msg.userId.lastName || ""
-          }`;
-          const isEditing = editingMessageId === msg._id;
+          const senderName = `${msg.userId.firstName} ${msg.userId.lastName || ""}`;
+          const isEditing = editingId === msg._id;
+          const isSaving = savingId === msg._id;
+          const isDeleting = deletingId === msg._id;
 
           return (
             <div
               key={msg._id}
-              className="group relative flex items-start gap-4 animate-fade-in"
+              className={`group relative flex items-start gap-4 animate-fade-in ${
+                isDeleting ? "opacity-50" : ""
+              }`}
             >
               {/* Avatar */}
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold shadow-sm flex-shrink-0 ${
-                  isFromCEO ? "bg-indigo-600" : "bg-gray-600"
-                }`}
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold shadow-sm flex-shrink-0
+                  ${isFromCEO ? "bg-indigo-600" : "bg-gray-600"}`}
               >
                 {senderName[0] || "?"}
               </div>
@@ -152,9 +164,9 @@ export default function NoticeChatList({
               {/* Message Content */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2">
-                  <span className="font-medium text-gray-900">
+                  <p className="text-sm font-medium text-gray-900">
                     {senderName}
-                  </span>
+                  </p>
                   {isFromCEO && (
                     <span className="text-xs px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full">
                       CEO
@@ -170,7 +182,6 @@ export default function NoticeChatList({
                   </span>
                 </div>
 
-                {/* Editable or normal text */}
                 {isEditing ? (
                   <div className="mt-1">
                     <textarea
@@ -183,17 +194,21 @@ export default function NoticeChatList({
                           e.preventDefault();
                           saveEdit(msg);
                         }
-                        if (e.key === "Escape") {
-                          cancelEdit();
-                        }
+                        if (e.key === "Escape") cancelEdit();
                       }}
                     />
 
                     <div className="flex gap-2 mt-2">
                       <button
+                        onClick={cancelEdit}
+                        className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition"
+                      >
+                        Cancel
+                      </button>
+                      <button
                         onClick={() => saveEdit(msg)}
                         disabled={isSaving || !editText.trim()}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50 transition"
+                        className="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-1"
                       >
                         {isSaving ? (
                           <Loader2 size={14} className="animate-spin" />
@@ -201,14 +216,6 @@ export default function NoticeChatList({
                           <Check size={14} />
                         )}
                         Save
-                      </button>
-
-                      <button
-                        onClick={cancelEdit}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300 transition"
-                      >
-                        <X size={14} />
-                        Cancel
                       </button>
                     </div>
                   </div>
@@ -219,20 +226,21 @@ export default function NoticeChatList({
                     </p>
 
                     {msg.isEdited && (
-                      <span className="text-xs text-gray-500 italic block mt-1">
+                      <span className="text-xs text-gray-500 italic mt-1 block">
                         edited
                       </span>
                     )}
                   </>
                 )}
 
-                {/* Edit / Delete controls – only CEO */}
+                {/* Edit & Delete buttons – only CEO */}
                 {!isEditing && isCEO && (
                   <div className="flex gap-3 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => startEdit(msg)}
+                      disabled={isSaving || isDeleting}
                       className="text-blue-600 hover:text-blue-800 text-xs flex items-center gap-1 transition"
-                      title="Edit message"
+                      title="Edit notice"
                     >
                       <Pencil size={14} />
                       Edit
@@ -240,11 +248,18 @@ export default function NoticeChatList({
 
                     <button
                       onClick={() => handleDelete(msg)}
-                      className="text-red-600 hover:text-red-800 text-xs flex items-center gap-1 transition"
-                      title="Delete message"
+                      disabled={isDeleting || isSaving}
+                      className={`text-red-600 hover:text-red-800 text-xs flex items-center gap-1 transition ${
+                        isDeleting ? "opacity-50 cursor-wait" : ""
+                      }`}
+                      title="Delete notice"
                     >
-                      <Trash2 size={14} />
-                      Delete
+                      {isDeleting ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Trash2 size={14} />
+                      )}
+                      {isDeleting ? "Deleting..." : "Delete"}
                     </button>
                   </div>
                 )}

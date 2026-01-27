@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../../../api/api";
-import socket from "../../../components/chat/socket";
+import { getSocket } from "../../../components/chat/socket"; // ← named import
 
 import TeamSidebar from "../../../components/chat/tlchat/TeamSidebar";
 import ChatRoom from "../../../components/chat/tlchat/ChatRoom";
@@ -12,7 +12,10 @@ export default function TeamChatPage() {
   const [activeChannelId, setActiveChannelId] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
 
-  const currentUser = JSON.parse(localStorage.getItem("user"));
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+  // Get the actual socket instance
+  const socket = getSocket(); // ← call it here to get the io instance
 
   /* ----------------------------------
      LOAD INITIAL DATA
@@ -25,8 +28,6 @@ export default function TeamChatPage() {
   const loadChannels = async () => {
     try {
       const res = await api.get("/chat/channels");
-
-      // Ensure channels is always an array
       const channelList = Array.isArray(res.data)
         ? res.data
         : res.data.channels || res.data.data || [];
@@ -38,13 +39,13 @@ export default function TeamChatPage() {
       }
     } catch (err) {
       console.error("Failed to load channels", err);
-      setChannels([]); // fallback to empty array
+      setChannels([]); // fallback
     }
   };
 
   const loadUsers = async () => {
     try {
-      const res = await api.get("/user"); // now sends token automatically
+      const res = await api.get("/user");
       setUsers(res.data);
     } catch (err) {
       console.error("Failed to load users", err);
@@ -55,14 +56,13 @@ export default function TeamChatPage() {
   /* ----------------------------------
      SAFE ACTIVE CHANNEL
   ---------------------------------- */
-  const activeChannel = channels.length
-    ? channels.find((c) => c._id === activeChannelId) || null
-    : null;
+  const activeChannel = channels.find((c) => c._id === activeChannelId) || null;
 
   /* ----------------------------------
      SOCKET EVENTS
   ---------------------------------- */
   useEffect(() => {
+    // Now socket is the real Socket.IO instance
     socket.on("channel:new", (channel) => {
       setChannels((prev) => [...prev, channel]);
     });
@@ -83,7 +83,7 @@ export default function TeamChatPage() {
       socket.off("channel:updated");
       socket.off("channel:deleted");
     };
-  }, []);
+  }, [socket]); // depend on socket instance
 
   /* ----------------------------------
      CREATE CHANNEL
@@ -122,7 +122,7 @@ export default function TeamChatPage() {
 
       {showCreate && (
         <CreateChannelModal
-          isOpen={showCreate} // Pass the state
+          isOpen={showCreate}
           users={users}
           currentUser={currentUser}
           onCreate={createChannel}

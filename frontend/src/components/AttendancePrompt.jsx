@@ -1,44 +1,47 @@
 import React, { useState, useEffect } from "react";
-
-import { checkIn } from "../services/attendanceService";
-
-// Replace this with the actual backend endpoint later
-const USER_INFO_ENDPOINT = "/api/user/profile";
+import { checkIn, getTodayAttendance } from "../services/attendanceService";
 
 const AttendancePrompt = ({ onCheckIn }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
+  const [attendanceLoading, setAttendanceLoading] = useState(true);
   const [profile, setProfile] = useState({
     name: "",
+    role: "",
     isLoading: true,
     error: null,
   });
 
-
-  // Update the current time every second
+  // Update time every second
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch user profile (mock for now, replace with real API later)
+  // Fetch user profile FIRST
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-  
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        //get user info from local storage for now
-        const user = JSON.parse(localStorage.getItem("ems_user"));
+        const user = JSON.parse(localStorage.getItem("user"));
+        const userRole = user?.role?.toUpperCase() || "";
 
         setProfile({
-          name: `${user.firstName} ${user.lastName}`,
+          name: `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "User",
+          role: userRole,
           isLoading: false,
           error: null,
         });
+
+        // If CEO, auto check-in
+        if (userRole === "CEO") {
+          onCheckIn(new Date());
+          setHasCheckedInToday(true);
+          setAttendanceLoading(false);
+        }
       } catch (err) {
-        console.error("Failed to fetch user profile:", err);
         setProfile({
           name: "User",
+          role: "",
           isLoading: false,
           error: "Failed to load profile",
         });
@@ -46,13 +49,41 @@ const AttendancePrompt = ({ onCheckIn }) => {
     };
 
     fetchUserProfile();
-  }, []);
+  }, [onCheckIn]);
+
+  // Check today's attendance (only if not CEO)
+  useEffect(() => {
+    if (profile.role === "CEO") return;
+
+    const checkAttendanceStatus = async () => {
+      const result = await getTodayAttendance();
+
+      if (result.success && result.data.hasCheckedIn) {
+        setHasCheckedInToday(true);
+        onCheckIn(new Date());
+      }
+
+      setAttendanceLoading(false);
+    };
+
+    if (!profile.isLoading) {
+      checkAttendanceStatus();
+    }
+  }, [profile.isLoading, profile.role, onCheckIn]);
+
+  // Do not show popup if:
+  if (
+    attendanceLoading || 
+    hasCheckedInToday || 
+    profile.role === "CEO"
+  ) {
+    return null;
+  }
 
   const handleCheckInClick = async () => {
     const result = await checkIn();
     if (result.success) {
       onCheckIn(currentTime);
-       console.log("Check-in result:", result);
     } else {
       alert(result.error || "Failed to check in. Please try again.");
     }
@@ -80,7 +111,7 @@ const AttendancePrompt = ({ onCheckIn }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/80 backdrop-blur-sm">
-      <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm text-center transform transition-all duration-300">
+      <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm text-center">
         <h2 className="text-xl font-bold text-gray-900 mb-1">
           {getGreeting()},
         </h2>
@@ -92,7 +123,7 @@ const AttendancePrompt = ({ onCheckIn }) => {
           <p className="text-xs text-gray-500 font-semibold mb-1">
             Current Local Time
           </p>
-          <p className="text-5xl font-black text-gray-800 mt-1 leading-tight">
+          <p className="text-5xl font-black text-gray-800 mt-1">
             {formattedTime}
           </p>
           <p className="text-sm text-gray-500 mt-2">{formattedDate}</p>
@@ -101,17 +132,13 @@ const AttendancePrompt = ({ onCheckIn }) => {
         <button
           onClick={handleCheckInClick}
           disabled={profile.isLoading || profile.error}
-          className={`w-full py-3 text-white text-lg font-bold rounded-lg shadow-lg transition duration-200 ease-in-out ${
+          className={`w-full py-3 text-white text-lg font-bold rounded-lg ${
             profile.isLoading || profile.error
               ? "bg-gray-400 cursor-not-allowed"
-              : "bg-green-600 hover:bg-green-700 shadow-green-400/30"
+              : "bg-green-600 hover:bg-green-700"
           }`}
         >
-          {profile.isLoading
-            ? "Loading Profile..."
-            : profile.error
-            ? "Unable to Load"
-            : "Check In Now"}
+          Check In Now
         </button>
       </div>
     </div>

@@ -16,12 +16,11 @@ export default function UserProfile() {
   return (
     <div className="min-h-screen bg-gray-100 flex">
       {/* ================= SIDEBAR ================= */}
-      <Sidebar />
 
       {/* ================= MAIN CONTENT ================= */}
       <div className="flex-1 p-8">
         {/* Breadcrumb */}
-        <div className="mb-6">
+        {/* <div className="mb-6">
           <Link
             to="/user-management"
             className="flex items-center text-sm text-gray-600 hover:text-blue-600"
@@ -29,7 +28,7 @@ export default function UserProfile() {
             <FiArrowLeft className="mr-2" />
             Back to User Management
           </Link>
-        </div>
+        </div> */}
 
         {/* Profile Card */}
         <div className="max-w-xl mx-auto bg-white rounded-xl shadow p-8 text-center">

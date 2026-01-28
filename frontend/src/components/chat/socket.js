@@ -1,4 +1,4 @@
-// src/components/chat/socket.js  (or wherever it is)
+// src/components/chat/socket.js
 
 import { io } from "socket.io-client";
 
@@ -8,17 +8,17 @@ const URL =
     : "https://your-production-url.com";
 
 const getToken = () => {
-  // Option 1: most reliable – read the separate accessToken key
   let token = localStorage.getItem("accessToken");
 
-  // Option 2: fallback if you ever change storage pattern
   if (!token) {
     const userStr = localStorage.getItem("user");
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
         token = user?.accessToken || user?.token || null;
-      } catch (e) {}
+      } catch (e) {
+        console.warn("Failed to parse user from localStorage:", e);
+      }
     }
   }
 
@@ -27,7 +27,7 @@ const getToken = () => {
 
 let socket = null;
 
-const initializeSocket = () => {
+export const initializeSocket = () => {
   const token = getToken();
 
   console.log(
@@ -36,9 +36,13 @@ const initializeSocket = () => {
   );
 
   if (!token) {
-    console.warn(
-      "No access token found in localStorage → socket won't authenticate",
-    );
+    console.warn("No access token found → socket won't authenticate");
+  }
+
+  // If socket already exists, disconnect old one
+  if (socket) {
+    socket.disconnect();
+    socket = null;
   }
 
   socket = io(URL, {
@@ -49,7 +53,7 @@ const initializeSocket = () => {
     reconnectionDelay: 1000,
     transports: ["polling", "websocket"],
     auth: {
-      token: token || undefined, // send even if undefined (backend will reject gracefully)
+      token: token || undefined,
     },
   });
 
@@ -68,7 +72,7 @@ const initializeSocket = () => {
     console.log("Socket disconnected:", reason);
   });
 
-  // Try to connect if we have a token
+  // Auto-connect if token exists
   if (token) {
     socket.connect();
   }
@@ -76,10 +80,7 @@ const initializeSocket = () => {
   return socket;
 };
 
-// Run once on module load
-initializeSocket();
-
-// Safe getter
+// Safe getter (always returns current socket, initializes if missing)
 export const getSocket = () => {
   if (!socket) {
     initializeSocket();
@@ -87,4 +88,15 @@ export const getSocket = () => {
   return socket;
 };
 
-export default getSocket();
+// Force reconnect (useful after login when token changes)
+export const reconnectSocket = () => {
+  console.log("Forcing socket reconnect...");
+  if (socket) {
+    socket.disconnect();
+    socket = null;
+  }
+  return initializeSocket();
+};
+
+// Optional: default export if you prefer
+export default getSocket;

@@ -66,45 +66,41 @@ const initializeSocket = (httpServer) => {
 
     // ==================== CHANNEL EVENTS ====================
 
-    // Get user's channels
     socket.on("channels:get", async (callback) => {
       try {
         let channels;
 
         if (socket.user.role === "CEO") {
-          // CEO can see all channels
           channels = await Channel.find({ isActive: true })
             .populate("createdBy", "firstName lastName role")
-            .populate("members", "firstName lastName email role")
+            .populate("members", "firstName lastName email role profileImage")
             .sort({ createdAt: -1 });
         } else if (socket.user.role === "TL" || socket.user.role === "PM") {
-          // TL/PM can see all channels
           channels = await Channel.find({ isActive: true })
             .populate("createdBy", "firstName lastName role")
-            .populate("members", "firstName lastName email role")
+            .populate("members", "firstName lastName email role profileImage")
             .sort({ createdAt: -1 });
         } else {
-          // Regular employees see only channels they're members of
           channels = await Channel.find({
             members: socket.user._id,
             isActive: true,
           })
             .populate("createdBy", "firstName lastName role")
-            .populate("members", "firstName lastName email role")
+            .populate("members", "firstName lastName email role profileImage")
             .sort({ createdAt: -1 });
         }
 
-        callback({ success: true, channels });
+        callback?.({ success: true, channels });
       } catch (error) {
-        callback({ success: false, error: error.message });
+        console.error("channels:get error:", error);
+        callback?.({ success: false, error: error.message });
       }
     });
 
-    // Create channel (TL/PM/CEO only)
     socket.on("channel:create", async (data, callback) => {
       try {
         if (!["CEO", "TL", "PM"].includes(socket.user.role)) {
-          return callback({
+          return callback?.({
             success: false,
             error: "Only CEO, TL, or PM can create channels",
           });
@@ -112,15 +108,13 @@ const initializeSocket = (httpServer) => {
 
         const { name, type, memberIds, description } = data;
 
-        // Validate required fields
         if (!name || !type) {
-          return callback({
+          return callback?.({
             success: false,
             error: "Channel name and type are required",
           });
         }
 
-        // Create channel
         const channel = await Channel.create({
           name,
           type: type || "regular",
@@ -133,25 +127,23 @@ const initializeSocket = (httpServer) => {
           .populate("createdBy", "firstName lastName role")
           .populate("members", "firstName lastName email role");
 
-        // Add creator and members to channel room
         socket.join(`channel:${channel._id}`);
 
-        // Notify all members
         populatedChannel.members.forEach((member) => {
           io.to(`user:${member._id}`).emit("channel:created", populatedChannel);
         });
 
-        callback({ success: true, channel: populatedChannel });
+        callback?.({ success: true, channel: populatedChannel });
       } catch (error) {
-        callback({ success: false, error: error.message });
+        console.error("channel:create error:", error);
+        callback?.({ success: false, error: error.message });
       }
     });
 
-    // Remove member from channel (TL/PM/CEO only)
     socket.on("channel:removeMember", async (data, callback) => {
       try {
         if (!["CEO", "TL", "PM"].includes(socket.user.role)) {
-          return callback({
+          return callback?.({
             success: false,
             error: "Only CEO, TL, or PM can remove members",
           });
@@ -160,12 +152,10 @@ const initializeSocket = (httpServer) => {
         const { channelId, userId } = data;
 
         const channel = await Channel.findById(channelId);
-
         if (!channel) {
-          return callback({ success: false, error: "Channel not found" });
+          return callback?.({ success: false, error: "Channel not found" });
         }
 
-        // Remove member
         channel.members = channel.members.filter(
           (memberId) => memberId.toString() !== userId,
         );
@@ -176,31 +166,28 @@ const initializeSocket = (httpServer) => {
           .populate("createdBy", "firstName lastName role")
           .populate("members", "firstName lastName email role");
 
-        // Remove user from channel room
         const userSockets = await io.in(`user:${userId}`).fetchSockets();
         userSockets.forEach((s) => s.leave(`channel:${channelId}`));
 
-        // Notify removed user
         io.to(`user:${userId}`).emit("channel:removed", { channelId });
 
-        // Notify channel members
         io.to(`channel:${channelId}`).emit("channel:memberRemoved", {
           channelId,
           userId,
           channel: updatedChannel,
         });
 
-        callback({ success: true, channel: updatedChannel });
+        callback?.({ success: true, channel: updatedChannel });
       } catch (error) {
-        callback({ success: false, error: error.message });
+        console.error("channel:removeMember error:", error);
+        callback?.({ success: false, error: error.message });
       }
     });
 
-    // Add member to channel (TL/PM/CEO only)
     socket.on("channel:addMember", async (data, callback) => {
       try {
         if (!["CEO", "TL", "PM"].includes(socket.user.role)) {
-          return callback({
+          return callback?.({
             success: false,
             error: "Only CEO, TL, or PM can add members",
           });
@@ -209,12 +196,10 @@ const initializeSocket = (httpServer) => {
         const { channelId, userId } = data;
 
         const channel = await Channel.findById(channelId);
-
         if (!channel) {
-          return callback({ success: false, error: "Channel not found" });
+          return callback?.({ success: false, error: "Channel not found" });
         }
 
-        // Add member if not already present
         if (!channel.members.includes(userId)) {
           channel.members.push(userId);
           await channel.save();
@@ -224,41 +209,34 @@ const initializeSocket = (httpServer) => {
           .populate("createdBy", "firstName lastName role")
           .populate("members", "firstName lastName email role");
 
-        // Add user to channel room
         const userSockets = await io.in(`user:${userId}`).fetchSockets();
         userSockets.forEach((s) => s.join(`channel:${channelId}`));
 
-        // Notify added user
         io.to(`user:${userId}`).emit("channel:added", updatedChannel);
 
-        // Notify channel members
         io.to(`channel:${channelId}`).emit("channel:memberAdded", {
           channelId,
           userId,
           channel: updatedChannel,
         });
 
-        callback({ success: true, channel: updatedChannel });
+        callback?.({ success: true, channel: updatedChannel });
       } catch (error) {
-        callback({ success: false, error: error.message });
+        console.error("channel:addMember error:", error);
+        callback?.({ success: false, error: error.message });
       }
     });
 
     // ==================== MESSAGE EVENTS ====================
 
-    // Get messages for a channel
     socket.on("messages:get", async (data, callback) => {
       try {
         const { channelId, limit = 50, skip = 0 } = data;
 
-        // Check if user has access to this channel
         const channel = await Channel.findById(channelId);
+        if (!channel)
+          return callback?.({ success: false, error: "Channel not found" });
 
-        if (!channel) {
-          return callback({ success: false, error: "Channel not found" });
-        }
-
-        // Check permissions
         const isMember = channel.members.some(
           (memberId) => memberId.toString() === socket.user._id.toString(),
         );
@@ -270,7 +248,7 @@ const initializeSocket = (httpServer) => {
           isMember;
 
         if (!canAccess) {
-          return callback({
+          return callback?.({
             success: false,
             error: "You do not have access to this channel",
           });
@@ -282,39 +260,35 @@ const initializeSocket = (httpServer) => {
           .limit(limit)
           .skip(skip);
 
-        callback({ success: true, messages: messages.reverse() });
+        callback?.({ success: true, messages: messages.reverse() });
       } catch (error) {
-        callback({ success: false, error: error.message });
+        console.error("messages:get error:", error);
+        callback?.({ success: false, error: error.message });
       }
     });
 
-    // Send message
     socket.on("message:send", async (data, callback) => {
       try {
         const { channelId, text, attachments } = data;
 
         if (!text || !text.trim()) {
-          return callback({ success: false, error: "Message cannot be empty" });
+          return callback?.({
+            success: false,
+            error: "Message cannot be empty",
+          });
         }
 
         const channel = await Channel.findById(channelId);
+        if (!channel)
+          return callback?.({ success: false, error: "Channel not found" });
 
-        if (!channel) {
-          return callback({ success: false, error: "Channel not found" });
-        }
-
-        // Check permissions
         let canSend = false;
 
         if (socket.user.role === "CEO") {
-          // CEO can send to any channel
           canSend = true;
         } else if (socket.user.role === "TL" || socket.user.role === "PM") {
-          // TL/PM can send to any channel
           canSend = true;
         } else {
-          // Regular employees can only send to channels they're members of
-          // and cannot send to notice channels
           const isMember = channel.members.some(
             (memberId) => memberId.toString() === socket.user._id.toString(),
           );
@@ -322,14 +296,13 @@ const initializeSocket = (httpServer) => {
         }
 
         if (!canSend) {
-          return callback({
+          return callback?.({
             success: false,
             error:
               "You do not have permission to send messages in this channel",
           });
         }
 
-        // Create message
         const message = await Message.create({
           channelId,
           userId: socket.user._id,
@@ -342,29 +315,25 @@ const initializeSocket = (httpServer) => {
           "firstName lastName email role profileImage",
         );
 
-        // Emit to channel
         io.to(`channel:${channelId}`).emit("message:new", populatedMessage);
 
-        callback({ success: true, message: populatedMessage });
+        callback?.({ success: true, message: populatedMessage });
       } catch (error) {
-        callback({ success: false, error: error.message });
+        console.error("message:send error:", error);
+        callback?.({ success: false, error: error.message });
       }
     });
 
-    // Edit message
     socket.on("message:edit", async (data, callback) => {
       try {
         const { messageId, text } = data;
 
         const message = await Message.findById(messageId);
+        if (!message)
+          return callback?.({ success: false, error: "Message not found" });
 
-        if (!message) {
-          return callback({ success: false, error: "Message not found" });
-        }
-
-        // Only message owner can edit
         if (message.userId.toString() !== socket.user._id.toString()) {
-          return callback({
+          return callback?.({
             success: false,
             error: "You can only edit your own messages",
           });
@@ -380,36 +349,32 @@ const initializeSocket = (httpServer) => {
           "firstName lastName email role profileImage",
         );
 
-        // Emit to channel
         io.to(`channel:${message.channelId}`).emit(
           "message:edited",
           updatedMessage,
         );
 
-        callback({ success: true, message: updatedMessage });
+        callback?.({ success: true, message: updatedMessage });
       } catch (error) {
-        callback({ success: false, error: error.message });
+        console.error("message:edit error:", error);
+        callback?.({ success: false, error: error.message });
       }
     });
 
-    // Delete message
     socket.on("message:delete", async (data, callback) => {
       try {
         const { messageId } = data;
 
         const message = await Message.findById(messageId);
+        if (!message)
+          return callback?.({ success: false, error: "Message not found" });
 
-        if (!message) {
-          return callback({ success: false, error: "Message not found" });
-        }
-
-        // Only message owner, TL, PM, or CEO can delete
         const canDelete =
           message.userId.toString() === socket.user._id.toString() ||
           ["CEO", "TL", "PM"].includes(socket.user.role);
 
         if (!canDelete) {
-          return callback({
+          return callback?.({
             success: false,
             error: "You do not have permission to delete this message",
           });
@@ -418,22 +383,21 @@ const initializeSocket = (httpServer) => {
         const channelId = message.channelId;
         await Message.findByIdAndDelete(messageId);
 
-        // Emit to channel
         io.to(`channel:${channelId}`).emit("message:deleted", { messageId });
 
-        callback({ success: true, messageId });
+        callback?.({ success: true, messageId });
       } catch (error) {
-        callback({ success: false, error: error.message });
+        console.error("message:delete error:", error);
+        callback?.({ success: false, error: error.message });
       }
     });
 
-    // ==================== NOTICE EVENTS (CEO only) ====================
+    // ==================== NOTICE EVENTS ====================
 
-    // Send notice to all employees
     socket.on("notice:send", async (data, callback) => {
       try {
         if (socket.user.role !== "CEO") {
-          return callback({
+          return callback?.({
             success: false,
             error: "Only CEO can send notices",
           });
@@ -442,19 +406,20 @@ const initializeSocket = (httpServer) => {
         const { channelId, text } = data;
 
         if (!text || !text.trim()) {
-          return callback({ success: false, error: "Notice cannot be empty" });
+          return callback?.({
+            success: false,
+            error: "Notice cannot be empty",
+          });
         }
 
         const channel = await Channel.findById(channelId);
-
         if (!channel || channel.type !== "notice") {
-          return callback({
+          return callback?.({
             success: false,
             error: "Invalid notice channel",
           });
         }
 
-        // Create notice message
         const message = await Message.create({
           channelId,
           userId: socket.user._id,
@@ -466,22 +431,21 @@ const initializeSocket = (httpServer) => {
           "firstName lastName email role profileImage",
         );
 
-        // Broadcast to all users (notices visible to everyone)
         io.emit("notice:new", populatedMessage);
 
-        callback({ success: true, message: populatedMessage });
+        callback?.({ success: true, message: populatedMessage });
       } catch (error) {
-        callback({ success: false, error: error.message });
+        console.error("notice:send error:", error);
+        callback?.({ success: false, error: error.message });
       }
     });
 
-    // ==================== PRIVATE CHAT EVENTS (CEO) ====================
+    // ==================== PRIVATE CHAT EVENTS ====================
 
-    // Get all employees for CEO private chat
     socket.on("employees:get", async (callback) => {
       try {
         if (socket.user.role !== "CEO") {
-          return callback({
+          return callback?.({
             success: false,
             error: "Only CEO can access employee list",
           });
@@ -492,17 +456,17 @@ const initializeSocket = (httpServer) => {
           status: "Active",
         }).select("firstName lastName email role profileImage");
 
-        callback({ success: true, employees });
+        callback?.({ success: true, employees });
       } catch (error) {
-        callback({ success: false, error: error.message });
+        console.error("employees:get error:", error);
+        callback?.({ success: false, error: error.message });
       }
     });
 
-    // Send private message (CEO only)
     socket.on("private:send", async (data, callback) => {
       try {
         if (socket.user.role !== "CEO") {
-          return callback({
+          return callback?.({
             success: false,
             error: "Only CEO can send private messages",
           });
@@ -511,10 +475,12 @@ const initializeSocket = (httpServer) => {
         const { recipientId, text } = data;
 
         if (!text || !text.trim()) {
-          return callback({ success: false, error: "Message cannot be empty" });
+          return callback?.({
+            success: false,
+            error: "Message cannot be empty",
+          });
         }
 
-        // Find or create private channel
         let channel = await Channel.findOne({
           type: "private",
           members: { $all: [socket.user._id, recipientId] },
@@ -522,6 +488,10 @@ const initializeSocket = (httpServer) => {
 
         if (!channel) {
           const recipient = await User.findById(recipientId);
+          if (!recipient) {
+            return callback?.({ success: false, error: "Recipient not found" });
+          }
+
           channel = await Channel.create({
             name: `Private: CEO - ${recipient.firstName} ${recipient.lastName}`,
             type: "private",
@@ -529,7 +499,6 @@ const initializeSocket = (httpServer) => {
             members: [socket.user._id, recipientId],
           });
 
-          // Join both users to channel
           socket.join(`channel:${channel._id}`);
           const recipientSockets = await io
             .in(`user:${recipientId}`)
@@ -537,7 +506,6 @@ const initializeSocket = (httpServer) => {
           recipientSockets.forEach((s) => s.join(`channel:${channel._id}`));
         }
 
-        // Create message
         const message = await Message.create({
           channelId: channel._id,
           userId: socket.user._id,
@@ -549,72 +517,28 @@ const initializeSocket = (httpServer) => {
           "firstName lastName email role profileImage",
         );
 
-        // Send to both users
         io.to(`channel:${channel._id}`).emit("private:message", {
           channelId: channel._id,
           message: populatedMessage,
         });
 
-        callback({
+        callback?.({
           success: true,
           message: populatedMessage,
           channelId: channel._id,
         });
       } catch (error) {
-        callback({ success: false, error: error.message });
+        console.error("private:send error:", error);
+        callback?.({ success: false, error: error.message });
       }
     });
 
-    // ==================== SEARCH ====================
-
-    // Search messages (CEO/TL/PM can search all, others only their channels)
-    socket.on("search:messages", async (data, callback) => {
-      try {
-        const { query, limit = 20 } = data;
-
-        if (!query || query.trim().length < 2) {
-          return callback({
-            success: false,
-            error: "Search query must be at least 2 characters",
-          });
-        }
-
-        let searchFilter = {
-          text: { $regex: query.trim(), $options: "i" },
-        };
-
-        // Restrict search based on role
-        if (!["CEO", "TL", "PM"].includes(socket.user.role)) {
-          const userChannels = await Channel.find({
-            members: socket.user._id,
-            isActive: true,
-          }).select("_id");
-
-          searchFilter.channelId = {
-            $in: userChannels.map((ch) => ch._id),
-          };
-        }
-
-        const messages = await Message.find(searchFilter)
-          .populate("userId", "firstName lastName email role profileImage")
-          .populate("channelId", "name type")
-          .sort({ createdAt: -1 })
-          .limit(limit);
-
-        callback({ success: true, results: messages });
-      } catch (error) {
-        callback({ success: false, error: error.message });
-      }
-    });
-
-    // Create or get private channel (CEO only)
-    // inside io.on("connection", ...)
     socket.on("private:create", async ({ recipientId }, callback) => {
       try {
         const ALLOWED_ROLES = ["CEO", "TL", "ATL", "PM"];
 
         if (!ALLOWED_ROLES.includes(socket.user.role)) {
-          return callback({
+          return callback?.({
             success: false,
             error: "You are not allowed to start private chats",
           });
@@ -630,7 +554,7 @@ const initializeSocket = (httpServer) => {
         if (!channel) {
           const recipient = await User.findById(recipientId);
           if (!recipient) {
-            return callback({ success: false, error: "Recipient not found" });
+            return callback?.({ success: false, error: "Recipient not found" });
           }
 
           channel = await Channel.create({
@@ -645,23 +569,20 @@ const initializeSocket = (httpServer) => {
             .populate("createdBy", "firstName lastName role");
         }
 
-        // Join rooms
         socket.join(`channel:${channel._id}`);
 
         const recipientSockets = await io
           .in(`user:${recipientId}`)
           .fetchSockets();
-
         recipientSockets.forEach((s) => s.join(`channel:${channel._id}`));
 
-        // Emit channel to BOTH users
         io.to(`user:${socket.user._id}`).emit("channel:new", channel);
         io.to(`user:${recipientId}`).emit("channel:new", channel);
 
-        callback({ success: true, channel });
+        callback?.({ success: true, channel });
       } catch (err) {
         console.error("private:create error:", err);
-        callback({ success: false, error: err.message });
+        callback?.({ success: false, error: err.message });
       }
     });
 

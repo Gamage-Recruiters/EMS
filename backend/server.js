@@ -42,7 +42,7 @@ const io = initializeSocket(httpServer);
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
-  "https://ems-9e73.vercel.app",
+  "https://your-frontend.vercel.app",
 ];
 
 const corsOptions = {

@@ -3,12 +3,11 @@ import { checkIn, getTodayAttendance } from "../services/attendanceService";
 
 const AttendancePrompt = ({ onCheckIn }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
-
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [attendanceLoading, setAttendanceLoading] = useState(true);
-
   const [profile, setProfile] = useState({
     name: "",
+    role: "",
     isLoading: true,
     error: null,
   });
@@ -19,8 +18,43 @@ const AttendancePrompt = ({ onCheckIn }) => {
     return () => clearInterval(timer);
   }, []);
 
-  // Check today's attendance
+  // Fetch user profile FIRST
   useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        const userRole = user?.role?.toUpperCase() || "";
+
+        setProfile({
+          name: `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "User",
+          role: userRole,
+          isLoading: false,
+          error: null,
+        });
+
+        // If CEO, auto check-in
+        if (userRole === "CEO") {
+          onCheckIn(new Date());
+          setHasCheckedInToday(true);
+          setAttendanceLoading(false);
+        }
+      } catch (err) {
+        setProfile({
+          name: "User",
+          role: "",
+          isLoading: false,
+          error: "Failed to load profile",
+        });
+      }
+    };
+
+    fetchUserProfile();
+  }, [onCheckIn]);
+
+  // Check today's attendance (only if not CEO)
+  useEffect(() => {
+    if (profile.role === "CEO") return;
+
     const checkAttendanceStatus = async () => {
       const result = await getTodayAttendance();
 
@@ -32,34 +66,17 @@ const AttendancePrompt = ({ onCheckIn }) => {
       setAttendanceLoading(false);
     };
 
-    checkAttendanceStatus();
-  }, []);
+    if (!profile.isLoading) {
+      checkAttendanceStatus();
+    }
+  }, [profile.isLoading, profile.role, onCheckIn]);
 
-  // Fetch user profile
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const user = JSON.parse(localStorage.getItem("user"));
-
-        setProfile({
-          name: `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "User",
-          isLoading: false,
-          error: null,
-        });
-      } catch (err) {
-        setProfile({
-          name: "User",
-          isLoading: false,
-          error: "Failed to load profile",
-        });
-      }
-    };
-
-    fetchUserProfile();
-  }, []);
-
-  // 🚫 Do not show popup while loading or already checked in
-  if (attendanceLoading || hasCheckedInToday) {
+  // Do not show popup if:
+  if (
+    attendanceLoading || 
+    hasCheckedInToday || 
+    profile.role === "CEO"
+  ) {
     return null;
   }
 
@@ -129,4 +146,3 @@ const AttendancePrompt = ({ onCheckIn }) => {
 };
 
 export default AttendancePrompt;
-

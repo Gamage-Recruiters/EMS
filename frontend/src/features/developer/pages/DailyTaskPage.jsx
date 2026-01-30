@@ -10,23 +10,6 @@ import {
 } from "../../../services/dailyTaskService";
 
 // ================= DATE HELPERS =================
-// const isInCurrentWeek = (dateStr) => {
-//   const date = new Date(dateStr);
-//   const now = new Date();
-
-//   const day = now.getDay(); // 0 (Sun) - 6 (Sat)
-//   const monday = new Date(now);
-//   monday.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
-//   monday.setHours(0, 0, 0, 0);
-
-//   const friday = new Date(monday);
-//   friday.setDate(monday.getDate() + 4);
-//   friday.setHours(23, 59, 59, 999);
-
-//   return date >= monday && date <= friday;
-// };
-
-// ================= DATE HELPERS =================
 const getWeekNumber = (date) => {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
@@ -45,8 +28,6 @@ const isInCurrentWeek = (dateStr) => {
     date.getFullYear() === now.getFullYear() // make sure it's this year
   );
 };
-
-
 
 function DailyTaskPage() {
   const [tasks, setTasks] = useState([]);
@@ -127,7 +108,7 @@ function DailyTaskPage() {
           </div>
 
           <Link
-            to="/tasks/new"
+            to="/dashboard/dev/daily-task-form"
             className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
             + Add Daily Task

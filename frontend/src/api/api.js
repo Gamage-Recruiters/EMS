@@ -26,7 +26,7 @@
 //   async (error) => {
 //     const originalRequest = error.config;
 
-    
+
 //     if (error.response.status === 401 && !originalRequest._retry) {
 //       originalRequest._retry = true;
 
@@ -44,7 +44,7 @@
 //         api.defaults.headers.common['Authorization'] = `Bearer ${res.data.accessToken}`;
 //         return api(originalRequest);
 //       } catch (err) {
-        
+
 //         console.error('Session expired', err);
 //         localStorage.clear();
 //         window.location.href = '/login';

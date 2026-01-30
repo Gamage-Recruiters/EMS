@@ -492,10 +492,15 @@ import MeetingOverview from "./pages/Meeting-Notification-Chat/MeetingOverview";
 import CreateMeetings from "./pages/Meeting-Notification-Chat/CreateMeetings";
 import UnassignedDashboard from "./pages/dashboard/UnassignedDashboard.jsx";
 
+
 // 🔹 CHAT PAGES
 import ChatPage from "./pages/Meeting-Notification-Chat/ChatPage.jsx";
 import TLChatPage from "./pages/Meeting-Notification-Chat/TLChat/TeamChatPage.jsx";
 import CEOChatPage from "./pages/Meeting-Notification-Chat/ceo/CEODashboard.jsx"; // single reusable chat UI
+
+//kanban
+import TaskBoardPage from "./pages/kanban/TaskBoardPage.jsx";
+
 
 export default function App() {
   const [checkInTime, setCheckInTime] = useState(null);
@@ -598,7 +603,7 @@ export default function App() {
           <Route
             path="/dashboard/ceo/daily-task-sheet"
             element={
-              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL"]}>
+              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL", "PM"]}>
                 <DailyTaskReviewPage />
               </ProtectedRoute>
             }
@@ -613,6 +618,12 @@ export default function App() {
             }
           />
 
+         
+
+          {/* ================= Kanban ================= */}
+           <Route path="/dashboard/kanban" element={<TaskBoardPage />} />
+
+
           {/* ================= DEVELOPER ================= */}
           <Route
             path="/dashboard/dev"
@@ -623,7 +634,7 @@ export default function App() {
             }
           />
           <Route
-            path="/dashboard/dev/daily-task-update"
+            path="/dashboard/dev/daily-task-form"
             element={
               <ProtectedRoute allowedRoles={["Developer"]}>
                 <DailyTaskFormPage />
@@ -633,7 +644,7 @@ export default function App() {
           <Route
             path="/dashboard/dev/weekly-summary"
             element={
-              <ProtectedRoute allowedRoles={["Developer", "TL", "CEO"]}>
+              <ProtectedRoute allowedRoles={["Developer"]}>
                 <DailyTaskPage />
               </ProtectedRoute>
             }
@@ -641,11 +652,15 @@ export default function App() {
 
           {/* ================= COMPLAINTS ================= */}
           <Route
-            path="/dashboard/complaints"
-            element={<DeveloperComplaintDashboard />}
+            path="/dashboard/dev/complaints"
+            element={
+              <ProtectedRoute allowedRoles={["Developer"]}>
+                <DeveloperComplaintDashboard />
+              </ProtectedRoute>
+            }
           />
           <Route
-            path="/dashboard/complaints/new"
+            path="/dashboard/dev/complaints/new"
             element={
               <ProtectedRoute allowedRoles={["Developer"]}>
                 <DeveloperComplaintForm />
@@ -655,7 +670,7 @@ export default function App() {
           <Route
             path="/dashboard/complaints/review"
             element={
-              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL"]}>
+              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL", "PM"]}>
                 <ComplaintReviewDashboard />
               </ProtectedRoute>
             }
@@ -663,7 +678,7 @@ export default function App() {
           <Route
             path="/dashboard/complaints/new-admin"
             element={
-              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin"]}>
+              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL", "PM"]}>
                 <AdminComplaintSubmissionPage />
               </ProtectedRoute>
             }

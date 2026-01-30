@@ -63,10 +63,10 @@ export default function ComplaintSubmissionPage() {
       toast.success("Complaint submitted successfully");
 
       // 🔁 Redirect to complaint dashboard
-      navigate("/complaints");
+      navigate("/dashboard/dev/complaints");
     } catch (error) {
       toast.error(
-        error.response?.data?.message || "Failed to submit complaint"
+        error.response?.data?.message || "Failed to submit complaint",
       );
     } finally {
       setSubmitting(false);
@@ -157,7 +157,7 @@ export default function ComplaintSubmissionPage() {
           <div className="flex gap-3 justify-end">
             <button
               type="button"
-              onClick={() => navigate("/complaints")}
+              onClick={() => navigate("/dashboard/dev/complaints")}
               className="px-4 py-2 border rounded text-sm"
             >
               Cancel

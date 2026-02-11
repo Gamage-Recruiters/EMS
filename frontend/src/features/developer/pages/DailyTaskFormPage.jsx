@@ -22,7 +22,7 @@ function DailyTaskFormPage() {
 
   const update = (key) => (e) => setForm({ ...form, [key]: e.target.value });
 
-  const goBack = () => navigate("/tasks");
+  const goBack = () => navigate("/dashboard/dev/weekly-summary");
 
   // ================= SUBMIT =================
   const handleSubmit = async () => {

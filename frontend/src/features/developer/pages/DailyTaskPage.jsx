@@ -194,7 +194,9 @@ function DailyTaskPage() {
                   <th className="px-3 py-2">#</th>
                   <th className="px-3 py-2">Date</th>
                   <th className="px-3 py-2">Task</th>
+                  <th className="px-3 py-2">Description</th>
                   <th className="px-3 py-2">Project</th>
+                  <th className="px-3 py-2">Developer</th>
                   <th className="px-3 py-2">Status</th>
                   <th className="px-3 py-2">Start</th>
                   <th className="px-3 py-2">End</th>
@@ -213,7 +215,15 @@ function DailyTaskPage() {
                       {new Date(task.date).toLocaleDateString()}
                     </td>
                     <td className="px-3 py-2 font-medium">{task.task}</td>
+                    <td className="px-3 py-2 text-xs max-w-xs truncate">
+                      {task.facedIssues || "—"}
+                    </td>
                     <td className="px-3 py-2">{task.project}</td>
+                    <td className="px-3 py-2 text-xs">
+                      {task.developer?.firstName && task.developer?.lastName
+                        ? `${task.developer.firstName} ${task.developer.lastName}`
+                        : "—"}
+                    </td>
                     <td className="px-3 py-2">
                       <StatusBadge label={task.status} />
                     </td>
@@ -241,7 +251,7 @@ function DailyTaskPage() {
                 {filtered.length === 0 && (
                   <tr>
                     <td
-                      colSpan="11"
+                      colSpan="13"
                       className="text-center py-8 text-slate-500"
                     >
                       No tasks found

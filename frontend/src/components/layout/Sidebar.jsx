@@ -25,10 +25,8 @@ const Sidebar = () => {
     Developer: [
       { name: "Dashboard", path: "/dashboard/dev" },
       { name: "Task Board", path: "/dashboard/dev/task-board" },
-      { name: "Update Task Status", path: "/dashboard/dev/update-task-status" },
-      { name: "Daily Task Update Form", path: "/dashboard/dev/daily-task-update" },
+      { name: "Daily Task Sheet", path: "/dashboard/dev/daily-task-update" },
       { name: "Weekly Work Summary", path: "/dashboard/dev/weekly-summary" },
-      { name: "Issues Form", path: "/dashboard/dev/issues" },
       { name: "Leave Form", path: "/dashboard/leave-form" },
       { name: "Complaint Submission", path: "/dashboard/complaints" },
     ],

@@ -1,9 +1,20 @@
-// Controller to handle task creation
 import Task from '../models/Task.js';
 import Project from '../models/Project.js';
 import User from '../models/User.js';
 
 
+/**
+ * CREATE TASK
+ * Creates a new task and assigns it to a user.
+ * Accessible by: TL (Team Lead), ATL (Assistant Team Lead), PM (Project Manager)
+ * @param {string} title - Task title (required)
+ * @param {string} description - Task description
+ * @param {string} project - Project ID (optional)
+ * @param {string} assignedTo - User ID to assign task to (required)
+ * @param {date} startDate - Task start date (required)
+ * @param {date} dueDate - Task due date (optional, defaults to startDate)
+ * @param {string} priority - Task priority (optional, defaults to MEDIUM)
+ */
 export const createTask = async (req, res) => {
   try {
     const {
@@ -80,7 +91,12 @@ export const createTask = async (req, res) => {
   }
 };
 
-// Controller to handle fetching tasks assigned to a user
+/**
+ * GET MY TASKS
+ * Retrieves all tasks assigned to the currently logged-in user.
+ * Accessible by: All authenticated users (Developer, TL, ATL, PM, CEO, SA)
+ * Returns: Tasks sorted by creation date
+ */
 export const getMyTasks = async (req, res) => {
   try {
     const tasks = await Task.find({ assignedTo: req.user.id })
@@ -103,7 +119,12 @@ export const getMyTasks = async (req, res) => {
   }
 };
 
-// Controller to fetch all tasks (for Kanban board)
+/**
+ * GET ALL TASKS
+ * Retrieves all tasks in the system (for Kanban board view).
+ * Accessible by: All authenticated users
+ * Returns: All tasks with assigned user, project, and assigner details
+ */
 export const getAllTasks = async (req, res) => {
   try {
     const tasks = await Task.find()
@@ -126,7 +147,12 @@ export const getAllTasks = async (req, res) => {
   }
 };
 
-// Controller to update task status
+/**
+ * UPDATE TASK STATUS
+ * Updates the status of a task (To Do, In Progress, Done).
+ * Accessible by: Developers (can only update their own tasks), TL, ATL, PM (can update any)
+ * @param {string} status - New task status (To Do, In Progress, Done)
+ */
 export const updateTaskStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -185,7 +211,19 @@ export const updateTaskStatus = async (req, res) => {
 };
 
 
-// Controller to update task details (for edit functionality) TL/ATL
+/**
+ * UPDATE TASK DETAILS
+ * Updates task information including title, description, assignment, dates, and priority.
+ * Accessible by: TL (Team Lead), ATL (Assistant Team Lead) only
+ * @param {string} title - Task title
+ * @param {string} description - Task description
+ * @param {string} project - Project ID
+ * @param {string} assignedTo - User ID to assign task to
+ * @param {date} startDate - Task start date
+ * @param {date} dueDate - Task due date
+ * @param {string} priority - Task priority
+ * @param {string} status - Task status
+ */
 export const updateTask = async (req, res) => {
   try {
     const taskId = req.params.id;
@@ -260,7 +298,12 @@ export const updateTask = async (req, res) => {
   }
 };
 
-// Controller to delete task (only TL and ATL)
+/**
+ * DELETE TASK
+ * Deletes a task from the system.
+ * Accessible by: TL (Team Lead), ATL (Assistant Team Lead) only
+ * @param {string} id - Task ID to delete
+ */
 export const deleteTask = async (req, res) => {
   try {
     const taskId = req.params.id;
@@ -301,7 +344,12 @@ export const deleteTask = async (req, res) => {
   }
 };
 
-// Get all users (for assignment dropdown)
+/**
+ * GET ALL USERS
+ * Retrieves all users in the system for task assignment dropdown.
+ * Accessible by: All authenticated users
+ * Returns: User ID, first name, and email
+ */
 export const getAllUsers = async (req, res) => {
   try {
     const users = await User.find()
@@ -322,7 +370,12 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
-// Get all projects (for project dropdown)
+/**
+ * GET ALL PROJECTS
+ * Retrieves all projects in the system for task assignment dropdown.
+ * Accessible by: All authenticated users
+ * Returns: Project ID and project name
+ */
 export const getAllProjects = async (req, res) => {
   try {
     const projects = await Project.find()

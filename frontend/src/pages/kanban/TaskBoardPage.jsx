@@ -71,6 +71,7 @@ export default function TaskBoardPage() {
           dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : "",
           priority: task.priority || "MEDIUM",
           status: status,
+          assignedByName: task.assignedBy?.firstName || task.assignedBy?.name || "",
         };
 
         organizedTasks[status].items.push(item);
@@ -405,8 +406,14 @@ export default function TaskBoardPage() {
             <div style={{ marginBottom: "15px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                 <span style={{ fontSize: "16px" }}>👤</span>
-                <span style={{ color: "#555", fontWeight: "500" }}>Developer:</span>
+                <span style={{ color: "#555", fontWeight: "500" }}>Assigned To:</span>
                 <span style={{ color: "#333" }}>{selectedTask.developerName}</span>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                <span style={{ fontSize: "16px" }}>✋</span>
+                <span style={{ color: "#555", fontWeight: "500" }}>Assigned By:</span>
+                <span style={{ color: "#333" }}>{selectedTask.assignedByName}</span>
               </div>
               
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
@@ -539,7 +546,7 @@ export default function TaskBoardPage() {
                   style={{
                     background: snapshot.isDraggingOver ? "#e3f2fd" : "#f4f5f7",
                     padding: "16px",
-                    width: "300px",
+                    width: "360px",
                     minHeight: "400px",
                     borderRadius: "8px",
                     boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
@@ -589,7 +596,7 @@ export default function TaskBoardPage() {
                             userSelect: "none",
                             padding: "12px",
                             margin: "0 0 8px 0",
-                            background: "white",
+                            background: String(item.assignedToId) === String(userId) && !canEditOrDelete ? "#fffbf0" : "white",
                             borderRadius: "6px",
                             boxShadow: snapshot.isDragging
                               ? "0 5px 15px rgba(0,0,0,0.2)"
@@ -601,6 +608,7 @@ export default function TaskBoardPage() {
                                 ? "#2196F3"
                                 : "#4CAF50"
                             }`,
+                            borderRight: String(item.assignedToId) === String(userId) && !canEditOrDelete ? "3px solid #4CAF50" : "none",
                             cursor: snapshot.isDragging ? "grabbing" : "grab",
                             transform: snapshot.isDragging
                               ? "rotate(2deg)"
@@ -648,27 +656,66 @@ export default function TaskBoardPage() {
                             )}
                           </div>
 
-                          {/* Show developer info for TL/ATL */}
-                          {canEditOrDelete && item.developerName && (
+                          {/* Show developer info for TL/ATL and all users to identify task assignment */}
+                          {item.developerName && (
                             <div
                               style={{
                                 fontSize: "12px",
-                                color: "#666",
+                                color: String(item.assignedToId) === String(userId) ? "#2e7d32" : "#666",
                                 marginBottom: "6px",
                                 display: "flex",
                                 alignItems: "center",
                                 gap: "4px",
-                                backgroundColor: "#f5f5f5",
+                                backgroundColor: String(item.assignedToId) === String(userId) ? "#e8f5e9" : "#f5f5f5",
                                 padding: "4px 8px",
                                 borderRadius: "4px",
+                                fontWeight: String(item.assignedToId) === String(userId) ? "600" : "normal",
                               }}
                             >
                               👤 <strong>{item.developerName}</strong>
                               {item.developerEmail && (
-                                <span style={{ color: "#999", fontSize: "11px" }}>
+                                <span style={{ color: String(item.assignedToId) === String(userId) ? "#1565c0" : "#999", fontSize: "11px" }}>
                                   ({item.developerEmail})
                                 </span>
                               )}
+                            </div>
+                          )}
+
+                          {/* Show "Your Task" badge for own tasks */}
+                          {String(item.assignedToId) === String(userId) && !canEditOrDelete && (
+                            <div
+                              style={{
+                                fontSize: "10px",
+                                color: "white",
+                                backgroundColor: "#4CAF50",
+                                padding: "2px 8px",
+                                borderRadius: "10px",
+                                display: "inline-block",
+                                marginBottom: "4px",
+                                fontWeight: "600",
+                                marginRight: "4px",
+                              }}
+                            >
+                              ✓ Your Task
+                            </div>
+                          )}
+
+                          {/* Show assigned by info for TL/ATL */}
+                          {canEditOrDelete && item.assignedByName && (
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "#0066cc",
+                                marginBottom: "6px",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "4px",
+                                backgroundColor: "#f0f7ff",
+                                padding: "4px 8px",
+                                borderRadius: "4px",
+                              }}
+                            >
+                              ✋ <strong>by {item.assignedByName}</strong>
                             </div>
                           )}
 

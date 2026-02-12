@@ -1,9 +1,17 @@
 import DailyTask from "../models/DailyTask.js";
 
 /**
- * @desc    Create daily task (Developer submission)
- * @route   POST /api/daily-tasks
- * @access  Private (Developer)
+ * CREATE DAILY TASK
+ * Creates a new daily task submission by a developer for tracking daily work.
+ * Accessible by: Developer only
+ * @param {string} task - Task description or name (required)
+ * @param {string} project - Project ID (required)
+ * @param {string} status - Task status (optional, defaults to "Not Started")
+ * @param {time} startTime - When work started
+ * @param {time} endTime - When work ended
+ * @param {number} workingHours - Total hours worked
+ * @param {string} facedIssues - Any issues encountered
+ * @param {string} learnings - Key learnings from the task
  */
 export const createDailyTask = async (req, res) => {
   try {
@@ -56,9 +64,10 @@ export const createDailyTask = async (req, res) => {
 };
 
 /**
- * @desc    Get logged-in developer's daily tasks (full details)
- * @route   GET /api/daily-tasks/my
- * @access  Private
+ * GET MY DAILY TASKS
+ * Retrieves all daily tasks submitted by the currently logged-in developer.
+ * Accessible by: All authenticated users (typically used by Developer to view their submissions)
+ * Returns: Complete daily task details with developer information
  */
 export const getMyDailyTasks = async (req, res) => {
   try {
@@ -81,9 +90,10 @@ export const getMyDailyTasks = async (req, res) => {
 };
 
 /**
- * @desc    Get all daily tasks (PM / TL / CEO)
- * @route   GET /api/daily-tasks
- * @access  Private
+ * GET ALL DAILY TASKS
+ * Retrieves all daily tasks submitted by all developers (for review and approval).
+ * Accessible by: PM (Project Manager), TL (Team Lead), CEO only
+ * Returns: All daily tasks with developer information
  */
 export const getAllDailyTasks = async (req, res) => {
   try {
@@ -114,9 +124,10 @@ export const getAllDailyTasks = async (req, res) => {
 };
 
 /**
- * @desc    PM updates PM check
- * @route   PUT /api/daily-tasks/:id/pm-check
- * @access  Private (PM / CEO)
+ * UPDATE PM CHECK
+ * Project Manager or CEO reviews and approves/rejects PM check on a daily task.
+ * Accessible by: PM (Project Manager), CEO only
+ * @param {string} pmCheck - PM's approval status/feedback
  */
 export const updatePMCheck = async (req, res) => {
   try {
@@ -156,9 +167,10 @@ export const updatePMCheck = async (req, res) => {
 };
 
 /**
- * @desc    TL updates team lead check
- * @route   PUT /api/daily-tasks/:id/tl-check
- * @access  Private (TL / CEO)
+ * UPDATE TEAM LEAD CHECK
+ * Team Lead or CEO reviews and approves/rejects the daily task submission.
+ * Accessible by: TL (Team Lead), CEO only
+ * @param {string} teamLeadCheck - Team Lead's approval status/feedback
  */
 export const updateTLCheck = async (req, res) => {
   try {
@@ -198,9 +210,10 @@ export const updateTLCheck = async (req, res) => {
 };
 
 /**
- * @desc    Delete a daily task (ONLY owner developer)
- * @route   DELETE /api/daily-tasks/:id
- * @access  Private
+ * DELETE DAILY TASK
+ * Deletes a daily task. Only the developer who submitted the task can delete it.
+ * Accessible by: Developer (only owns their own tasks)
+ * @param {string} id - Daily task ID to delete
  */
 export const deleteDailyTask = async (req, res) => {
   try {

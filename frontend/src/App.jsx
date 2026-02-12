@@ -502,6 +502,9 @@ import ChatPage from "./pages/Meeting-Notification-Chat/ChatPage";
 import UnassignedDashboard from "./pages/dashboard/UnassignedDashboard.jsx";
 import TLPastProjects from "./pages/dashboard/TLPastProjects";
 
+// Kanban
+import TaskBoardPage from "./pages/kanban/TaskBoardPage";
+
 export default function App() {
   const [checkInTime, setCheckInTime] = useState(null);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
@@ -590,6 +593,9 @@ export default function App() {
             }
             />
 
+           {/* ================= Kanban ================= */}
+           <Route path="/dashboard/kanban" element={<TaskBoardPage />} />  
+
           {/* ================= DEVELOPER ================= */}
           <Route
             path="/dashboard/dev"
@@ -612,6 +618,14 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={["Developer", "TL", "CEO"]}>
                 <DailyTaskPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/dev/task-board"
+            element={
+              <ProtectedRoute allowedRoles={["Developer", "TL", "CEO"]}>
+                <TaskBoardPage />
               </ProtectedRoute>
             }
           />

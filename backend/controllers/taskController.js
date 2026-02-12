@@ -189,10 +189,12 @@ export const updateTaskStatus = async (req, res) => {
     }
 
     // TL / ATL can update any task
-    task.status = status;
-    await task.save();
-
-    const updatedTask = await Task.findById(taskId)
+    // Use findByIdAndUpdate to avoid validation errors with partial updates
+    const updatedTask = await Task.findByIdAndUpdate(
+      taskId,
+      { status },
+      { new: true, runValidators: true }
+    )
       .populate("assignedTo", "firstName email")
       .populate("project", "projectName");
 

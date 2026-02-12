@@ -142,6 +142,7 @@ export default function TaskBoardPage() {
 
     try {
       await taskService.updateStatus(draggableId, newStatus);
+      fetchTasks(); // Refresh to ensure data is in sync with backend
     } catch (err) {
       console.error("Status update failed:", err);
       setError("Failed to update status");

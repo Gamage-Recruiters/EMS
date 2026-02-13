@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import Sidebar from "../../components/layout/Sidebar.jsx";
 import { Link } from "react-router-dom";
 import { checkIn, getTodayAttendance, checkOut } from "../../services/attendanceService";
+import { getMyDailyTasks } from "../../services/dailyTaskService";
 import { useNavigate } from "react-router-dom";
 
 const DevDashboard = () => {
@@ -11,30 +12,18 @@ const DevDashboard = () => {
   const navigate = useNavigate();
   const [todayAttendance, setTodayAttendance] = useState(null);
   const [loading, setLoading] = useState(false);
-
-
-  const recentTasks = [
-    {
-      title: "EMS Wire frames",
-      description: "Designs with figma",
-      status: "pending",
-    },
-    {
-      title: "Update wireframes in developer module",
-      description: "daily task path",
-      status: "pending",
-    },
-    {
-      title:
-        "Discuss team with better practices to more efficient EMS development",
-      description: "",
-      status: "completed",
-    },
-  ];
+  const [recentTasks, setRecentTasks] = useState([]);
+  const [tasksLoading, setTasksLoading] = useState(false);
+  const [taskStats, setTaskStats] = useState({
+    pending: 0,
+    inProgress: 0,
+    completed: 0,
+  });
 
   useEffect(() => {
     if(user) {
       fetchTodayAttendance(); // if user is available fetch attendance
+      fetchRecentTasks(); // fetch recent tasks
     }
   }, [user]);
 
@@ -42,6 +31,34 @@ const DevDashboard = () => {
     const result = await getTodayAttendance();
     if (result.success) {
       setTodayAttendance(result.data.data);
+    }
+  };
+
+  // Fetch recent tasks (last 3)
+  const fetchRecentTasks = async () => {
+    try {
+      setTasksLoading(true);
+      const res = await getMyDailyTasks();
+      if (res.data && res.data.data) {
+        const allTasks = res.data.data;
+        // Get the 3 most recent tasks
+        const recent = allTasks.slice(0, 3);
+        setRecentTasks(recent);
+
+        // Calculate task statistics
+        const stats = {
+          pending: allTasks.filter(
+            (t) => t.status === "Not Started" || t.status === "Blocked"
+          ).length,
+          inProgress: allTasks.filter((t) => t.status === "In Progress").length,
+          completed: allTasks.filter((t) => t.status === "Completed").length,
+        };
+        setTaskStats(stats);
+      }
+    } catch (error) {
+      console.error("Failed to fetch recent tasks:", error);
+    } finally {
+      setTasksLoading(false);
     }
   };
   // handle Check-In
@@ -157,17 +174,21 @@ const DevDashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <DevKpiCard
                   label="Pending Tasks"
-                  value="12"
-                  subtitle="+2 this month"
+                  value={taskStats.pending}
+                  subtitle={`+${Math.max(0, taskStats.pending - 0)} pending`}
                   accent="text-emerald-500"
                 />
                 <DevKpiCard
                   label="In Progress"
-                  value="48"
-                  subtitle="+5 this month"
+                  value={taskStats.inProgress}
+                  subtitle={`${taskStats.inProgress} active`}
                   accent="text-emerald-500"
                 />
-                <DevKpiCard label="Completed" value="4" subtitle="" />
+                <DevKpiCard 
+                  label="Completed" 
+                  value={taskStats.completed} 
+                  subtitle={`${taskStats.completed} done`}
+                />
               </div>
             </section>
 
@@ -177,30 +198,39 @@ const DevDashboard = () => {
                 <h2 className="text-base font-semibold text-slate-900">
                   Recent Tasks
                 </h2>
-                <button className="text-xs text-blue-600 font-medium hover:underline">
+                <Link
+                  to="/dashboard/dev/weekly-summary"
+                  className="text-xs text-blue-600 font-medium hover:underline"
+                >
                   View All
-                </button>
+                </Link>
               </div>
 
               <div className="space-y-3">
-                {recentTasks.map((t, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-slate-900">
-                        {t.title}
-                      </p>
-                      {t.description && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          {t.description}
+                {tasksLoading ? (
+                  <p className="text-sm text-gray-500 py-4">Loading tasks...</p>
+                ) : recentTasks.length === 0 ? (
+                  <p className="text-sm text-gray-500 py-4">No tasks yet. Create one to get started!</p>
+                ) : (
+                  recentTasks.map((t) => (
+                    <div
+                      key={t._id}
+                      className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">
+                          {t.task}
                         </p>
-                      )}
+                        {t.project && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Project: {t.project}
+                          </p>
+                        )}
+                      </div>
+                      <StatusBadge status={t.status} />
                     </div>
-                    <StatusBadge status={t.status} />
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </section>
           </div>
@@ -208,7 +238,7 @@ const DevDashboard = () => {
           {/* Right column: calendar + quick actions */}
           <div className="w-80 flex flex-col gap-6">
             <CalendarCard />
-            <QuickActionsCard />
+            <QuickActionsCard navigate={navigate} />
           </div>
         </div>
       </main>
@@ -247,57 +277,149 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-const CalendarCard = () => (
-  <section className="bg-white rounded-3xl shadow-sm p-5">
-    <div className="flex items-center justify-between mb-3">
-      <div className="flex gap-2">
-        <select className="text-xs border border-gray-200 rounded-md px-2 py-1 text-gray-600 bg-white">
-          <option>Sep</option>
-        </select>
-        <select className="text-xs border border-gray-200 rounded-md px-2 py-1 text-gray-600 bg-white">
-          <option>2025</option>
-        </select>
-      </div>
-      <div className="flex gap-2 text-gray-400 text-xs">
-        <button>{"<"}</button>
-        <button>{">"}</button>
-      </div>
-    </div>
+const CalendarCard = () => {
+  const [currentDate, setCurrentDate] = React.useState(new Date());
+  const [currentTime, setCurrentTime] = React.useState(new Date());
 
-    <div className="grid grid-cols-7 text-[11px] text-center text-gray-400 mb-2">
-      {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
-        <span key={d}>{d}</span>
-      ))}
-    </div>
-    <div className="grid grid-cols-7 gap-y-1 text-[11px] text-center">
-      {Array.from({ length: 30 }, (_, i) => i + 1).map((day) => {
-        const isSelected = [9, 10, 11, 12, 13].includes(day);
-        return (
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const today = currentDate.getDate();
+
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDayOfMonth = new Date(year, month, 1).getDay();
+
+  const days = [];
+  for (let i = 0; i < firstDayOfMonth; i++) {
+    days.push(null);
+  }
+  for (let i = 1; i <= daysInMonth; i++) {
+    days.push(i);
+  }
+
+  const handlePrevMonth = () => {
+    setCurrentDate(new Date(year, month - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(new Date(year, month + 1, 1));
+  };
+
+  const timeString = currentTime.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+
+  return (
+    <section className="bg-white rounded-3xl shadow-sm p-5">
+      {/* Time Display */}
+      <div className="mb-4 text-center">
+        <p className="text-2xl font-semibold text-slate-900">{timeString}</p>
+        <p className="text-xs text-gray-500">{monthNames[month]} {year}</p>
+      </div>
+
+      {/* Month/Year Navigation */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex gap-2">
+          <select
+            value={month}
+            onChange={(e) =>
+              setCurrentDate(new Date(year, parseInt(e.target.value), 1))
+            }
+            className="text-xs border border-gray-200 rounded-md px-2 py-1 text-gray-600 bg-white"
+          >
+            {monthNames.map((m, idx) => (
+              <option key={idx} value={idx}>
+                {m}
+              </option>
+            ))}
+          </select>
+          <select
+            value={year}
+            onChange={(e) =>
+              setCurrentDate(new Date(parseInt(e.target.value), month, 1))
+            }
+            className="text-xs border border-gray-200 rounded-md px-2 py-1 text-gray-600 bg-white"
+          >
+            {[2024, 2025, 2026, 2027, 2028].map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex gap-2 text-gray-400 text-xs">
           <button
-            key={day}
+            onClick={handlePrevMonth}
+            className="hover:text-gray-600"
+          >
+            {"<"}
+          </button>
+          <button
+            onClick={handleNextMonth}
+            className="hover:text-gray-600"
+          >
+            {">"}
+          </button>
+        </div>
+      </div>
+
+      {/* Day Headers */}
+      <div className="grid grid-cols-7 text-[11px] text-center text-gray-400 mb-2">
+        {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
+          <span key={d}>{d}</span>
+        ))}
+      </div>
+
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-7 gap-y-1 text-[11px] text-center">
+        {days.map((day, idx) => (
+          <button
+            key={idx}
+            disabled={!day}
             className={`w-7 h-7 mx-auto rounded-full flex items-center justify-center ${
-              isSelected
-                ? "bg-slate-900 text-white"
+              !day
+                ? "text-gray-300 cursor-default"
+                : day === today
+                ? "bg-blue-600 text-white font-semibold"
                 : "text-gray-600 hover:bg-gray-100"
             }`}
           >
             {day}
           </button>
-        );
-      })}
-    </div>
-  </section>
-);
+        ))}
+      </div>
+    </section>
+  );
+};
 
-const QuickActionsCard = () => (
+const QuickActionsCard = ({ navigate }) => (
   <section className="bg-white rounded-3xl shadow-sm p-5 space-y-3">
     <h2 className="text-sm font-semibold text-slate-900">Quick Actions</h2>
 
-    <button className="w-full rounded-md bg-blue-600 text-white text-xs font-semibold py-2.5 hover:bg-blue-700">
+    <button
+      onClick={() => navigate("/dashboard/dev/daily-task-update")}
+      className="w-full rounded-md bg-blue-600 text-white text-xs font-semibold py-2.5 hover:bg-blue-700"
+    >
       Create Daily New Task
     </button>
 
-    <button className="w-full rounded-md bg-white border border-blue-600 text-blue-600 text-xs font-semibold py-2.5 hover:bg-blue-50">
+    <button
+      onClick={() => navigate("/dashboard/dev/weekly-summary")}
+      className="w-full rounded-md bg-white border border-blue-600 text-blue-600 text-xs font-semibold py-2.5 hover:bg-blue-50"
+    >
       Update Daily Task
     </button>
 

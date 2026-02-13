@@ -616,7 +616,7 @@ export default function App() {
           <Route
             path="/dashboard/dev/weekly-summary"
             element={
-              <ProtectedRoute allowedRoles={["Developer", "TL", "CEO"]}>
+              <ProtectedRoute allowedRoles={["Developer", "TL", "PM", "CEO"]}>
                 <DailyTaskPage />
               </ProtectedRoute>
             }

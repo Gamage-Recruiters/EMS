@@ -6,8 +6,10 @@ import { FiTrash2, FiFilter, FiCalendar, FiList } from "react-icons/fi";
 import StatusBadge from "../components/StatusBadge";
 import {
   getMyDailyTasks,
+  getAllDailyTasks,
   deleteDailyTask,
 } from "../../../services/dailyTaskService";
+import { useAuth } from "../../../context/AuthContext";
 
 // ================= DATE HELPERS =================
 // const isInCurrentWeek = (dateStr) => {
@@ -49,6 +51,7 @@ const isInCurrentWeek = (dateStr) => {
 
 
 function DailyTaskPage() {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,9 +60,12 @@ function DailyTaskPage() {
   const [view, setView] = useState("week"); // week | all
 
   // ================= FETCH =================
+  const isReviewer = ["TL", "PM", "CEO"].includes(user?.role);
+  const canDelete = user?.role === "Developer";
+
   const fetchTasks = async () => {
     try {
-      const res = await getMyDailyTasks();
+      const res = isReviewer ? await getAllDailyTasks() : await getMyDailyTasks();
       setTasks(res.data.data);
     } catch {
       toast.error("Failed to load tasks");
@@ -69,8 +75,9 @@ function DailyTaskPage() {
   };
 
   useEffect(() => {
+    if (!user) return;
     fetchTasks();
-  }, []);
+  }, [user, isReviewer]);
 
   // ================= FILTER =================
   const filtered = useMemo(() => {
@@ -126,12 +133,14 @@ function DailyTaskPage() {
             </p>
           </div>
 
-          <Link
-            to="/dashboard/dev/daily-task-update"
-            className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            + Add Daily Task
-          </Link>
+          {canDelete && (
+            <Link
+              to="/dashboard/dev/daily-task-update"
+              className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              + Add Daily Task
+            </Link>
+          )}
         </header>
 
         {/* ================= FILTER BAR ================= */}
@@ -203,7 +212,7 @@ function DailyTaskPage() {
                   <th className="px-3 py-2">Hours</th>
                   <th className="px-3 py-2">PM</th>
                   <th className="px-3 py-2">TL</th>
-                  <th className="px-3 py-2">Action</th>
+                  {canDelete && <th className="px-3 py-2">Action</th>}
                 </tr>
               </thead>
 
@@ -236,22 +245,24 @@ function DailyTaskPage() {
                     <td className="px-3 py-2">
                       <StatusBadge label={task.teamLeadCheck} />
                     </td>
-                    <td className="px-3 py-2 text-center">
-                      <button
-                        onClick={() => handleDelete(task._id)}
-                        className="text-red-600 hover:text-red-800"
-                        title="Delete task"
-                      >
-                        <FiTrash2 size={16} />
-                      </button>
-                    </td>
+                    {canDelete && (
+                      <td className="px-3 py-2 text-center">
+                        <button
+                          onClick={() => handleDelete(task._id)}
+                          className="text-red-600 hover:text-red-800"
+                          title="Delete task"
+                        >
+                          <FiTrash2 size={16} />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
 
                 {filtered.length === 0 && (
                   <tr>
                     <td
-                      colSpan="13"
+                      colSpan={canDelete ? 13 : 12}
                       className="text-center py-8 text-slate-500"
                     >
                       No tasks found

@@ -1,8 +1,6 @@
 // frontend/src/pages/dashboard/TLDashboard.jsx
-import Reactm, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
-import Sidebar from "../../components/layout/Sidebar.jsx";
-import { Link, Navigate } from "react-router-dom";
 import {
   checkIn,
   getTodayAttendance,
@@ -283,7 +281,10 @@ const TLDashboard = () => {
                 <h2 className="text-sm font-semibold text-slate-900">
                   Notifications
                 </h2>
-                <button className="text-xs text-blue-600 font-medium hover:underline">
+                <button
+                  onClick={() => navigate("/dashboard/notifications")}
+                  className="text-xs text-blue-600 font-medium hover:underline"
+                >
                   View All
                 </button>
               </div>
@@ -296,7 +297,14 @@ const TLDashboard = () => {
             </div>
 
             {/* Quick actions card */}
-            <QuickActions />
+            <QuickActions
+              onNavigate={navigate}
+              links={{
+                meeting: "/dashboard/meetings/create",
+                notice: "/dashboard/tl/notices",
+                addDeveloper: "/dashboard/tl/add-developer",
+              }}
+            />
           </section>
 
           {/* Project Progress Summary */}
@@ -305,7 +313,10 @@ const TLDashboard = () => {
               <h2 className="text-sm font-semibold text-slate-900">
                 Project Progress Summary
               </h2>
-              <button className="text-xs text-blue-600 font-medium hover:underline">
+              <button
+                onClick={() => navigate("/dashboard/tl/past-projects")}
+                className="text-xs text-blue-600 font-medium hover:underline"
+              >
                 All Projects
               </button>
             </div>
@@ -376,18 +387,33 @@ const NotificationItem = ({ notification }) => {
   );
 };
 
-const QuickActions = () => (
+const QuickActions = ({ onNavigate, links }) => (
   <div className="bg-gradient-to-b from-[#2563EB] to-[#1D4ED8] rounded-3xl shadow-sm p-6 text-white flex flex-col gap-4">
     <h2 className="text-sm font-semibold">Quick Actions</h2>
 
-    <QuickActionButton label="Schedule Meeting" icon="🗓" />
-    <QuickActionButton label="Post Special Notice" icon="📢" />
-    <QuickActionButton label="Add Developer" icon="👨‍💻" />
+    <QuickActionButton
+      label="Schedule Meeting"
+      icon="🗓"
+      onClick={() => onNavigate(links.meeting)}
+    />
+    <QuickActionButton
+      label="Post Special Notice"
+      icon="📢"
+      onClick={() => onNavigate(links.notice)}
+    />
+    <QuickActionButton
+      label="Add Developer"
+      icon="👨‍💻"
+      onClick={() => onNavigate(links.addDeveloper)}
+    />
   </div>
 );
 
-const QuickActionButton = ({ label, icon }) => (
-  <button className="w-full bg-white text-blue-600 rounded-xl py-2.5 text-xs font-semibold flex items-center justify-center gap-2 hover:bg-blue-50">
+const QuickActionButton = ({ label, icon, onClick }) => (
+  <button
+    onClick={onClick}
+    className="w-full bg-white text-blue-600 rounded-xl py-2.5 text-xs font-semibold flex items-center justify-center gap-2 hover:bg-blue-50"
+  >
     <span>{icon}</span>
     <span>{label}</span>
   </button>

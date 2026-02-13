@@ -497,7 +497,10 @@ import JobDetails from "./features/management/pages/employee-profile/JobDetails"
 // Meetings
 import MeetingOverview from "./pages/Meeting-Notification-Chat/MeetingOverview";
 import CreateMeetings from "./pages/Meeting-Notification-Chat/CreateMeetings";
+import Notifications from "./pages/Meeting-Notification-Chat/Notifications";
+import ChatPage from "./pages/Meeting-Notification-Chat/ChatPage";
 import UnassignedDashboard from "./pages/dashboard/UnassignedDashboard.jsx";
+import TLPastProjects from "./pages/dashboard/TLPastProjects";
 
 // Kanban
 import TaskBoardPage from "./pages/kanban/TaskBoardPage";
@@ -546,6 +549,7 @@ export default function App() {
           <Route path="/dashboard/overview" element={<DashboardOverview />} />
           <Route path="/dashboard/attendance" element={<AttendancePage />} />
           <Route path="/dashboard/meetings" element={<MeetingOverview />} />
+          <Route path="/dashboard/notifications" element={<Notifications />} />
           <Route path="/dashboard/unassigned" element={<UnassignedDashboard />} />
           <Route path="/dashboard/leave-form" element={<LeaveForm />} />
 
@@ -612,7 +616,7 @@ export default function App() {
           <Route
             path="/dashboard/dev/weekly-summary"
             element={
-              <ProtectedRoute allowedRoles={["Developer", "TL", "CEO"]}>
+              <ProtectedRoute allowedRoles={["Developer", "TL", "PM", "CEO"]}>
                 <DailyTaskPage />
               </ProtectedRoute>
             }
@@ -660,7 +664,7 @@ export default function App() {
           <Route
             path="/dashboard/employees"
             element={
-              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin"]}>
+              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL"]}>
                 <UserManagementPage />
               </ProtectedRoute>
             }
@@ -698,6 +702,46 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={["TL"]}>
                 <TLDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/tl/team-formation"
+            element={<Navigate to="/dashboard/employees?tab=team-creation" replace />}
+          />
+          <Route
+            path="/dashboard/tl/add-developer"
+            element={<Navigate to="/dashboard/employees?tab=teams" replace />}
+          />
+          <Route
+            path="/dashboard/tl/notices"
+            element={
+              <ProtectedRoute allowedRoles={["TL"]}>
+                <ChatPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/tl/dev-progress"
+            element={
+              <ProtectedRoute allowedRoles={["TL"]}>
+                <DailyTaskReviewPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/tl/weekly-progress"
+            element={
+              <ProtectedRoute allowedRoles={["TL"]}>
+                <DailyTaskPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/tl/past-projects"
+            element={
+              <ProtectedRoute allowedRoles={["TL"]}>
+                <TLPastProjects />
               </ProtectedRoute>
             }
           />

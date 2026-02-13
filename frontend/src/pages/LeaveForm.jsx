@@ -14,6 +14,12 @@ export default function LeaveForm() {
   const [leaveType, setLeaveType] = useState('');
   const [reason, setReason] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [team, setTeam] = useState('');
+  const [additionalNotes, setAdditionalNotes] = useState('');
+  const [validationErrors, setValidationErrors] = useState({});
 
   const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -74,8 +80,9 @@ export default function LeaveForm() {
     setError(null);
     setFormLoading(true);
 
-    if (!fromDate || !toDate || !leaveType || !reason) {
-      setError("Please fill in all required fields.");
+    // Client-side validation
+    const isValid = validateForm();
+    if (!isValid) {
       setFormLoading(false);
       return;
     }
@@ -99,6 +106,33 @@ export default function LeaveForm() {
     }
   };
 
+  const validateEmail = (value) => {
+    return /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(value);
+  };
+
+  const validateForm = () => {
+    const errors = {};
+
+    if (!fullName.trim()) errors.fullName = 'Full name is required.';
+    if (!email.trim()) errors.email = 'Email is required.';
+    else if (!validateEmail(email.trim())) errors.email = 'Enter a valid email address.';
+    if (!phone.trim()) errors.phone = 'Phone number is required.';
+    else if (!/^\d{10}$/.test(phone)) errors.phone = 'Phone number must be 10 digits.';
+    if (!team) errors.team = 'Please select a team.';
+    if (!leaveType) errors.leaveType = 'Please select a leave type.';
+    if (!fromDate) errors.fromDate = 'From date is required.';
+    if (!toDate) errors.toDate = 'To date is required.';
+    if (fromDate && toDate) {
+      const start = new Date(fromDate);
+      const end = new Date(toDate);
+      if (end < start) errors.toDate = 'To date cannot be before From date.';
+    }
+    if (!reason.trim()) errors.reason = 'Please provide a reason for leave.';
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleReset = () => {
     setFromDate('');
     setToDate('');
@@ -106,6 +140,12 @@ export default function LeaveForm() {
     setLeaveType('');
     setReason('');
     setSelectedFile(null);
+    setFullName('');
+    setEmail('');
+    setPhone('');
+    setTeam('');
+    setAdditionalNotes('');
+    setValidationErrors({});
     setError(null);
     setSuccess(false);
     setFormLoading(false);
@@ -294,9 +334,14 @@ export default function LeaveForm() {
                     <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
                       placeholder="John Doe"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all"
+                      className={`w-full bg-slate-50 border rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all ${validationErrors.fullName ? 'border-red-300 focus:border-red-400' : 'border-slate-200'}`}
                     />
+                    {validationErrors.fullName && (
+                      <p className="text-sm text-red-600 mt-1">{validationErrors.fullName}</p>
+                    )}
                   </div>
                 </div>
 
@@ -309,9 +354,14 @@ export default function LeaveForm() {
                     <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       placeholder="john.doe@company.com"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all"
+                      className={`w-full bg-slate-50 border rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all ${validationErrors.email ? 'border-red-300 focus:border-red-400' : 'border-slate-200'}`}
                     />
+                    {validationErrors.email && (
+                      <p className="text-sm text-red-600 mt-1">{validationErrors.email}</p>
+                    )}
                   </div>
                 </div>
 
@@ -324,9 +374,17 @@ export default function LeaveForm() {
                     <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       type="tel"
-                      placeholder="+1 (555) 000-0000"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all"
+                      value={phone}
+                      onChange={(e) => {
+                        const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setPhone(cleaned);
+                      }}
+                      placeholder="Enter 10-digit phone number"
+                      className={`w-full bg-slate-50 border rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all ${validationErrors.phone ? 'border-red-300 focus:border-red-400' : 'border-slate-200'}`}
                     />
+                    {validationErrors.phone && (
+                      <p className="text-sm text-red-600 mt-1">{validationErrors.phone}</p>
+                    )}
                   </div>
                 </div>
 
@@ -337,8 +395,12 @@ export default function LeaveForm() {
                   </label>
                   <div className="relative">
                     <Users className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <select className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all appearance-none cursor-pointer">
-                      <option value="" disabled selected>Select your team</option>
+                    <select
+                      value={team}
+                      onChange={(e) => setTeam(e.target.value)}
+                      className={`w-full bg-slate-50 border rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all appearance-none cursor-pointer ${validationErrors.team ? 'border-red-300 focus:border-red-400' : 'border-slate-200'}`}
+                    >
+                      <option value="" disabled>Select your team</option>
                       <option>Frontend Team</option>
                       <option>Backend Team</option>
                       <option>Mobile App Team</option>
@@ -348,6 +410,9 @@ export default function LeaveForm() {
                       <option>Product Management</option>
                       <option>Other</option>
                     </select>
+                    {validationErrors.team && (
+                      <p className="text-sm text-red-600 mt-1">{validationErrors.team}</p>
+                    )}
                     <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
                       <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -378,7 +443,7 @@ export default function LeaveForm() {
                     <select
                       value={leaveType}
                       onChange={(e) => setLeaveType(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all appearance-none cursor-pointer"
+                      className={`w-full bg-slate-50 border rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all appearance-none cursor-pointer ${validationErrors.leaveType ? 'border-red-300 focus:border-red-400' : 'border-slate-200'}`}
                     >
                       <option value="" disabled>Select leave type</option>
                       <option value="Sick Leave">Sick Leave (Illness or Injury)</option>
@@ -390,6 +455,9 @@ export default function LeaveForm() {
                       <option value="Unpaid Leave">Leave Without Pay</option>
                       <option value="Other">Other</option>
                     </select>
+                    {validationErrors.leaveType && (
+                      <p className="text-sm text-red-600 mt-1">{validationErrors.leaveType}</p>
+                    )}
                     <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
                       <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -406,12 +474,15 @@ export default function LeaveForm() {
                     </label>
                     <div className="relative">
                       <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input
-                        type="date"
-                        value={fromDate}
-                        onChange={handleFromDateChange}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all"
-                      />
+                        <input
+                          type="date"
+                          value={fromDate}
+                          onChange={handleFromDateChange}
+                          className={`w-full bg-slate-50 border rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all ${validationErrors.fromDate ? 'border-red-300 focus:border-red-400' : 'border-slate-200'}`}
+                        />
+                        {validationErrors.fromDate && (
+                          <p className="text-sm text-red-600 mt-1">{validationErrors.fromDate}</p>
+                        )}
                     </div>
                   </div>
 
@@ -421,12 +492,15 @@ export default function LeaveForm() {
                     </label>
                     <div className="relative">
                       <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input
-                        type="date"
-                        value={toDate}
-                        onChange={handleToDateChange}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all"
-                      />
+                        <input
+                          type="date"
+                          value={toDate}
+                          onChange={handleToDateChange}
+                          className={`w-full bg-slate-50 border rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all ${validationErrors.toDate ? 'border-red-300 focus:border-red-400' : 'border-slate-200'}`}
+                        />
+                        {validationErrors.toDate && (
+                          <p className="text-sm text-red-600 mt-1">{validationErrors.toDate}</p>
+                        )}
                     </div>
                   </div>
 
@@ -457,8 +531,11 @@ export default function LeaveForm() {
                     onChange={(e) => setReason(e.target.value)}
                     placeholder="Please provide a detailed reason for your leave request..."
                     rows={4}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all resize-none"
+                    className={`w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all resize-none ${validationErrors.reason ? 'border-red-300 focus:border-red-400' : 'border-slate-200'}`}
                   />
+                  {validationErrors.reason && (
+                    <p className="text-sm text-red-600 mt-1">{validationErrors.reason}</p>
+                  )}
                 </div>
 
                 {/* Additional Notes */}
@@ -467,6 +544,8 @@ export default function LeaveForm() {
                     Additional Notes <span className="text-slate-400 text-xs">(Optional)</span>
                   </label>
                   <textarea
+                    value={additionalNotes}
+                    onChange={(e) => setAdditionalNotes(e.target.value)}
                     placeholder="Any additional information or special circumstances..."
                     rows={3}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all resize-none"

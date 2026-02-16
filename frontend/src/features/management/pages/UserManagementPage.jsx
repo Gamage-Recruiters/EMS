@@ -204,7 +204,7 @@ export default function UserManagementPage() {
                 </div>
               </div>
               <button
-                onClick={() => navigate("/profile")}
+                onClick={() => navigate("/dashboard/profile/personal-details")}
                 className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
               >
                 Add Employee

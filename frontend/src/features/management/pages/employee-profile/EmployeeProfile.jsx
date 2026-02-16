@@ -215,7 +215,8 @@ export default function EmployeeProfile() {
 
     const next = Math.min(currentStepIndex + 1, lastStepIndex);
     setMaxUnlockedStep((prev) => Math.max(prev, next));
-    navigate(`/profile/${STEP_ROUTES[next].path}${qs}`);
+    navigate(`${STEP_ROUTES[next].path}${qs}`);
+
   };
 
   const goBack = () => {
@@ -223,7 +224,8 @@ export default function EmployeeProfile() {
     clearMessages();
 
     const prev = Math.max(currentStepIndex - 1, 0);
-    navigate(`/profile/${STEP_ROUTES[prev].path}${qs}`);
+    navigate(`${STEP_ROUTES[prev].path}${qs}`);
+
   };
 
   // -------- Create / Update (only on last step) --------
@@ -269,7 +271,7 @@ export default function EmployeeProfile() {
 
       setSuccessMsg("Employee created successfully.");
       setTimeout(() => {
-        navigate("/employees");
+        navigate("/dashboard/employees");
       }, 900);
     } catch (err) {
       console.error(err);
@@ -331,7 +333,7 @@ export default function EmployeeProfile() {
 
       setSuccessMsg("Employee updated successfully.");
       setTimeout(() => {
-        navigate("/employees");
+        navigate("/dashboard/employees");
       }, 900);
     } catch (err) {
       console.error(err);
@@ -436,7 +438,7 @@ export default function EmployeeProfile() {
               {!isView && (
                 <div className="flex items-center justify-between pt-8 border-t border-gray-200">
                   <button
-                    onClick={() => navigate("/employees")}
+                    onClick={() => navigate("/dashboard/employees")}
                     className="px-6 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium rounded-lg transition"
                   >
                     Cancel

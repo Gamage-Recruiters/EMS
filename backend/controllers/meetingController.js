@@ -1,5 +1,13 @@
+import mongoose from "mongoose";
 import Meeting from "../models/Meeting.js";
 import User from "../models/User.js";
+
+//normalize participant role
+const ALLOWED_PARTICIPANT_ROLES = ["CEO", "TL", "ATL", "PM", "Developer"];
+
+const normalizeParticipantRole = (role) => {
+  return ALLOWED_PARTICIPANT_ROLES.includes(role) ? role : "Developer";
+};
 
 /**
  * @desc    Create a new meeting
@@ -41,17 +49,44 @@ export const createMeeting = async (req, res) => {
       });
     }
 
+    // participants must be an array if provided
+    if (participants !== undefined && !Array.isArray(participants)) {
+      return res.status(400).json({
+        success: false,
+        message: "Participants must be an array",
+      });
+    }
+
     // ================= PARTICIPANTS PROCESS =================
     let formattedParticipants = [];
 
-    if (participants && participants.length > 0) {
+    if (Array.isArray(participants) && participants.length > 0) {
       for (const p of participants) {
-        const user = await User.findOne({ email: p.email });
+        let user = null;
+
+        // support participant by email
+        if (p?.email) {
+          user = await User.findOne({ email: p.email });
+        }
+        // support participant by user id
+        else if (p?.user && mongoose.Types.ObjectId.isValid(p.user)) {
+          user = await User.findById(p.user);
+        } 
+        // support sending direct objectId string
+        else if (typeof p === "string" && mongoose.Types.ObjectId.isValid(p)) {
+          user = await User.findById(p);
+        } 
+        else {
+          return res.status(400).json({
+            success: false,
+            message: "Each participant must contain a valid email or user id",
+          });
+        }
 
         if (!user) {
           return res.status(404).json({
             success: false,
-            message: `User not found: ${p.email}`,
+            message: `User not found`,
           });
         }
 
@@ -160,7 +195,17 @@ export const getAllMeetings = async (req, res) => {
  */
 export const cancelMeeting = async (req, res) => {
   try {
-    const meeting = await Meeting.findById(req.params.id);
+    const { id } = req.params;
+
+    // validate Mongo ObjectId first
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({
+        success: false,
+        message: "Meeting not found",
+      });
+    }
+
+    const meeting = await Meeting.findById(id);
 
     if (!meeting) {
       return res.status(404).json({
@@ -183,16 +228,17 @@ export const cancelMeeting = async (req, res) => {
     meeting.status = "Cancelled";
     await meeting.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Meeting cancelled successfully",
       data: meeting,
     });
   } catch (error) {
     console.error("Cancel meeting error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Failed to cancel meeting",
+      error: error.message,
     });
   }
 };
@@ -204,9 +250,35 @@ export const cancelMeeting = async (req, res) => {
  */
 export const rescheduleMeeting = async (req, res) => {
   try {
+    const { id } = req.params;
+
+    // validate meeting id first
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({
+        success: false,
+        message: "Meeting not found",
+      });
+    }
+
+    // validate body exists
+    if (!req.body || Object.keys(req.body).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Request body is required",
+      });
+    }
+
     const { title, date, time, duration, meetingLink } = req.body;
 
-    const meeting = await Meeting.findById(req.params.id);
+    // at least one field must be provided
+    if (!title && !date && !time && !duration && !meetingLink) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one field is required to reschedule the meeting",
+      });
+    }
+
+    const meeting = await Meeting.findById(id);
 
     if (!meeting) {
       return res.status(404).json({
@@ -225,27 +297,32 @@ export const rescheduleMeeting = async (req, res) => {
         message: "You are not allowed to reschedule this meeting",
       });
     }
+
     if (title) meeting.title = title;
     if (date) meeting.date = date;
     if (time) meeting.time = time;
     if (duration) meeting.duration = duration;
-    if (meeting.locationType === "online" && meetingLink) {
-      meeting.meetingLink = meetingLink;
+
+    if (meeting.locationType === "online") {
+      if (meetingLink) {
+        meeting.meetingLink = meetingLink;
+      }
     }
 
     meeting.status = "Scheduled";
     await meeting.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Meeting rescheduled successfully",
       data: meeting,
     });
   } catch (error) {
     console.error("Reschedule meeting error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Failed to reschedule meeting",
+      error: error.message,
     });
   }
 };

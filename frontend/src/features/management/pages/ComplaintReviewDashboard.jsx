@@ -108,7 +108,7 @@ export default function ComplaintReviewDashboard() {
         </div>
 
         <button
-          onClick={() => navigate("/complaints/new-admin")}
+          onClick={() => navigate("/dashboard/complaints/new-admin")}
           className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
         >
           <FiPlus /> Create Admin Complaint

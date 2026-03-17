@@ -140,6 +140,14 @@ export const updatePMCheck = async (req, res) => {
 
     const { pmCheck } = req.body;
 
+    // ================= BASIC VALIDATION =================
+    if (!pmCheck) {
+      return res.status(400).json({
+        success: false,
+        message: "pmCheck is required",
+      });
+    }
+
     const task = await DailyTask.findById(req.params.id);
 
     if (!task) {
@@ -182,6 +190,14 @@ export const updateTLCheck = async (req, res) => {
     }
 
     const { teamLeadCheck } = req.body;
+
+    // ================= BASIC VALIDATION =================
+    if (!teamLeadCheck) {
+      return res.status(400).json({
+        success: false,
+        message: "teamLeadCheck is required",
+      });
+    }
 
     const task = await DailyTask.findById(req.params.id);
 

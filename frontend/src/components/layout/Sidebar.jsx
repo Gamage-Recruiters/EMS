@@ -11,16 +11,26 @@ const Sidebar = () => {
   const menus = {
     CEO: [
       { name: "Dashboard", path: "/dashboard/ceo" },
+      { name: "Task Board", path: "/dashboard/dev/task-board" },
       { name: "Employee Details", path: "/dashboard/employees" },
       { name: "Daily Task Sheet", path: "/dashboard/ceo/daily-task-sheet" },
       { name: "Daily Task History", path: "/dashboard/dev/weekly-summary" },
-      { name: "Weekly Progress Overview", path: "/dashboard/ceo/weekly-overview" },
-      { name: "Weekly Progress History", path: "/dashboard/ceo/weekly-history" },
+      {
+        name: "Weekly Progress Overview",
+        path: "/dashboard/ceo/weekly-overview",
+      },
+      {
+        name: "Weekly Progress History",
+        path: "/dashboard/ceo/weekly-history",
+      },
       { name: "CEO Attendance Summary", path: "/dashboard/attendance" },
       { name: "Notice Broadcasting", path: "/dashboard/ceo/notices" },
       { name: "CEO Meeting Display", path: "/dashboard/meetings" },
       { name: "Leave Approval / Display", path: "/dashboard/ceo/leave" },
-      { name: "Complaint Review Dashboard", path: "/dashboard/complaints/review" },
+      {
+        name: "Complaint Review Dashboard",
+        path: "/dashboard/complaints/review",
+      },
     ],
 
     Developer: [
@@ -41,6 +51,7 @@ const Sidebar = () => {
 
     TL: [
       { name: "TL Dashboard", path: "/dashboard/tl" },
+      { name: "Task Board", path: "/dashboard/dev/task-board" },
       { name: "Team Formation Editor", path: "/dashboard/tl/team-formation" },
       { name: "Add Developer to Team", path: "/dashboard/tl/add-developer" },
       { name: "Schedule Meeting", path: "/dashboard/meetings" },
@@ -48,9 +59,11 @@ const Sidebar = () => {
       { name: "Developer Progress View", path: "/dashboard/tl/dev-progress" },
       { name: "Weekly Team Progress", path: "/dashboard/tl/weekly-progress" },
       { name: "Past Project Details", path: "/dashboard/tl/past-projects" },
-      { name: "Complaint Review Dashboard", path: "/dashboard/complaints/review" },
+      {
+        name: "Complaint Review Dashboard",
+        path: "/dashboard/complaints/review",
+      },
     ],
-
   };
 
   // default role if not logged in (you can change this)

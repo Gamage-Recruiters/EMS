@@ -7,15 +7,18 @@ const Sidebar = () => {
   const { user } = useAuth();
   const location = useLocation();
 
-  // Role-based menu items
+  // Role-based menu items (WITH CHAT)
   const menus = {
     CEO: [
       { name: "Dashboard", path: "/dashboard/ceo" },
+      { name: "CEO Chat", path: "/chat/ceo" },
       { name: "Employee Details", path: "/dashboard/employees" },
+      { name: "Daily Task History", path: "/dashboard/dev/weekly-summary" },
       {
         name: "Developer Progress View",
         path: "/dashboard/ceo/daily-task-sheet",
       },
+
       {
         name: "Weekly Progress Overview",
         path: "/dashboard/ceo/weekly-overview",
@@ -34,7 +37,12 @@ const Sidebar = () => {
 
     Developer: [
       { name: "Dashboard", path: "/dashboard/dev" },
+      { name: "Employee Chat", path: "/chat/employee" }, 
       { name: "Task Board", path: "/dashboard/dev/task-board" },
+      { name: "Update Task Status", path: "/dashboard/dev/update-task-status" },
+      {
+        name: "Daily Task Update Form",
+        path: "/dashboard/dev/daily-task-update",
       {
         name: "Daily Task Form",
         path: "/dashboard/dev/daily-task-form",
@@ -42,6 +50,7 @@ const Sidebar = () => {
       { name: "Weekly Work Summary", path: "/dashboard/dev/weekly-summary" },
       { name: "Issues Form", path: "/dashboard/dev/issues" },
       { name: "Leave Form", path: "/dashboard/leave-form" },
+      { name: "My Meetings", path: "/dashboard/meetings" },
       { name: "Complaint Submission", path: "/dashboard/dev/complaints" },
     ],
 
@@ -54,6 +63,7 @@ const Sidebar = () => {
 
     TL: [
       { name: "TL Dashboard", path: "/dashboard/tl" },
+      { name: "Team Chat", path: "/chat/tl" }, 
       { name: "Team Formation Editor", path: "/dashboard/tl/team-formation" },
       { name: "Add Developer to Team", path: "/dashboard/tl/add-developer" },
       { name: "Schedule Meeting", path: "/dashboard/meetings" },
@@ -86,7 +96,7 @@ const Sidebar = () => {
       <nav className="flex-1 overflow-y-auto py-4">
         <ul className="space-y-1">
           {menuList.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive = location.pathname.startsWith(item.path);
 
             return (
               <li key={item.path}>

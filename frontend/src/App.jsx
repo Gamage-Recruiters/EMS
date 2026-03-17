@@ -492,8 +492,15 @@ import MeetingOverview from "./pages/Meeting-Notification-Chat/MeetingOverview";
 import CreateMeetings from "./pages/Meeting-Notification-Chat/CreateMeetings";
 import UnassignedDashboard from "./pages/dashboard/UnassignedDashboard.jsx";
 
+
+// 🔹 CHAT PAGES
+import ChatPage from "./pages/Meeting-Notification-Chat/ChatPage.jsx";
+import TLChatPage from "./pages/Meeting-Notification-Chat/TLChat/TeamChatPage.jsx";
+import CEOChatPage from "./pages/Meeting-Notification-Chat/ceo/CEODashboard.jsx"; // single reusable chat UI
+
 //kanban
 import TaskBoardPage from "./pages/kanban/TaskBoardPage.jsx";
+
 
 export default function App() {
   const [checkInTime, setCheckInTime] = useState(null);
@@ -548,6 +555,34 @@ export default function App() {
           />
           <Route path="/dashboard/leave-form" element={<LeaveForm />} />
 
+          {/* ================= CHAT ROUTES (NEW) ================= */}
+          <Route
+            path="/chat/ceo"
+            element={
+              <ProtectedRoute allowedRoles={["CEO"]}>
+                <CEOChatPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/chat/tl"
+            element={
+              <ProtectedRoute allowedRoles={["TL"]}>
+                <TLChatPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/chat/employee"
+            element={
+              <ProtectedRoute allowedRoles={["Developer", "ATL", "PM"]}>
+                <ChatPage />
+              </ProtectedRoute>
+            }
+          />
+
           {/* ================= CEO ================= */}
           <Route
             path="/dashboard/ceo"
@@ -577,20 +612,14 @@ export default function App() {
           <Route
             path="/dashboard/meetings/create"
             element={
-              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL"]}>
+              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL", "PM"]}>
                 <CreateMeetings />
               </ProtectedRoute>
             }
           />
 
-          <Route
-            path="/dashboard/meetings/create"
-            element={
-              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL"]}>
-                <CreateMeetings />
-              </ProtectedRoute>
-            }
-          />
+         
+
           {/* ================= Kanban ================= */}
            <Route path="/dashboard/kanban" element={<TaskBoardPage />} />
 

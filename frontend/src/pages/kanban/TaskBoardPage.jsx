@@ -1,84 +1,59 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import TaskForm from "../../components/kanban/TaskForm";
 import { taskService } from "../../services/taskService";
 
+const STATUSES = ["To Do", "In Progress", "Done"];
+
 export default function TaskBoardPage() {
+  const [allTasks, setAllTasks] = useState([]);
   const [columns, setColumns] = useState({
     "To Do": { title: "To Do", items: [] },
     "In Progress": { title: "In Progress", items: [] },
-    "Done": { title: "Done", items: [] },
+    Done: { title: "Done", items: [] },
   });
+
   const [showForm, setShowForm] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [editTask, setEditTask] = useState(null);
+
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [userRole, setUserRole] = useState(null);
-  const [userId, setUserId] = useState(null);
+  const [error, setError] = useState("");
 
+  const [userRole, setUserRole] = useState("");
+  const [userId, setUserId] = useState("");
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showOnlyMyTasks, setShowOnlyMyTasks] = useState(false);
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState("ALL");
+  const [showOnlyExpired, setShowOnlyExpired] = useState(false);
 
+  // Load logged-in user
   useEffect(() => {
-    fetchTasks();
-    // Get user role from localStorage or context
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    setUserRole(user.role);
-    setUserId(user._id);
-    fetchTasks();
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    setUserRole(user?.role || "");
+    setUserId(user?._id || "");
   }, []);
+
+  // Fetch tasks after user info is loaded
+  useEffect(() => {
+    if (!userId) return;
+    fetchTasks();
+  }, [userId]);
+
+  const roleUpper = String(userRole).toUpperCase();
+  const isDeveloper = roleUpper === "DEVELOPER";
+  const canCreateTask = ["TL", "ATL", "PM", "CEO"].includes(roleUpper);
+  const canEditOrDelete = ["TL", "ATL", "PM", "CEO"].includes(roleUpper);
+  const canDragAnyTask = ["TL", "ATL", "PM", "CEO"].includes(roleUpper);
 
   const fetchTasks = async () => {
     try {
       setLoading(true);
       const response = await taskService.allTasks();
-      let tasks = response.data?.data || response.data ||[];
-
-      // If logged user is DEVELOPER → only his tasks
-      const isDeveloper = String(userRole || "").toUpperCase() === "DEVELOPER";
-
-      if (isDeveloper) {
-        tasks = tasks.filter((task) => {
-          const assignedToId = task.assignedTo?._id || task.assignedTo;
-          return String(assignedToId) === String(userId);
-        });
-      }
-      console.log("Fetched tasks:", tasks); // Debug log
-
-      const organizedTasks = {
-        "To Do": { title: "To Do", items: [] },
-        "In Progress": { title: "In Progress", items: [] },
-        "Done": { title: "Done", items: [] },
-      };
-
- tasks.forEach((task) => {
-        const status = task.status || "To Do";
-        if (!organizedTasks[status]) return;
-
-        const assignedToObj = task.assignedTo || null;
-        const assignedId = assignedToObj?._id || assignedToObj || "";
-
-        const item = {
-          id: task._id,
-          content: task.title || "",
-          assignedToId: assignedId,                    // ← most important fix
-          developerName: assignedToObj?.firstName || assignedToObj?.name || "Unassigned",
-          developerEmail: assignedToObj?.email || "",
-          description: task.description || "",
-          project: task.project?._id || null,
-          projectName: task.project?.projectName || "No Project",
-          startDate: task.startDate ? new Date(task.startDate).toISOString().split("T")[0] : "",
-          dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : "",
-          priority: task.priority || "MEDIUM",
-          status: status,
-          assignedByName: task.assignedBy?.firstName || task.assignedBy?.name || "",
-        };
-
-        organizedTasks[status].items.push(item);
-      });
-
-      setColumns(organizedTasks);
-      setError(null);
+      const tasks = response.data?.data || [];
+      setAllTasks(tasks);
+      setError("");
     } catch (err) {
       console.error("Error fetching tasks:", err);
       setError(err.response?.data?.message || "Failed to load tasks");
@@ -87,66 +62,183 @@ export default function TaskBoardPage() {
     }
   };
 
+  const normalizedTasks = useMemo(() => {
+    return allTasks.map((task) => {
+      const assignedToObj = task.assignedTo || null;
+      const assignedId = assignedToObj?._id || assignedToObj || "";
+
+      return {
+        id: task._id,
+        content: task.title || "",
+        description: task.description || "",
+        status: task.status || "To Do",
+        priority: task.priority || "MEDIUM",
+
+        assignedToId: assignedId,
+        developerId: assignedId,
+        developerName:
+          `${assignedToObj?.firstName || ""} ${assignedToObj?.lastName || ""}`.trim() ||
+          assignedToObj?.name ||
+          "Unassigned",
+        developerEmail: assignedToObj?.email || "",
+
+        assignedById: task.assignedBy?._id || "",
+        assignedByName:
+          `${task.assignedBy?.firstName || ""} ${task.assignedBy?.lastName || ""}`.trim() ||
+          task.assignedBy?.name ||
+          "",
+
+        project: task.project?._id || "",
+        projectName: task.project?.projectName || "No Project",
+
+        startDate: task.startDate
+          ? new Date(task.startDate).toISOString().split("T")[0]
+          : "",
+        dueDate: task.dueDate
+          ? new Date(task.dueDate).toISOString().split("T")[0]
+          : "",
+      };
+    });
+  }, [allTasks]);
+
+  const isTaskExpired = (task) => {
+    if (!task.dueDate) return false;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const due = new Date(task.dueDate);
+    due.setHours(0, 0, 0, 0);
+
+    return due < today && task.status !== "Done";
+  };
+
+  const getDaysLate = (dueDate) => {
+    if (!dueDate) return 0;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const due = new Date(dueDate);
+    due.setHours(0, 0, 0, 0);
+
+    const diff = today - due;
+    return Math.floor(diff / (1000 * 60 * 60 * 24));
+  };
+
+  const filteredTasks = useMemo(() => {
+    let result = [...normalizedTasks];
+    const term = searchTerm.trim().toLowerCase();
+
+    if (term) {
+      result = result.filter((task) => {
+        return (
+          task.content.toLowerCase().includes(term) ||
+          task.developerName.toLowerCase().includes(term) ||
+          task.developerEmail.toLowerCase().includes(term) ||
+          task.projectName.toLowerCase().includes(term)
+        );
+      });
+    }
+
+    if (showOnlyMyTasks) {
+      result = result.filter(
+        (task) => String(task.assignedToId) === String(userId),
+      );
+    }
+
+    if (selectedStatusFilter !== "ALL") {
+      result = result.filter((task) => task.status === selectedStatusFilter);
+    }
+
+    if (showOnlyExpired) {
+      result = result.filter((task) => isTaskExpired(task));
+    }
+
+    return result;
+  }, [
+    normalizedTasks,
+    searchTerm,
+    showOnlyMyTasks,
+    selectedStatusFilter,
+    showOnlyExpired,
+    userId,
+  ]);
+
+  useEffect(() => {
+    const organizedTasks = {
+      "To Do": { title: "To Do", items: [] },
+      "In Progress": { title: "In Progress", items: [] },
+      Done: { title: "Done", items: [] },
+    };
+
+    filteredTasks.forEach((task) => {
+      if (organizedTasks[task.status]) {
+        organizedTasks[task.status].items.push(task);
+      }
+    });
+
+    setColumns(organizedTasks);
+  }, [filteredTasks]);
+
+  const canDragTask = (task) => {
+    if (canDragAnyTask) return true;
+    if (isDeveloper) {
+      return String(task.assignedToId) === String(userId);
+    }
+    return false;
+  };
 
   const onDragEnd = async (result) => {
     if (!result.destination) return;
 
     const { source, destination, draggableId } = result;
 
-    if (source.droppableId === destination.droppableId && source.index === destination.index) {
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) {
       return;
     }
 
-    const isDeveloper = String(userRole || "").toUpperCase() === "DEVELOPER";
+    const sourceColumn = columns[source.droppableId];
+    const movedTask = sourceColumn.items.find(
+      (item) => item.id === draggableId,
+    );
 
-    if (isDeveloper) {
-  const task = columns[source.droppableId].items.find(
-    (item) => item.id === draggableId
-  );
+    if (!movedTask) return;
 
-  if (!task || String(task.assignedToId) !== String(userId)) {
-    console.log("Drag blocked - not own task", {
-      draggableId,
-      assignedTo: task?.assignedToId,
-      userId,
-      role: userRole
-    });
-    return;
-  }
-}
+    if (!canDragTask(movedTask)) {
+      setError("You can only move tasks assigned to you.");
+      return;
+    }
 
     const newStatus = destination.droppableId;
 
-    // Optimistic update
-    const sourceColumn = columns[source.droppableId];
-    const destColumn = columns[destination.droppableId];
-    const sourceItems = [...sourceColumn.items];
-    const destItems = source.droppableId === destination.droppableId 
-      ? sourceItems 
-      : [...destColumn.items];
+    const newColumns = JSON.parse(JSON.stringify(columns));
+    const sourceItems = [...newColumns[source.droppableId].items];
+    const destinationItems =
+      source.droppableId === destination.droppableId
+        ? sourceItems
+        : [...newColumns[destination.droppableId].items];
 
     const [removed] = sourceItems.splice(source.index, 1);
     removed.status = newStatus;
-    destItems.splice(destination.index, 0, removed);
+    destinationItems.splice(destination.index, 0, removed);
 
-    const newColumns = {
-      ...columns,
-      [source.droppableId]: { ...sourceColumn, items: sourceItems },
-    };
-
-    if (source.droppableId !== destination.droppableId) {
-      newColumns[destination.droppableId] = { ...destColumn, items: destItems };
-    }
+    newColumns[source.droppableId].items = sourceItems;
+    newColumns[destination.droppableId].items = destinationItems;
 
     setColumns(newColumns);
 
     try {
       await taskService.updateStatus(draggableId, newStatus);
-      fetchTasks(); // Refresh to ensure data is in sync with backend
+      await fetchTasks();
+      setError("");
     } catch (err) {
       console.error("Status update failed:", err);
-      setError("Failed to update status");
-      fetchTasks(); // rollback
+      setError(err.response?.data?.message || "Failed to update task status");
+      await fetchTasks();
     }
   };
 
@@ -160,18 +252,20 @@ export default function TaskBoardPage() {
         startDate: taskData.startDate,
         dueDate: taskData.dueDate || taskData.startDate,
         priority: taskData.priority || "MEDIUM",
+        status: taskData.status || "To Do",
       };
 
-      console.log("Creating task with payload:", payload);
       await taskService.create(payload);
-      
-      fetchTasks();
-      setError(null);
+      await fetchTasks();
       setShowForm(false);
+      setError("");
     } catch (err) {
       console.error("Create task error:", err);
-      const errorMessage = err.response?.data?.message || err.response?.data?.error || err.message || "Failed to create task";
-      setError(errorMessage);
+      setError(
+        err.response?.data?.message ||
+          err.response?.data?.error ||
+          "Failed to create task",
+      );
     }
   };
 
@@ -188,34 +282,31 @@ export default function TaskBoardPage() {
         status: updatedTask.status,
       };
 
-      console.log("Updating task:", updatedTask.id, payload);
       await taskService.updateTask(updatedTask.id, payload);
-      
-      fetchTasks();
-      setError(null);
+      await fetchTasks();
       setShowForm(false);
       setEditTask(null);
+      setError("");
     } catch (err) {
       console.error("Update task error:", err);
-      const errorMessage = err.response?.data?.message || err.message || "Failed to update task";
-      setError(errorMessage);
+      setError(err.response?.data?.message || "Failed to update task");
     }
   };
 
   const handleDeleteTask = async (taskId) => {
-    if (!window.confirm("Are you sure you want to delete this task?")) {
-      return;
-    }
+    if (!window.confirm("Are you sure you want to delete this task?")) return;
 
     try {
       await taskService.deleteTask(taskId);
-      fetchTasks();
+      await fetchTasks();
       setSelectedTask(null);
-      setError(null);
+      setError("");
     } catch (err) {
       console.error("Delete task error:", err);
-      const errorMessage = err.response?.data?.message || err.message || "Failed to delete task. You may not have permission.";
-      setError(errorMessage);
+      setError(
+        err.response?.data?.message ||
+          "Failed to delete task. You may not have permission.",
+      );
     }
   };
 
@@ -224,25 +315,25 @@ export default function TaskBoardPage() {
     setEditTask(null);
   };
 
-  const canEditOrDelete = userRole === 'TL' || userRole === 'ATL';
-  
+  const getColumnColor = (id) => {
+    if (id === "To Do") return "#FF9800";
+    if (id === "In Progress") return "#2196F3";
+    return "#4CAF50";
+  };
 
   if (loading) {
     return (
-      <div style={{ 
-        padding: "20px", 
-        textAlign: "center",
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: "18px",
-        color: "#666"
-      }}>
-        <div>
-          <div style={{ marginBottom: "10px" }}>⏳</div>
-          Loading tasks...
-        </div>
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "grid",
+          placeItems: "center",
+          fontSize: "18px",
+          color: "#666",
+          background: "#f6f8fc",
+        }}
+      >
+        Loading tasks...
       </div>
     );
   }
@@ -250,117 +341,228 @@ export default function TaskBoardPage() {
   return (
     <div
       style={{
-        padding: "20px",
-        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-        backgroundColor: "#f9f9f9",
         minHeight: "100vh",
+        background: "#f6f8fc",
+        padding: "24px",
+        fontFamily: "'Segoe UI', sans-serif",
       }}
     >
-      {error && (
+      {/* Header */}
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: "18px",
+          padding: "20px 24px",
+          boxShadow: "0 8px 24px rgba(15, 23, 42, 0.06)",
+          marginBottom: "20px",
+        }}
+      >
         <div
           style={{
-            backgroundColor: "#ffebee",
-            color: "#c62828",
-            padding: "12px 16px",
-            borderRadius: "8px",
-            marginBottom: "20px",
-            border: "1px solid #ef5350",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            gap: "16px",
+            flexWrap: "wrap",
           }}
         >
-          <span>{error}</span>
-          <button
-            onClick={() => setError(null)}
+          <div>
+            <h2 style={{ margin: 0, color: "#1e293b" }}>
+              {isDeveloper ? "Task Board" : "Kanban Board - Team Tasks"}
+            </h2>
+            <p
+              style={{ margin: "6px 0 0", color: "#64748b", fontSize: "14px" }}
+            >
+              {isDeveloper
+                ? "View all tasks or switch to your own tasks only."
+                : "Manage, search, and track project tasks easily."}
+            </p>
+          </div>
+
+          {canCreateTask && (
+            <button
+              onClick={() => {
+                setEditTask(null);
+                setShowForm(true);
+              }}
+              style={{
+                background: "linear-gradient(135deg, #4169E1, #5b7cff)",
+                color: "#fff",
+                border: "none",
+                padding: "12px 20px",
+                borderRadius: "12px",
+                fontWeight: 700,
+                cursor: "pointer",
+                boxShadow: "0 10px 24px rgba(65, 105, 225, 0.25)",
+              }}
+            >
+              + Assign Task
+            </button>
+          )}
+        </div>
+
+        {/* Summary */}
+        <div
+          style={{
+            marginTop: "14px",
+            display: "flex",
+            gap: "10px",
+            flexWrap: "wrap",
+          }}
+        >
+          <span
             style={{
-              background: "none",
-              border: "none",
-              color: "#c62828",
-              cursor: "pointer",
-              fontSize: "20px",
-              fontWeight: "bold",
-              padding: "0",
-              marginLeft: "10px",
+              background: "#eef2ff",
+              color: "#3730a3",
+              padding: "6px 12px",
+              borderRadius: "999px",
+              fontSize: "12px",
+              fontWeight: "700",
             }}
           >
-            ×
-          </button>
+            Total Tasks: {normalizedTasks.length}
+          </span>
+
+          <span
+            style={{
+              background: "#fff1f2",
+              color: "#be123c",
+              padding: "6px 12px",
+              borderRadius: "999px",
+              fontSize: "12px",
+              fontWeight: "700",
+            }}
+          >
+            Expired:{" "}
+            {normalizedTasks.filter((task) => isTaskExpired(task)).length}
+          </span>
+        </div>
+
+        {/* Filters */}
+        <div
+          style={{
+            marginTop: "18px",
+            display: "grid",
+            gridTemplateColumns: "2fr 1fr 1fr 1fr",
+            gap: "12px",
+          }}
+        >
+          <input
+            type="text"
+            placeholder={
+              isDeveloper
+                ? "Search by task name, project, developer..."
+                : "Search by task name or developer name..."
+            }
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              padding: "12px 14px",
+              borderRadius: "12px",
+              border: "1px solid #dbe2ea",
+              fontSize: "14px",
+              outline: "none",
+            }}
+          />
+
+          <select
+            value={selectedStatusFilter}
+            onChange={(e) => setSelectedStatusFilter(e.target.value)}
+            style={{
+              padding: "12px 14px",
+              borderRadius: "12px",
+              border: "1px solid #dbe2ea",
+              fontSize: "14px",
+              background: "#fff",
+            }}
+          >
+            <option value="ALL">All Status</option>
+            <option value="To Do">To Do</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Done">Done</option>
+          </select>
+
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              background: "#f8fafc",
+              border: "1px solid #dbe2ea",
+              borderRadius: "12px",
+              padding: "0 14px",
+              fontSize: "14px",
+              color: "#334155",
+              minHeight: "46px",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={showOnlyMyTasks}
+              onChange={(e) => setShowOnlyMyTasks(e.target.checked)}
+            />
+            My Tasks Only
+          </label>
+
+          {!isDeveloper ? (
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                background: "#fff1f2",
+                border: "1px solid #fecdd3",
+                borderRadius: "12px",
+                padding: "0 14px",
+                fontSize: "14px",
+                color: "#9f1239",
+                minHeight: "46px",
+                fontWeight: "600",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={showOnlyExpired}
+                onChange={(e) => setShowOnlyExpired(e.target.checked)}
+              />
+              Expired Tasks Only
+            </label>
+          ) : (
+            <div />
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <div
+          style={{
+            background: "#fee2e2",
+            color: "#b91c1c",
+            border: "1px solid #fecaca",
+            borderRadius: "12px",
+            padding: "12px 16px",
+            marginBottom: "18px",
+          }}
+        >
+          {error}
         </div>
       )}
 
-
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "30px",
-        }}
-      >
-        <h2 style={{ margin: 0, color: "#333" }}>
-          {canEditOrDelete ? "Kanban Board - All Tasks" : "My Tasks"}
-        </h2>
-        {canEditOrDelete && (
-          <button
-            onClick={() => {
-              setEditTask(null);
-              setShowForm(true);
-            }}
-            style={{
-              backgroundColor: "#4169E1",
-              color: "white",
-              border: "none",
-              padding: "12px 24px",
-              borderRadius: "8px",
-              fontSize: "16px",
-              fontWeight: "600",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              boxShadow: "0 4px 15px rgba(65, 105, 225, 0.4)",
-              transition: "transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.transform = "translateY(-2px)";
-              e.target.style.boxShadow = "0 6px 20px rgba(65, 105, 225, 0.6)";
-              e.target.style.backgroundColor = "#3a5fd0";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.transform = "translateY(0)";
-              e.target.style.boxShadow = "0 4px 15px rgba(65, 105, 225, 0.4)";
-              e.target.style.backgroundColor = "#4169E1";
-            }}
-          >
-            + Assign Task
-          </button>
-        )}
-      </div>
-
+      {/* Task form modal */}
       {showForm && (
         <div
+          onClick={handleCloseForm}
           style={{
             position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.5)",
+            inset: 0,
+            background: "rgba(0,0,0,0.45)",
             display: "flex",
-            alignItems: "center",
             justifyContent: "center",
+            alignItems: "center",
             zIndex: 3000,
           }}
-          onClick={handleCloseForm}
         >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              maxHeight: "90vh",
-              overflow: "auto",
-            }}
-          >
+          <div onClick={(e) => e.stopPropagation()}>
             <TaskForm
               onAddTask={addTask}
               onUpdateTask={updateTaskDetails}
@@ -371,98 +573,71 @@ export default function TaskBoardPage() {
         </div>
       )}
 
+      {/* Task details modal */}
       {selectedTask && (
         <div
+          onClick={() => setSelectedTask(null)}
           style={{
             position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.5)",
+            inset: 0,
+            background: "rgba(0,0,0,0.45)",
             display: "flex",
-            alignItems: "center",
             justifyContent: "center",
-            zIndex: 2000,
+            alignItems: "center",
+            zIndex: 2500,
           }}
-          onClick={() => setSelectedTask(null)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: "white",
-              padding: "30px",
-              borderRadius: "12px",
-              width: "500px",
-              maxWidth: "90%",
-              maxHeight: "80vh",
-              overflowY: "auto",
+              width: "540px",
+              maxWidth: "92%",
+              background: "#fff",
+              borderRadius: "18px",
+              padding: "28px",
+              boxShadow: "0 18px 40px rgba(0,0,0,0.18)",
             }}
           >
-            <h3 style={{ marginTop: 0, color: "#333" }}>{selectedTask.content}</h3>
-            {selectedTask.description && (
-              <p style={{ color: "#666", marginBottom: "20px" }}>{selectedTask.description}</p>
-            )}
-            
-            <div style={{ marginBottom: "15px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                <span style={{ fontSize: "16px" }}>👤</span>
-                <span style={{ color: "#555", fontWeight: "500" }}>Assigned To:</span>
-                <span style={{ color: "#333" }}>{selectedTask.developerName}</span>
-              </div>
+            <h3 style={{ marginTop: 0, color: "#0f172a" }}>
+              {selectedTask.content}
+            </h3>
+            <p style={{ color: "#64748b", lineHeight: 1.6 }}>
+              {selectedTask.description || "No description provided."}
+            </p>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                <span style={{ fontSize: "16px" }}>✋</span>
-                <span style={{ color: "#555", fontWeight: "500" }}>Assigned By:</span>
-                <span style={{ color: "#333" }}>{selectedTask.assignedByName}</span>
-              </div>
-              
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                <span style={{ fontSize: "16px" }}>📁</span>
-                <span style={{ color: "#555", fontWeight: "500" }}>Project:</span>
-                <span style={{ color: "#333" }}>{selectedTask.projectName}</span>
-              </div>
-              
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                <span style={{ fontSize: "16px" }}>📅</span>
-                <span style={{ color: "#555", fontWeight: "500" }}>Timeline:</span>
-                <span style={{ color: "#333" }}>{selectedTask.startDate} → {selectedTask.dueDate}</span>
-              </div>
-              
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                <span style={{ fontSize: "16px" }}>⚡</span>
-                <span style={{ color: "#555", fontWeight: "500" }}>Priority:</span>
-                <span style={{
-                  padding: "2px 8px",
-                  borderRadius: "4px",
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  color: "white",
-                  backgroundColor: selectedTask.priority === "HIGH" ? "#f44336" : 
-                                  selectedTask.priority === "MEDIUM" ? "#ff9800" : "#4caf50",
-                }}>
-                  {selectedTask.priority}
-                </span>
-              </div>
-              
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontSize: "16px" }}>📊</span>
-                <span style={{ color: "#555", fontWeight: "500" }}>Status:</span>
-                <span style={{
-                  padding: "2px 8px",
-                  borderRadius: "4px",
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  color: "white",
-                  backgroundColor: selectedTask.status === 'To Do' ? "#FF9800" : 
-                                  selectedTask.status === 'In Progress' ? "#2196F3" : "#4CAF50",
-                }}>
-                  {selectedTask.status}
-                </span>
-              </div>
+            <div style={{ display: "grid", gap: "10px", marginTop: "20px" }}>
+              <InfoRow label="Assigned To" value={selectedTask.developerName} />
+              <InfoRow
+                label="Assigned By"
+                value={selectedTask.assignedByName || "-"}
+              />
+              <InfoRow label="Project" value={selectedTask.projectName} />
+              <InfoRow
+                label="Start Date"
+                value={selectedTask.startDate || "-"}
+              />
+              <InfoRow label="Due Date" value={selectedTask.dueDate || "-"} />
+              <InfoRow label="Priority" value={selectedTask.priority} />
+              <InfoRow label="Status" value={selectedTask.status} />
+              <InfoRow
+                label="Expired"
+                value={
+                  isTaskExpired(selectedTask)
+                    ? `Yes - ${getDaysLate(selectedTask.dueDate)} day(s) late`
+                    : "No"
+                }
+              />
             </div>
 
-            <div style={{ display: "flex", gap: "10px", marginTop: "25px", paddingTop: "20px", borderTop: "1px solid #eee" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                marginTop: "24px",
+                paddingTop: "18px",
+                borderTop: "1px solid #e5e7eb",
+              }}
+            >
               {canEditOrDelete && (
                 <>
                   <button
@@ -471,37 +646,13 @@ export default function TaskBoardPage() {
                       setSelectedTask(null);
                       setShowForm(true);
                     }}
-                    style={{
-                      flex: 1,
-                      padding: "10px 20px",
-                      backgroundColor: "#4169E1",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                      fontWeight: "600",
-                      transition: "background-color 0.3s ease",
-                    }}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = "#3a5fd0"}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = "#4169E1"}
+                    style={actionBtn("#4169E1")}
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDeleteTask(selectedTask.id)}
-                    style={{
-                      flex: 1,
-                      padding: "10px 20px",
-                      backgroundColor: "#f44336",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                      fontWeight: "600",
-                      transition: "background-color 0.3s ease",
-                    }}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = "#d32f2f"}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = "#f44336"}
+                    style={actionBtn("#ef4444")}
                   >
                     Delete
                   </button>
@@ -509,19 +660,7 @@ export default function TaskBoardPage() {
               )}
               <button
                 onClick={() => setSelectedTask(null)}
-                style={{
-                  flex: 1,
-                  padding: "10px 20px",
-                  backgroundColor: "#757575",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  fontWeight: "600",
-                  transition: "background-color 0.3s ease",
-                }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = "#616161"}
-                onMouseLeave={(e) => e.target.style.backgroundColor = "#757575"}
+                style={actionBtn("#64748b")}
               >
                 Close
               </button>
@@ -530,259 +669,287 @@ export default function TaskBoardPage() {
         </div>
       )}
 
+      {/* Kanban board */}
       <DragDropContext onDragEnd={onDragEnd}>
         <div
           style={{
-            display: "flex",
-            gap: "16px",
-            flexWrap: "wrap",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+            gap: "18px",
+            alignItems: "start",
           }}
         >
-          {Object.entries(columns).map(([id, column]) => (
-            <Droppable droppableId={id} key={id}>
-              {(provided, snapshot) => (
-                <div
-                  {...provided.droppableProps}
-                  ref={provided.innerRef}
-                  style={{
-                    background: snapshot.isDraggingOver ? "#e3f2fd" : "#f4f5f7",
-                    padding: "16px",
-                    width: "360px",
-                    minHeight: "400px",
-                    borderRadius: "8px",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                    transition: "background-color 0.2s ease",
-                  }}
-                >
+          {STATUSES.map((statusKey) => {
+            const column = columns[statusKey];
+
+            return (
+              <Droppable droppableId={statusKey} key={statusKey}>
+                {(provided, snapshot) => (
                   <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
                     style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: "16px",
+                      background: snapshot.isDraggingOver
+                        ? "#eef6ff"
+                        : "#ffffff",
+                      borderRadius: "18px",
+                      padding: "16px",
+                      minHeight: "500px",
+                      boxShadow: "0 10px 24px rgba(15, 23, 42, 0.06)",
+                      borderTop: `5px solid ${getColumnColor(statusKey)}`,
                     }}
                   >
-                    <h4 style={{ margin: 0, color: "#333" }}>{column.title}</h4>
-                    <span
+                    <div
                       style={{
-                        background: "#ddd",
-                        color: "#333",
-                        padding: "2px 8px",
-                        borderRadius: "10px",
-                        fontSize: "12px",
-                        fontWeight: "bold",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: "16px",
                       }}
                     >
-                      {column.items.length}
-                    </span>
-                  </div>
+                      <h4 style={{ margin: 0, color: "#1e293b" }}>
+                        {column.title}
+                      </h4>
+                      <span
+                        style={{
+                          minWidth: "28px",
+                          textAlign: "center",
+                          padding: "4px 10px",
+                          borderRadius: "999px",
+                          background: "#e2e8f0",
+                          color: "#334155",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                        }}
+                      >
+                        {column.items.length}
+                      </span>
+                    </div>
 
-                  {column.items.map((item, index) => (
-                    <Draggable
-                      key={item.id}
-                      draggableId={item.id}
-                      index={index}
-                      isDragDisabled={
-                       String(userRole || "").toUpperCase() === "DEVELOPER" && String(item.assignedToId) !== String(userId)
-  
-                      }
-                    >
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          onClick={() => setSelectedTask(item)}
-                          style={{
-                            userSelect: "none",
-                            padding: "12px",
-                            margin: "0 0 8px 0",
-                            background: String(item.assignedToId) === String(userId) && !canEditOrDelete ? "#fffbf0" : "white",
-                            borderRadius: "6px",
-                            boxShadow: snapshot.isDragging
-                              ? "0 5px 15px rgba(0,0,0,0.2)"
-                              : "0 1px 3px rgba(0,0,0,0.2)",
-                            borderLeft: `4px solid ${
-                              id === "To Do"
-                                ? "#FF9800"
-                                : id === "In Progress"
-                                ? "#2196F3"
-                                : "#4CAF50"
-                            }`,
-                            borderRight: String(item.assignedToId) === String(userId) && !canEditOrDelete ? "3px solid #4CAF50" : "none",
-                            cursor: snapshot.isDragging ? "grabbing" : "grab",
-                            transform: snapshot.isDragging
-                              ? "rotate(2deg)"
-                              : "none",
-                            transition: "all 0.2s ease",
-                            ...provided.draggableProps.style,
-                          }}
+                    {column.items.map((item, index) => {
+                      const draggableAllowed = canDragTask(item);
+                      const expired = isTaskExpired(item);
+
+                      return (
+                        <Draggable
+                          key={item.id}
+                          draggableId={item.id}
+                          index={index}
+                          isDragDisabled={!draggableAllowed}
                         >
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "start",
-                              marginBottom: "8px",
-                            }}
-                          >
+                          {(provided, snapshot) => (
                             <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              onClick={() => setSelectedTask(item)}
                               style={{
-                                fontWeight: "500",
-                                fontSize: "14px",
-                                color: "#333",
-                                flex: 1,
+                                background: expired ? "#fff5f5" : "#fff",
+                                border: expired
+                                  ? "2px solid #ef4444"
+                                  : "1px solid #e5e7eb",
+                                borderLeft: expired
+                                  ? "6px solid #dc2626"
+                                  : `5px solid ${getColumnColor(statusKey)}`,
+                                borderRadius: "14px",
+                                padding: "14px",
+                                marginBottom: "12px",
+                                boxShadow: snapshot.isDragging
+                                  ? "0 16px 28px rgba(0,0,0,0.18)"
+                                  : "0 4px 12px rgba(15, 23, 42, 0.06)",
+                                cursor: draggableAllowed
+                                  ? "grab"
+                                  : "not-allowed",
+                                opacity: draggableAllowed ? 1 : 0.82,
+                                transition: "0.2s ease",
+                                ...provided.draggableProps.style,
                               }}
                             >
-                              {item.content}
-                            </div>
-                            {canEditOrDelete && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditTask({ ...item, status: id });
-                                  setShowForm(true);
-                                }}
+                              <div
                                 style={{
-                                  background: "transparent",
-                                  border: "none",
-                                  cursor: "pointer",
-                                  fontSize: "16px",
-                                  padding: "0 4px",
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  gap: "10px",
+                                  marginBottom: "10px",
                                 }}
-                                title="Edit task"
                               >
-                                ✏️
-                              </button>
-                            )}
-                          </div>
+                                <div
+                                  style={{
+                                    fontWeight: 700,
+                                    color: "#1e293b",
+                                    fontSize: "15px",
+                                    lineHeight: 1.4,
+                                  }}
+                                >
+                                  {item.content}
+                                </div>
 
-                          {/* Show developer info for TL/ATL and all users to identify task assignment */}
-                          {item.developerName && (
-                            <div
-                              style={{
-                                fontSize: "12px",
-                                color: String(item.assignedToId) === String(userId) ? "#2e7d32" : "#666",
-                                marginBottom: "6px",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "4px",
-                                backgroundColor: String(item.assignedToId) === String(userId) ? "#e8f5e9" : "#f5f5f5",
-                                padding: "4px 8px",
-                                borderRadius: "4px",
-                                fontWeight: String(item.assignedToId) === String(userId) ? "600" : "normal",
-                              }}
-                            >
-                              👤 <strong>{item.developerName}</strong>
-                              {item.developerEmail && (
-                                <span style={{ color: String(item.assignedToId) === String(userId) ? "#1565c0" : "#999", fontSize: "11px" }}>
-                                  ({item.developerEmail})
-                                </span>
+                                {canEditOrDelete && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditTask(item);
+                                      setShowForm(true);
+                                    }}
+                                    style={{
+                                      border: "none",
+                                      background: "transparent",
+                                      cursor: "pointer",
+                                      fontSize: "16px",
+                                    }}
+                                    title="Edit task"
+                                  >
+                                    ✏️
+                                  </button>
+                                )}
+                              </div>
+
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexWrap: "wrap",
+                                  gap: "8px",
+                                  marginBottom: "10px",
+                                }}
+                              >
+                                <Tag bg="#eff6ff" color="#1d4ed8">
+                                  👤 {item.developerName}
+                                </Tag>
+
+                                {item.projectName !== "No Project" && (
+                                  <Tag bg="#f3e8ff" color="#7e22ce">
+                                    📁 {item.projectName}
+                                  </Tag>
+                                )}
+
+                                <Tag
+                                  bg={
+                                    item.priority === "HIGH"
+                                      ? "#fee2e2"
+                                      : item.priority === "MEDIUM"
+                                        ? "#fff7ed"
+                                        : "#ecfdf5"
+                                  }
+                                  color={
+                                    item.priority === "HIGH"
+                                      ? "#b91c1c"
+                                      : item.priority === "MEDIUM"
+                                        ? "#c2410c"
+                                        : "#15803d"
+                                  }
+                                >
+                                  {item.priority}
+                                </Tag>
+
+                                {expired && (
+                                  <Tag bg="#fee2e2" color="#b91c1c">
+                                    🚨 Expired by {getDaysLate(item.dueDate)}{" "}
+                                    day
+                                    {getDaysLate(item.dueDate) > 1 ? "s" : ""}
+                                  </Tag>
+                                )}
+                              </div>
+
+                              <div
+                                style={{
+                                  fontSize: "12px",
+                                  color: expired ? "#b91c1c" : "#64748b",
+                                  fontWeight: expired ? "700" : "400",
+                                }}
+                              >
+                                📅 {item.startDate || "-"} →{" "}
+                                {item.dueDate || "-"}
+                              </div>
+
+                              {String(item.assignedToId) === String(userId) &&
+                                isDeveloper && (
+                                  <div
+                                    style={{
+                                      marginTop: "10px",
+                                      display: "inline-block",
+                                      background: "#dcfce7",
+                                      color: "#166534",
+                                      padding: "4px 10px",
+                                      borderRadius: "999px",
+                                      fontSize: "11px",
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    Your Task
+                                  </div>
+                                )}
+
+                              {!draggableAllowed && isDeveloper && (
+                                <div
+                                  style={{
+                                    marginTop: "10px",
+                                    fontSize: "11px",
+                                    color: "#b45309",
+                                  }}
+                                >
+                                  You cannot drag this task because it is not
+                                  assigned to you.
+                                </div>
                               )}
                             </div>
                           )}
-
-                          {/* Show "Your Task" badge for own tasks */}
-                          {String(item.assignedToId) === String(userId) && !canEditOrDelete && (
-                            <div
-                              style={{
-                                fontSize: "10px",
-                                color: "white",
-                                backgroundColor: "#4CAF50",
-                                padding: "2px 8px",
-                                borderRadius: "10px",
-                                display: "inline-block",
-                                marginBottom: "4px",
-                                fontWeight: "600",
-                                marginRight: "4px",
-                              }}
-                            >
-                              ✓ Your Task
-                            </div>
-                          )}
-
-                          {/* Show assigned by info for TL/ATL */}
-                          {canEditOrDelete && item.assignedByName && (
-                            <div
-                              style={{
-                                fontSize: "12px",
-                                color: "#0066cc",
-                                marginBottom: "6px",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "4px",
-                                backgroundColor: "#f0f7ff",
-                                padding: "4px 8px",
-                                borderRadius: "4px",
-                              }}
-                            >
-                              ✋ <strong>by {item.assignedByName}</strong>
-                            </div>
-                          )}
-
-                          {item.projectName && item.projectName !== "No Project" && (
-                            <div
-                              style={{
-                                fontSize: "11px",
-                                color: "#7b1fa2",
-                                backgroundColor: "#f3e5f5",
-                                padding: "2px 8px",
-                                borderRadius: "10px",
-                                display: "inline-block",
-                                marginBottom: "4px",
-                              }}
-                            >
-                              📁 <strong>{item.projectName}</strong>
-                            </div>
-                          )}
-
-                          {item.priority && (
-                            <div
-                              style={{
-                                fontSize: "11px",
-                                display: "flex",
-                                color: "#fff",
-                                backgroundColor:
-                                  item.priority === "HIGH"
-                                    ? "#f44336"
-                                    : item.priority === "MEDIUM"
-                                    ? "#ff9800"
-                                    : "#4caf50",
-                                padding: "2px 8px",
-                                borderRadius: "10px",
-                                marginRight: "4px",
-                                marginTop: "4px",
-                                width: "fit-content",
-                              }}
-                            >
-                              {item.priority}
-                            </div>
-                          )}
-
-                          {item.dueDate && (
-                            <div
-                              style={{
-                                fontSize: "11px",
-                                color: "#888",
-                                marginTop: "4px",
-                                paddingTop: "4px",
-                                borderTop: "1px solid #eee",
-                              }}
-                            >
-                              📅 Due: {item.dueDate}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          ))}
+                        </Draggable>
+                      );
+                    })}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            );
+          })}
         </div>
       </DragDropContext>
     </div>
   );
+}
+
+function Tag({ children, bg, color }) {
+  return (
+    <span
+      style={{
+        background: bg,
+        color,
+        padding: "5px 10px",
+        borderRadius: "999px",
+        fontSize: "11px",
+        fontWeight: 700,
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
+function InfoRow({ label, value }) {
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "140px 1fr",
+        gap: "12px",
+        alignItems: "start",
+      }}
+    >
+      <strong style={{ color: "#334155" }}>{label}:</strong>
+      <span style={{ color: "#475569" }}>{value}</span>
+    </div>
+  );
+}
+
+function actionBtn(bg) {
+  return {
+    flex: 1,
+    padding: "11px 16px",
+    background: bg,
+    color: "#fff",
+    border: "none",
+    borderRadius: "10px",
+    cursor: "pointer",
+    fontWeight: 700,
+  };
 }

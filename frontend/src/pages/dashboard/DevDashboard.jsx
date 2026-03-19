@@ -12,8 +12,9 @@ const DevDashboard = () => {
   const navigate = useNavigate();
   const [todayAttendance, setTodayAttendance] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [recentTasks, setRecentTasks] = useState([]);
+  const [allTasks, setAllTasks] = useState([]);
   const [tasksLoading, setTasksLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [taskStats, setTaskStats] = useState({
     pending: 0,
     inProgress: 0,
@@ -34,24 +35,22 @@ const DevDashboard = () => {
     }
   };
 
-  // Fetch recent tasks (last 3)
+  // Fetch recent tasks
   const fetchRecentTasks = async () => {
     try {
       setTasksLoading(true);
       const res = await getMyDailyTasks();
       if (res.data && res.data.data) {
-        const allTasks = res.data.data;
-        // Get the 3 most recent tasks
-        const recent = allTasks.slice(0, 3);
-        setRecentTasks(recent);
+        const fetchedTasks = res.data.data;
+        setAllTasks(fetchedTasks);
 
         // Calculate task statistics
         const stats = {
-          pending: allTasks.filter(
+          pending: fetchedTasks.filter(
             (t) => t.status === "Not Started" || t.status === "Blocked"
           ).length,
-          inProgress: allTasks.filter((t) => t.status === "In Progress").length,
-          completed: allTasks.filter((t) => t.status === "Completed").length,
+          inProgress: fetchedTasks.filter((t) => t.status === "In Progress").length,
+          completed: fetchedTasks.filter((t) => t.status === "Completed").length,
         };
         setTaskStats(stats);
       }
@@ -97,6 +96,10 @@ const DevDashboard = () => {
   const isCheckedOut = todayAttendance?.checkInTime && todayAttendance?.checkOutTime; // user checked in and checked out
   const notCheckedIn = !todayAttendance?.checkInTime; // user has not checked in yet
 
+  const displayedTasks = allTasks
+    .filter((t) => searchQuery === "" || t.task.toLowerCase().includes(searchQuery.toLowerCase()))
+    .slice(0, 3);
+
   return (
     <div className="min-h-screen flex bg-[#F5F7FB]">
 
@@ -141,7 +144,7 @@ const DevDashboard = () => {
             {isCheckedOut && (
               <div className="rounded-md bg-gray-200 text-gray-600 text-xs font-medium px-4 py-2 flex items-center gap-2">
                 <span>✓</span>
-                <span>checkin/checkout</span>
+                <span>Checked Out</span>
               </div>
             )}
 
@@ -162,7 +165,9 @@ const DevDashboard = () => {
               <div className="bg-white rounded-3xl shadow-sm px-5 py-3 flex items-center gap-3">
                 <input
                   type="text"
-                  placeholder="Search teams by name, lead, or department..."
+                  placeholder="Search tasks..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="flex-1 bg-transparent text-sm text-gray-600 focus:outline-none"
                 />
                 <button className="w-9 h-9 rounded-full bg-slate-900 flex items-center justify-center">
@@ -199,7 +204,7 @@ const DevDashboard = () => {
                   Recent Tasks
                 </h2>
                 <Link
-                  to="/dashboard/dev/weekly-summary"
+                  to="/dashboard/dev/task-board"
                   className="text-xs text-blue-600 font-medium hover:underline"
                 >
                   View All
@@ -209,10 +214,10 @@ const DevDashboard = () => {
               <div className="space-y-3">
                 {tasksLoading ? (
                   <p className="text-sm text-gray-500 py-4">Loading tasks...</p>
-                ) : recentTasks.length === 0 ? (
+                ) : displayedTasks.length === 0 ? (
                   <p className="text-sm text-gray-500 py-4">No tasks yet. Create one to get started!</p>
                 ) : (
-                  recentTasks.map((t) => (
+                  displayedTasks.map((t) => (
                     <div
                       key={t._id}
                       className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3"
@@ -238,7 +243,7 @@ const DevDashboard = () => {
           {/* Right column: calendar + quick actions */}
           <div className="w-80 flex flex-col gap-6">
             <CalendarCard />
-            <QuickActionsCard navigate={navigate} />
+            <QuickActionsCard navigate={navigate} pendingCount={taskStats.pending} />
           </div>
         </div>
       </main>
@@ -280,6 +285,7 @@ const StatusBadge = ({ status }) => {
 const CalendarCard = () => {
   const [currentDate, setCurrentDate] = React.useState(new Date());
   const [currentTime, setCurrentTime] = React.useState(new Date());
+  const [selectedDate, setSelectedDate] = React.useState(null);
 
   React.useEffect(() => {
     const timer = setInterval(() => {
@@ -389,10 +395,11 @@ const CalendarCard = () => {
           <button
             key={idx}
             disabled={!day}
+            onClick={() => day && setSelectedDate(day)}
             className={`w-7 h-7 mx-auto rounded-full flex items-center justify-center ${
               !day
                 ? "text-gray-300 cursor-default"
-                : day === today
+                : day === (selectedDate || today)
                 ? "bg-blue-600 text-white font-semibold"
                 : "text-gray-600 hover:bg-gray-100"
             }`}
@@ -405,7 +412,7 @@ const CalendarCard = () => {
   );
 };
 
-const QuickActionsCard = ({ navigate }) => (
+const QuickActionsCard = ({ navigate, pendingCount }) => (
   <section className="bg-white rounded-3xl shadow-sm p-5 space-y-3">
     <h2 className="text-sm font-semibold text-slate-900">Quick Actions</h2>
 
@@ -417,7 +424,7 @@ const QuickActionsCard = ({ navigate }) => (
     </button>
 
     <button
-      onClick={() => navigate("/dashboard/dev/weekly-summary")}
+      onClick={() => navigate("/dashboard/dev/daily-task-update")}
       className="w-full rounded-md bg-white border border-blue-600 text-blue-600 text-xs font-semibold py-2.5 hover:bg-blue-50"
     >
       Update Daily Task
@@ -425,7 +432,7 @@ const QuickActionsCard = ({ navigate }) => (
 
     <div className="mt-2 rounded-md bg-[#FFF5E5] border border-[#FFE0A3] px-3 py-2 text-[11px] text-[#B06000] flex items-center gap-2">
       <span>⚠️</span>
-      <span>Pending Actions – 2 Tasks are pending.</span>
+      <span>Pending Actions – {pendingCount} Tasks are pending.</span>
     </div>
   </section>
 );

@@ -27,15 +27,14 @@ export default function TaskBoardPage() {
   const [showOnlyMyTasks, setShowOnlyMyTasks] = useState(false);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("ALL");
   const [showOnlyExpired, setShowOnlyExpired] = useState(false);
+  const [selectedProjectFilter, setSelectedProjectFilter] = useState("ALL");
 
-  // Load logged-in user
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     setUserRole(user?.role || "");
     setUserId(user?._id || "");
   }, []);
 
-  // Fetch tasks after user info is loaded
   useEffect(() => {
     if (!userId) return;
     fetchTasks();
@@ -43,9 +42,9 @@ export default function TaskBoardPage() {
 
   const roleUpper = String(userRole).toUpperCase();
   const isDeveloper = roleUpper === "DEVELOPER";
-  const canCreateTask = ["TL", "ATL", "PM", "CEO"].includes(roleUpper);
-  const canEditOrDelete = ["TL", "ATL", "PM", "CEO"].includes(roleUpper);
-  const canDragAnyTask = ["TL", "ATL", "PM", "CEO"].includes(roleUpper);
+  const canCreateTask = ["TL", "ATL", "PM"].includes(roleUpper);
+  const canEditOrDelete = ["TL", "ATL"].includes(roleUpper);
+  const canDragAnyTask = ["TL", "ATL", "PM"].includes(roleUpper);
 
   const fetchTasks = async () => {
     try {
@@ -101,6 +100,27 @@ export default function TaskBoardPage() {
     });
   }, [allTasks]);
 
+  const projectOptions = useMemo(() => {
+    const map = new Map();
+
+    normalizedTasks.forEach((task) => {
+      if (
+        task.project &&
+        task.projectName &&
+        task.projectName !== "No Project"
+      ) {
+        map.set(task.project, {
+          id: task.project,
+          name: task.projectName,
+        });
+      }
+    });
+
+    return Array.from(map.values()).sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+  }, [normalizedTasks]);
+
   const isTaskExpired = (task) => {
     if (!task.dueDate) return false;
 
@@ -155,6 +175,16 @@ export default function TaskBoardPage() {
       result = result.filter((task) => isTaskExpired(task));
     }
 
+    if (selectedProjectFilter !== "ALL") {
+      if (selectedProjectFilter === "NO_PROJECT") {
+        result = result.filter((task) => !task.project);
+      } else {
+        result = result.filter(
+          (task) => String(task.project) === String(selectedProjectFilter),
+        );
+      }
+    }
+
     return result;
   }, [
     normalizedTasks,
@@ -162,6 +192,7 @@ export default function TaskBoardPage() {
     showOnlyMyTasks,
     selectedStatusFilter,
     showOnlyExpired,
+    selectedProjectFilter,
     userId,
   ]);
 
@@ -347,7 +378,6 @@ export default function TaskBoardPage() {
         fontFamily: "'Segoe UI', sans-serif",
       }}
     >
-      {/* Header */}
       <div
         style={{
           background: "#fff",
@@ -401,7 +431,6 @@ export default function TaskBoardPage() {
           )}
         </div>
 
-        {/* Summary */}
         <div
           style={{
             marginTop: "14px",
@@ -438,12 +467,11 @@ export default function TaskBoardPage() {
           </span>
         </div>
 
-        {/* Filters */}
         <div
           style={{
             marginTop: "18px",
             display: "grid",
-            gridTemplateColumns: "2fr 1fr 1fr 1fr",
+            gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr",
             gap: "12px",
           }}
         >
@@ -480,6 +508,26 @@ export default function TaskBoardPage() {
             <option value="To Do">To Do</option>
             <option value="In Progress">In Progress</option>
             <option value="Done">Done</option>
+          </select>
+
+          <select
+            value={selectedProjectFilter}
+            onChange={(e) => setSelectedProjectFilter(e.target.value)}
+            style={{
+              padding: "12px 14px",
+              borderRadius: "12px",
+              border: "1px solid #dbe2ea",
+              fontSize: "14px",
+              background: "#fff",
+            }}
+          >
+            <option value="ALL">All Projects</option>
+            <option value="NO_PROJECT">No Project</option>
+            {projectOptions.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.name}
+              </option>
+            ))}
           </select>
 
           <label
@@ -548,7 +596,6 @@ export default function TaskBoardPage() {
         </div>
       )}
 
-      {/* Task form modal */}
       {showForm && (
         <div
           onClick={handleCloseForm}
@@ -573,7 +620,6 @@ export default function TaskBoardPage() {
         </div>
       )}
 
-      {/* Task details modal */}
       {selectedTask && (
         <div
           onClick={() => setSelectedTask(null)}
@@ -669,7 +715,6 @@ export default function TaskBoardPage() {
         </div>
       )}
 
-      {/* Kanban board */}
       <DragDropContext onDragEnd={onDragEnd}>
         <div
           style={{

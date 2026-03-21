@@ -74,7 +74,7 @@ export default function UserProfile() {
           {/* Buttons */}
           <div className="mt-8 space-y-3">
             <button
-              onClick={() => navigate("/profile/personal-details?mode=edit")}
+              onClick={() => navigate(`/dashboard/profile/personal-details?mode=edit&id=${id}`)}
               className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
             >
               Edit Profile

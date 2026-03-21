@@ -1,4 +1,3 @@
-// EmployeeProfile.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Link,
@@ -16,6 +15,8 @@ const STEP_ROUTES = [
   { key: "education", label: "🎓 Education", path: "education-qualification" },
   { key: "job", label: "💼 Job Details", path: "job-details" },
 ];
+
+const BASE_PROFILE_ROUTE = "/dashboard/profile";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Sri Lanka: 07XXXXXXXX OR +947XXXXXXXX OR 947XXXXXXXX
@@ -71,6 +72,8 @@ export default function EmployeeProfile() {
     return s ? `?${s}` : "";
   }, [searchParams]);
 
+  const buildStepPath = (stepPath) => `${BASE_PROFILE_ROUTE}/${stepPath}${qs}`;
+
   const currentStepIndex = useMemo(() => {
     const p = location.pathname;
     const idx = STEP_ROUTES.findIndex((s) => p.endsWith(`/${s.path}`));
@@ -91,11 +94,20 @@ export default function EmployeeProfile() {
     setMaxUnlockedStep(0);
   }, [mode, employeeId, isView]);
 
+  // Prevent edit/view mode without employee id
+  useEffect(() => {
+    if ((isEdit || isView) && !employeeId) {
+      setPageError("Employee ID is missing.");
+      setLoading(false);
+    }
+  }, [isEdit, isView, employeeId]);
+
   // Enforce sequential navigation for ADD + EDIT (VIEW not enforced)
   useEffect(() => {
     if (isView) return;
+
     if (currentStepIndex > maxUnlockedStep) {
-      navigate(`/profile/${STEP_ROUTES[maxUnlockedStep].path}${qs}`, {
+      navigate(buildStepPath(STEP_ROUTES[maxUnlockedStep].path), {
         replace: true,
       });
     }
@@ -103,7 +115,15 @@ export default function EmployeeProfile() {
 
   // Load in edit/view mode
   useEffect(() => {
-    if ((!isEdit && !isView) || !employeeId) return;
+    if (!isEdit && !isView) {
+      setLoading(false);
+      return;
+    }
+
+    if (!employeeId) {
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     clearMessages();
@@ -203,7 +223,7 @@ export default function EmployeeProfile() {
     clearMessages();
     if (idx === 0) return validatePersonal();
     if (idx === 1) return validateContact();
-    return true; // education/job optional
+    return true;
   };
 
   // -------- Wizard navigation (ADD + EDIT) --------
@@ -215,7 +235,7 @@ export default function EmployeeProfile() {
 
     const next = Math.min(currentStepIndex + 1, lastStepIndex);
     setMaxUnlockedStep((prev) => Math.max(prev, next));
-    navigate(`/profile/${STEP_ROUTES[next].path}${qs}`);
+    navigate(buildStepPath(STEP_ROUTES[next].path));
   };
 
   const goBack = () => {
@@ -223,7 +243,7 @@ export default function EmployeeProfile() {
     clearMessages();
 
     const prev = Math.max(currentStepIndex - 1, 0);
-    navigate(`/profile/${STEP_ROUTES[prev].path}${qs}`);
+    navigate(buildStepPath(STEP_ROUTES[prev].path));
   };
 
   // -------- Create / Update (only on last step) --------
@@ -238,7 +258,7 @@ export default function EmployeeProfile() {
 
       if (employee.profileFile) {
         const form = new FormData();
-        // Append top-level fields
+
         form.append("firstName", employee.firstName || "");
         form.append("lastName", employee.lastName || "");
         form.append("email", employee.email || "");
@@ -252,9 +272,14 @@ export default function EmployeeProfile() {
         form.append("city", employee.city || "");
         form.append("joinedDate", employee.joinedDate || "");
 
-        // Education fields using bracket notation so express.urlencoded can parse them
-        form.append("education[institution]", employee.education?.institution || "");
-        form.append("education[department]", employee.education?.department || "");
+        form.append(
+          "education[institution]",
+          employee.education?.institution || ""
+        );
+        form.append(
+          "education[department]",
+          employee.education?.department || ""
+        );
         form.append("education[degree]", employee.education?.degree || "");
         form.append("education[location]", employee.education?.location || "");
         form.append("education[startDate]", employee.education?.startDate || "");
@@ -269,7 +294,7 @@ export default function EmployeeProfile() {
 
       setSuccessMsg("Employee created successfully.");
       setTimeout(() => {
-        navigate("/employees");
+        navigate("/dashboard/employees");
       }, 900);
     } catch (err) {
       console.error(err);
@@ -291,12 +316,13 @@ export default function EmployeeProfile() {
         return;
       }
 
-      const ok1 = validatePersonal(); // password not required in edit
+      const ok1 = validatePersonal();
       const ok2 = validateContact();
       if (!ok1 || !ok2) return;
 
       if (employee.profileFile) {
         const form = new FormData();
+
         form.append("firstName", employee.firstName || "");
         form.append("lastName", employee.lastName || "");
         form.append("email", employee.email || "");
@@ -310,8 +336,14 @@ export default function EmployeeProfile() {
         form.append("city", employee.city || "");
         form.append("joinedDate", employee.joinedDate || "");
 
-        form.append("education[institution]", employee.education?.institution || "");
-        form.append("education[department]", employee.education?.department || "");
+        form.append(
+          "education[institution]",
+          employee.education?.institution || ""
+        );
+        form.append(
+          "education[department]",
+          employee.education?.department || ""
+        );
         form.append("education[degree]", employee.education?.degree || "");
         form.append("education[location]", employee.education?.location || "");
         form.append("education[startDate]", employee.education?.startDate || "");
@@ -323,7 +355,6 @@ export default function EmployeeProfile() {
       } else {
         const payload = { ...employee };
         if (!payload.password) delete payload.password;
-        // remove profileFile if present in state
         if (payload.profileFile) delete payload.profileFile;
 
         await employeeService.update(employeeId, payload);
@@ -331,7 +362,7 @@ export default function EmployeeProfile() {
 
       setSuccessMsg("Employee updated successfully.");
       setTimeout(() => {
-        navigate("/employees");
+        navigate("/dashboard/employees");
       }, 900);
     } catch (err) {
       console.error(err);
@@ -345,7 +376,7 @@ export default function EmployeeProfile() {
 
   const canOpenStep = (idx) => {
     if (isView) return true;
-    return idx <= maxUnlockedStep; // ADD + EDIT are sequential
+    return idx <= maxUnlockedStep;
   };
 
   if (loading) {
@@ -429,14 +460,14 @@ export default function EmployeeProfile() {
                   isView,
                   isAdd,
                   saving,
+                  employeeId,
                 }}
               />
 
-              {/* Wizard Footer (ADD + EDIT): Back / Next / Create / Update */}
               {!isView && (
                 <div className="flex items-center justify-between pt-8 border-t border-gray-200">
                   <button
-                    onClick={() => navigate("/employees")}
+                    onClick={() => navigate("/dashboard/employees")}
                     className="px-6 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium rounded-lg transition"
                   >
                     Cancel

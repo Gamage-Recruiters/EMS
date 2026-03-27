@@ -320,10 +320,6 @@ export default function UserProfile() {
                 >
                   Edit Profile
                 </button>
-
-                <button className="inline-flex w-full items-center justify-center rounded-xl border border-[#0F62FE]/30 bg-[#EAF1FF] px-4 py-2 text-sm font-semibold text-[#0F62FE] transition hover:bg-[#DBE7FF] sm:w-auto">
-                  Send Message
-                </button>
               </div>
             </section>
           </div>

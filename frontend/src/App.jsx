@@ -230,7 +230,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/dashboard/user-profile/:id" element={<UserProfile />} />
+          <Route path="/dashboard/user-profile" element={<UserProfile />} />
 
           {/* ================= DEVELOPER SELF PROFILE ================= */}
           <Route

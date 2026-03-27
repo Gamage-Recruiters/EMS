@@ -74,11 +74,8 @@ export default function SelfProfileEditPage() {
   };
 
   const profileOverviewPath = useMemo(() => {
-    if (employee?._id) {
-      return `/dashboard/user-profile/${employee._id}`;
-    }
-    return "/dashboard/home";
-  }, [employee?._id]);
+    return "/dashboard/user-profile";
+  }, []);
 
   useEffect(() => {
     setMaxUnlockedStep(0);

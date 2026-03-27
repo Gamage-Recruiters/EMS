@@ -46,7 +46,7 @@ import DailyTaskFormPage from "./features/developer/pages/DailyTaskFormPage";
 import DailyTaskPage from "./features/developer/pages/DailyTaskPage";
 import DeveloperComplaintForm from "./features/developer/pages/ComplaintSubmissionPage";
 import DeveloperComplaintDashboard from "./features/developer/pages/ComplaintDashboard";
-import SelfProfileEditPage from "./features/developer/pages/SelfProfileEditPage";
+import DevSelfProfileEditPage from "./features/developer/pages/DevSelfProfileEditPage.jsx";
 
 // Employee Profile
 import EmployeeProfile from "./features/management/pages/employee-profile/EmployeeProfile";
@@ -237,7 +237,7 @@ export default function App() {
             path="/dashboard/my-profile"
             element={
               <ProtectedRoute allowedRoles={["Developer"]}>
-                <SelfProfileEditPage />
+                <DevSelfProfileEditPage />
               </ProtectedRoute>
             }
           >

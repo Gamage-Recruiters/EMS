@@ -24,6 +24,7 @@ export default function SelfProfileEditPage() {
   const [saving, setSaving] = useState(false);
   const [pageError, setPageError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+  const [infoMsg, setInfoMsg] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
 
   const [maxUnlockedStep, setMaxUnlockedStep] = useState(0);
@@ -69,7 +70,15 @@ export default function SelfProfileEditPage() {
   const clearMessages = () => {
     setPageError(null);
     setSuccessMsg(null);
+    setInfoMsg(null);
   };
+
+  const profileOverviewPath = useMemo(() => {
+    if (employee?._id) {
+      return `/dashboard/user-profile/${employee._id}`;
+    }
+    return "/dashboard/home";
+  }, [employee?._id]);
 
   useEffect(() => {
     setMaxUnlockedStep(0);
@@ -91,6 +100,7 @@ export default function SelfProfileEditPage() {
       .then((res) => {
         const data = res?.data || {};
         setEmployee({
+          _id: data._id ?? data.id ?? "",
           firstName: data.firstName ?? "",
           lastName: data.lastName ?? "",
           email: data.email ?? "",
@@ -202,6 +212,7 @@ export default function SelfProfileEditPage() {
     try {
       setSaving(true);
       clearMessages();
+      setInfoMsg("Updating your profile details...");
 
       const ok1 = validatePersonal();
       const ok2 = validateContact();
@@ -223,12 +234,11 @@ export default function SelfProfileEditPage() {
 
       await employeeService.updateProfile(payload);
 
+      setInfoMsg(null);
       setSuccessMsg("Your profile was updated successfully.");
-      setTimeout(() => {
-        navigate("/dashboard/home");
-      }, 900);
     } catch (err) {
       console.error(err);
+      setInfoMsg(null);
       setPageError(err?.response?.data?.message || "Failed to update your profile.");
     } finally {
       setSaving(false);
@@ -253,23 +263,6 @@ export default function SelfProfileEditPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {(pageError || successMsg) && (
-        <div
-          className={`mx-8 mt-6 p-4 rounded-lg flex items-start gap-3 border ${
-            pageError ? "bg-red-50 border-red-200" : "bg-emerald-50 border-emerald-200"
-          }`}
-        >
-          {pageError ? (
-            <FiAlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-          ) : (
-            <FiCheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-          )}
-          <p className={`text-sm font-medium ${pageError ? "text-red-900" : "text-emerald-900"}`}>
-            {pageError || successMsg}
-          </p>
-        </div>
-      )}
-
       <div className="px-8 pb-12 pt-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1">
@@ -354,6 +347,50 @@ export default function SelfProfileEditPage() {
                       >
                         <FiSave className="w-5 h-5" />
                         {saving ? "Updating..." : "Update My Profile"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {(pageError || successMsg || infoMsg) && (
+                <div
+                  className={`p-4 rounded-lg flex items-start gap-3 border ${
+                    pageError
+                      ? "bg-red-50 border-red-200"
+                      : successMsg
+                      ? "bg-emerald-50 border-emerald-200"
+                      : "bg-blue-50 border-blue-200"
+                  }`}
+                >
+                  {pageError ? (
+                    <FiAlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  ) : successMsg ? (
+                    <FiCheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                  ) : (
+                    <div className="w-5 h-5 mt-0.5 rounded-full border-2 border-blue-300 border-t-blue-600 animate-spin flex-shrink-0" />
+                  )}
+
+                  <div className="flex-1">
+                    <p
+                      className={`text-sm font-medium ${
+                        pageError
+                          ? "text-red-900"
+                          : successMsg
+                          ? "text-emerald-900"
+                          : "text-blue-900"
+                      }`}
+                    >
+                      {pageError || successMsg || infoMsg}
+                    </p>
+
+                    {successMsg && (
+                      <button
+                        type="button"
+                        onClick={() => navigate(profileOverviewPath)}
+                        className="mt-3 inline-flex items-center rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition"
+                      >
+                        Go to Profile Overview
                       </button>
                     )}
                   </div>

@@ -29,7 +29,17 @@ export const employeeService = {
   getCurrentUser: () => api.get("/user/me"),
   getAllUsers: (params) => api.get("/user", { params }),
   getUserById: (id) => api.get(`/user/${id}`),
-  updateProfile: (payload) => api.put("/user/me", payload),
+  updateProfile: (payload) => {
+    const isFormData = typeof FormData !== "undefined" && payload instanceof FormData;
+
+    if (isFormData) {
+      return api.put("/user/me", payload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    }
+
+    return api.put("/user/me", payload);
+  },
   deleteProfile: () => api.delete("/user/me"),
 
   // Public endpoints

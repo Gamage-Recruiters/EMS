@@ -116,6 +116,15 @@ export const updateUserProfile = async (req, res, next) => {
       password
     } = req.body;
 
+    let parsedEducation = education;
+    if (typeof education === "string") {
+      try {
+        parsedEducation = JSON.parse(education);
+      } catch {
+        return next(new AppError("Invalid education payload", 400));
+      }
+    }
+
     // Basic details
     if (firstName) user.firstName = firstName;
     if (lastName) user.lastName = lastName;
@@ -131,14 +140,14 @@ export const updateUserProfile = async (req, res, next) => {
     if (city !== undefined) user.city = city;
 
     // Education (nested object)
-    if (education) {
+    if (parsedEducation) {
       user.education = {
-        institution: education.institution ?? user.education.institution,
-        department: education.department ?? user.education.department,
-        degree: education.degree ?? user.education.degree,
-        location: education.location ?? user.education.location,
-        startDate: education.startDate ?? user.education.startDate,
-        endDate: education.endDate ?? user.education.endDate,
+        institution: parsedEducation.institution ?? user.education.institution,
+        department: parsedEducation.department ?? user.education.department,
+        degree: parsedEducation.degree ?? user.education.degree,
+        location: parsedEducation.location ?? user.education.location,
+        startDate: parsedEducation.startDate ?? user.education.startDate,
+        endDate: parsedEducation.endDate ?? user.education.endDate,
       };
     }
 

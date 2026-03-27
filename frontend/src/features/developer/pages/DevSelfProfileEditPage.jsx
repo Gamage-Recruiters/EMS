@@ -232,7 +232,24 @@ export default function SelfProfileEditPage() {
         payload.password = employee.password.trim();
       }
 
-      await employeeService.updateProfile(payload);
+      const formData = new FormData();
+      formData.append("firstName", payload.firstName || "");
+      formData.append("lastName", payload.lastName || "");
+      formData.append("email", payload.email || "");
+      formData.append("contactNumber", payload.contactNumber || "");
+      formData.append("address", payload.address || "");
+      formData.append("city", payload.city || "");
+      formData.append("education", JSON.stringify(payload.education || {}));
+
+      if (payload.password) {
+        formData.append("password", payload.password);
+      }
+
+      if (employee?.profileFile instanceof File) {
+        formData.append("profileImage", employee.profileFile);
+      }
+
+      await employeeService.updateProfile(formData);
 
       setInfoMsg(null);
       setSuccessMsg("Your profile was updated successfully.");

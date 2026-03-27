@@ -85,6 +85,31 @@ export default function UserProfile() {
     return (profile?.role || "").toLowerCase() === "developer";
   }, [profile?.role]);
 
+  const education = useMemo(() => {
+    return profile?.education || {};
+  }, [profile?.education]);
+
+  const educationPeriod = useMemo(() => {
+    const start = education?.startDate
+      ? new Date(education.startDate).toLocaleDateString()
+      : "-";
+    const end = education?.endDate
+      ? new Date(education.endDate).toLocaleDateString()
+      : "Present";
+
+    if (start === "-" && end === "Present") return "Not available";
+    return `${start} - ${end}`;
+  }, [education?.startDate, education?.endDate]);
+
+  const fullAddress = useMemo(() => {
+    const address = profile?.address?.trim() || "";
+    const city = profile?.city?.trim() || "";
+
+    if (!address && !city) return "Not available";
+    if (address && city) return `${address}, ${city}`;
+    return address || city;
+  }, [profile?.address, profile?.city]);
+
   const profileImageSrc = useMemo(() => {
     const image = profile?.profileImage;
     if (!image) return "";
@@ -126,7 +151,7 @@ export default function UserProfile() {
             {/* Left summary panel */}
             <aside className="bg-gradient-to-br from-[#0F62FE] via-[#266DFF] to-[#4A88FF] p-5 text-white">
               {/* Avatar block */}
-              <div className="mx-auto flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-white/40 bg-white/20 text-2xl font-semibold">
+              <div className="mx-auto flex h-60 w-60 items-center justify-center overflow-hidden rounded-2xl border border-white/40 bg-white/20 text-2xl font-semibold">
                 {profileImageSrc ? (
                   <img
                     src={profileImageSrc}
@@ -181,45 +206,98 @@ export default function UserProfile() {
               <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">Profile Overview</h3>
-                  <p className="mt-1 text-sm text-slate-500">Live account details for your current login session</p>
+                  <p className="mt-1 text-sm text-slate-500">Your Account Information</p>
                 </div>
                 <span className="rounded-full bg-[#FFE9C2] px-3 py-1 text-[11px] font-semibold text-[#B26A00]">
                   Account
                 </span>
               </div>
 
-              {/* Detail cards grid */}
-              <div className="grid gap-5 sm:grid-cols-2">
-                <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
-                  <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-slate-500">
-                    <FiMail className="text-sm text-blue-600" />
-                    Email
+              {/* Personal section */}
+              <div className="mb-12">
+                <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Personal Details</h4>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-2">
+                    <p className="text-xs font-semibold text-slate-500">First Name</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-900">{profile?.firstName || "Not available"}</p>
                   </div>
-                  <p className="text-sm font-semibold text-slate-900 break-all">{profile?.email || "Not available"}</p>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-2">
+                    <p className="text-xs font-semibold text-slate-500">Last Name</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-900">{profile?.lastName || "Not available"}</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-2 sm:col-span-2">
+                    <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-slate-500">
+                      <FiMail className="text-sm text-blue-600" />
+                      Email
+                    </div>
+                    <p className="text-sm font-semibold text-slate-900 break-all">{profile?.email || "Not available"}</p>
+                  </div>
                 </div>
+              </div>
 
-                <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
-                  <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-slate-500">
-                    <FiUser className="text-sm text-blue-600" />
-                    Designation
+              {/* Work section */}
+              <div className="mb-12">
+                <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Work Details</h4>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-2">
+                    <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-slate-900">
+                      <FiUser className="text-sm text-blue-600" />
+                      Designation
+                    </div>
+                    <p className="text-sm font-semibold text-slate-900">{profile?.designation || "No designation assigned"}</p>
                   </div>
-                  <p className="text-sm font-semibold text-slate-900">{profile?.designation || "No designation assigned"}</p>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-2">
+                    <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-slate-900">
+                      <FiUsers className="text-sm text-blue-600" />
+                      Role
+                    </div>
+                    <p className="text-sm font-semibold text-slate-900">{profile?.role || "Unassigned"}</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-2 sm:col-span-2">
+                    <p className="text-xs font-semibold text-slate-500">Status</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-900">{profile?.status || "Unknown"}</p>
+                  </div>
                 </div>
+              </div>
 
-                <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
-                  <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-slate-500">
-                    <FiUsers className="text-sm text-blue-600" />
-                    Role
+              {/* Contact section */}
+              <div className="mb-12">
+                <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Contact Details</h4>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-2">
+                    <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-slate-500">
+                      <FiPhone className="text-sm text-blue-600" />
+                      Contact Number
+                    </div>
+                    <p className="text-sm font-semibold text-slate-900">{profile?.contactNumber || "Not available"}</p>
                   </div>
-                  <p className="text-sm font-semibold text-slate-900">{profile?.role || "Unassigned"}</p>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-2">
+                    <p className="text-xs font-semibold text-slate-500">Address</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-900">{fullAddress}</p>
+                  </div>
                 </div>
+              </div>
 
-                <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
-                  <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-slate-500">
-                    <FiPhone className="text-sm text-blue-600" />
-                    Contact Number
+              {/* Education section */}
+              <div className="mb-12">
+                <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Education Qualification</h4>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-2">
+                    <p className="text-xs font-semibold text-slate-500">Institution</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-900">{education?.institution || "Not available"}</p>
                   </div>
-                  <p className="text-sm font-semibold text-slate-900">{profile?.contactNumber || "Not available"}</p>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-2">
+                    <p className="text-xs font-semibold text-slate-500">Degree</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-900">{education?.degree || "Not available"}</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-2">
+                    <p className="text-xs font-semibold text-slate-500">Department</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-900">{education?.department || "Not available"}</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-2">
+                    <p className="text-xs font-semibold text-slate-500">Education Period</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-900">{educationPeriod}</p>
+                  </div>
                 </div>
               </div>
 

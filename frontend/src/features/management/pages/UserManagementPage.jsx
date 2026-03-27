@@ -1,3 +1,6 @@
+// This page is for managing all users in the system. 
+// It shows a list of all employees with their details and allows the admin to view, edit, or delete each employee.
+
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {

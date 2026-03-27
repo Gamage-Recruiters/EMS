@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import TaskForm from "../../components/kanban/TaskForm";
+import TaskForm from "./TaskForm";
 import { taskService } from "../../services/taskService";
 
 const STATUSES = ["To Do", "In Progress", "Done"];

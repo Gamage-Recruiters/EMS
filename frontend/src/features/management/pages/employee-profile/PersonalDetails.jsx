@@ -48,8 +48,8 @@ export default function PersonalDetails() {
   // Helper to get the correct image URL (handle both base64 and saved filenames)
   const getImageSrc = (image) => {
     if (!image) return null;
-    // If it's a data URL (base64), use as-is
-    if (image.startsWith("data:")) {
+    // If it's already a data URL or absolute URL, use as-is
+    if (image.startsWith("data:") || image.startsWith("http://") || image.startsWith("https://")) {
       return image;
     }
     // Otherwise assume it's a filename and construct the full backend URL

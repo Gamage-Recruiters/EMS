@@ -39,7 +39,6 @@ import UserManagementPage from "./features/management/pages/UserManagementPage";
 import DailyTaskReviewPage from "./features/management/pages/DailyTaskReviewPage";
 import ComplaintReviewDashboard from "./features/management/pages/ComplaintReviewDashboard";
 import AdminComplaintSubmissionPage from "./features/management/pages/AdminComplaintSubmissionPage";
-import UserManagement from "./pages/UserManagement";
 import UserProfile from "./pages/UserProfile";
 
 // Developer

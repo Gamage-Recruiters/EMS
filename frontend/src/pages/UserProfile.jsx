@@ -81,6 +81,10 @@ export default function UserProfile() {
     return parsed.toLocaleDateString();
   }, [profile]);
 
+  const isDeveloper = useMemo(() => {
+    return (profile?.role || "").toLowerCase() === "developer";
+  }, [profile?.role]);
+
   const profileImageSrc = useMemo(() => {
     const image = profile?.profileImage;
     if (!image) return "";
@@ -222,13 +226,18 @@ export default function UserProfile() {
               {/* Action buttons */}
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <button
-                  onClick={() =>
+                  onClick={() => {
+                    if (isDeveloper) {
+                      navigate("/dashboard/my-profile/personal-details?mode=edit");
+                      return;
+                    }
+
                     navigate(
                       `/dashboard/profile/personal-details?mode=edit${
                         profile?._id ? `&id=${profile._id}` : ""
                       }`
-                    )
-                  }
+                    );
+                  }}
                   className="inline-flex w-full items-center justify-center rounded-xl bg-[#0F62FE] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#004ED8] sm:w-auto"
                 >
                   Edit Profile

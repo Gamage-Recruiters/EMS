@@ -486,6 +486,7 @@ import DailyTaskFormPage from "./features/developer/pages/DailyTaskFormPage";
 import DailyTaskPage from "./features/developer/pages/DailyTaskPage";
 import DeveloperComplaintForm from "./features/developer/pages/ComplaintSubmissionPage";
 import DeveloperComplaintDashboard from "./features/developer/pages/ComplaintDashboard";
+import SelfProfileEditPage from "./features/developer/pages/SelfProfileEditPage";
 
 // Employee Profile
 import EmployeeProfile from "./features/management/pages/employee-profile/EmployeeProfile";
@@ -671,11 +672,26 @@ export default function App() {
           />
           <Route path="/dashboard/user-profile/:id" element={<UserProfile />} />
 
-          {/* ================= EMPLOYEE PROFILE ================= */}
+          {/* ================= DEVELOPER SELF PROFILE ================= */}
+          <Route
+            path="/dashboard/my-profile"
+            element={
+              <ProtectedRoute allowedRoles={["Developer"]}>
+                <SelfProfileEditPage />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="personal-details?mode=edit" replace />} />
+            <Route path="personal-details" element={<PersonalDetails />} />
+            <Route path="contact-details" element={<ContactDetails />} />
+            <Route path="education-qualification" element={<EducationQualification />} />
+          </Route>
+
+          {/* ================= EMPLOYEE PROFILE MANAGEMENT ================= */}
           <Route
             path="/dashboard/profile"
             element={
-              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin"]}>
+              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL"]}>
                 <EmployeeProfile />
               </ProtectedRoute>
             }

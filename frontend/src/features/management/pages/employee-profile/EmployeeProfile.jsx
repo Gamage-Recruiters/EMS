@@ -37,6 +37,7 @@ export default function EmployeeProfile() {
   const [loading, setLoading] = useState(isEdit || isView);
   const [saving, setSaving] = useState(false);
 
+  const [fieldErrors, setFieldErrors] = useState({});
   const [pageError, setPageError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
 
@@ -172,50 +173,57 @@ export default function EmployeeProfile() {
 
   // -------- Validation helpers (used for Next + Save) --------
   const validatePersonal = () => {
-    if (!employee.firstName?.trim()) {
-      setPageError("First name is required.");
-      return false;
-    }
-    if (!employee.lastName?.trim()) {
-      setPageError("Last name is required.");
-      return false;
-    }
+  const errors = {};
 
-    if (!employee.email?.trim()) {
-      setPageError("Email is required.");
-      return false;
-    }
-    if (!emailRegex.test(employee.email.trim())) {
-      setPageError("Enter a valid email address.");
-      return false;
-    }
+  if (!employee.firstName?.trim()) {
+    errors.firstName = "First name is required.";
+  }
 
-    // Password required only for ADD (not edit)
-    if (isAdd) {
-      if (!employee.password?.trim()) {
-        setPageError("Password is required for new employees.");
-        return false;
-      }
-      if (employee.password.trim().length < 6) {
-        setPageError("Password must be at least 6 characters.");
-        return false;
-      }
+  if (!employee.lastName?.trim()) {
+    errors.lastName = "Last name is required.";
+  }
+
+  if (!employee.email?.trim()) {
+    errors.email = "Email is required.";
+  } else if (!emailRegex.test(employee.email.trim())) {
+    errors.email = "Enter a valid email address.";
+  }
+
+  if (isAdd) {
+    if (!employee.password?.trim()) {
+      errors.password = "Password is required for new employees.";
+    } else if (employee.password.trim().length < 6) {
+      errors.password = "Password must be at least 6 characters.";
     }
+  }
+
+  setFieldErrors(errors);
+
+  if (Object.keys(errors).length > 0) {
+    setPageError("Please fix the highlighted fields.");
+    return false;
+  }
 
     return true;
   };
 
   const validateContact = () => {
-    if (!employee.contactNumber?.trim()) {
-      setPageError("Mobile number is required.");
-      return false;
-    }
-    if (!mobileRegex.test(employee.contactNumber.trim())) {
-      setPageError(
-        "Enter a valid Sri Lankan mobile number (07XXXXXXXX / +947XXXXXXXX)."
-      );
-      return false;
-    }
+  const errors = {};
+
+  if (!employee.contactNumber?.trim()) {
+    errors.contactNumber = "Mobile number is required.";
+  } else if (!mobileRegex.test(employee.contactNumber.trim())) {
+    errors.contactNumber =
+      "Enter a valid Sri Lankan mobile number (07XXXXXXXX / +947XXXXXXXX).";
+  }
+
+  setFieldErrors((prev) => ({ ...prev, ...errors }));
+
+  if (Object.keys(errors).length > 0) {
+    setPageError("Please fix the highlighted fields.");
+    return false;
+  }
+
     return true;
   };
 

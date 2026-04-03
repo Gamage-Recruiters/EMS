@@ -1,4 +1,5 @@
 // controllers/chatController.js
+import mongoose from 'mongoose';
 import Channel from '../models/Channel.js';
 import Message from '../models/Message.js';
 import User from '../models/User.js';
@@ -89,6 +90,10 @@ export const getChannelById = async (req, res, next) => {
   try {
     const { channelId } = req.params;
 
+    if (!mongoose.Types.ObjectId.isValid(channelId)) {
+      return next(new AppError('Invalid channel ID', 400));
+    }
+
     const channel = await Channel.findById(channelId)
       .populate('createdBy', 'firstName lastName role')
       .populate('members', 'firstName lastName email role profileImage');
@@ -147,11 +152,16 @@ export const addMemberToChannel = async (req, res, next) => {
       return next(new AppError('User not found', 404));
     }
 
-    // Add member if not already present
-    if (!channel.members.includes(userId)) {
-      channel.members.push(userId);
-      await channel.save();
+    // Check if user is already a member
+    const isAlreadyMember = channel.members.some(
+      (memberId) => memberId.toString() === userId.toString()
+    );
+    if (isAlreadyMember) {
+      return next(new AppError('User is already a member of this channel', 400));
     }
+
+    channel.members.push(userId);
+    await channel.save();
 
     const updatedChannel = await Channel.findById(channelId)
       .populate('createdBy', 'firstName lastName role')
@@ -340,6 +350,11 @@ export const sendMessage = async (req, res, next) => {
 export const editMessage = async (req, res, next) => {
   try {
     const { messageId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(messageId)) {
+      return next(new AppError('Invalid message ID', 400));
+    }
+
     const { text } = req.body;
 
     if (!text || !text.trim()) {

@@ -14,17 +14,11 @@ const Sidebar = () => {
       { name: "Task Board", path: "/dashboard/dev/task-board" },
       { name: "Employee Details", path: "/dashboard/employees" },
       { name: "Daily Task Sheet", path: "/dashboard/ceo/daily-task-sheet" },
-      { name: "Daily Task History", path: "/dashboard/dev/weekly-summary" },
-      {
-        name: "Weekly Progress Overview",
-        path: "/dashboard/ceo/weekly-overview",
-      },
       {
         name: "Weekly Progress History",
-        path: "/dashboard/ceo/weekly-history",
+        path: "/dashboard/dev/weekly-summary",
       },
       { name: "CEO Attendance Summary", path: "/dashboard/attendance" },
-      { name: "Notice Broadcasting", path: "/dashboard/ceo/notices" },
       { name: "CEO Meeting Display", path: "/dashboard/meetings" },
       { name: "Leave Approval / Display", path: "/dashboard/ceo/leave" },
       {

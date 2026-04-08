@@ -22,6 +22,8 @@ const COMPLAINT_TYPES = [
   },
 ];
 
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
 export default function ComplaintSubmissionPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -49,9 +51,8 @@ export default function ComplaintSubmissionPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const isImage = file.type?.startsWith("image/");
-    if (!isImage) {
-      toast.error("Please select a valid image file");
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      toast.error("Only JPG, PNG, or WEBP images are allowed");
       e.target.value = "";
       return;
     }

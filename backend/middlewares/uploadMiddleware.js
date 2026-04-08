@@ -11,14 +11,14 @@ const storage = multer.diskStorage({
 });
 
 const checkFileType = (file, cb) => {
-  const filetypes = /jpg|jpeg|png/;
+  const filetypes = /jpg|jpeg|png|webp/;
   const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
   const mimetype = filetypes.test(file.mimetype);
 
   if (extname && mimetype) {
     return cb(null, true);
   } else {
-    cb('Images only!');
+    cb('Only JPG, PNG, or WEBP images are allowed');
   }
 };
 

@@ -273,12 +273,13 @@ export default function ComplaintSubmissionPage() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">
-                      <label
-                        htmlFor="complaint-image"
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
                         className="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-md shadow-slate-900/20 transition hover:-translate-y-0.5 hover:bg-slate-700 cursor-pointer"
                       >
                         Choose image
-                      </label>
+                      </button>
                       <span className="text-sm text-slate-600">
                         {imageFile ? imageFile.name : "No file selected"}
                       </span>

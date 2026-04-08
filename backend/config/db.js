@@ -2,13 +2,17 @@ import mongoose from "mongoose";
 import dns from "node:dns";
 
 // Some local/corporate DNS resolvers reject SRV lookups used by mongodb+srv.
-// Force stable public resolvers (or override via DNS_SERVERS env).
-const dnsServers = (process.env.DNS_SERVERS || "8.8.8.8,1.1.1.1")
-  .split(",")
-  .map((s) => s.trim())
-  .filter(Boolean);
+// Only override DNS when using mongodb+srv and DNS_SERVERS is explicitly configured.
+const mongoUri = process.env.MONGO_URI || "";
+const shouldOverrideDns =
+  mongoUri.startsWith("mongodb+srv://") && !!process.env.DNS_SERVERS;
+const dnsServers = shouldOverrideDns
+  ? process.env.DNS_SERVERS.split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+  : [];
 
-if (dnsServers.length) {
+if (shouldOverrideDns && dnsServers.length) {
   dns.setServers(dnsServers);
 }
 

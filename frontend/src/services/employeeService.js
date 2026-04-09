@@ -29,7 +29,9 @@ export const employeeService = {
   getCurrentUser: () => api.get("/user/me"),
   getAllUsers: (params) => api.get("/user", { params }),
   getUserById: (id) => api.get(`/user/${id}`),
-  updateProfile: (payload) => api.put("/user/me", payload),
+  updateProfile: (payload) => {
+    return api.put("/user/me", payload);
+  },
   deleteProfile: () => api.delete("/user/me"),
 
   // Public endpoints

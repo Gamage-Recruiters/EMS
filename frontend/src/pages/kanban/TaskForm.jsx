@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 import { taskService } from "../../services/taskService.js";
 
-export default function TaskForm({ onAddTask, onClose, onUpdateTask, editTask }) {
+export default function TaskForm({
+  onAddTask,
+  onClose,
+  onUpdateTask,
+  editTask,
+}) {
   const [users, setUsers] = useState([]);
   const [projects, setProjects] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
@@ -11,16 +16,17 @@ export default function TaskForm({ onAddTask, onClose, onUpdateTask, editTask })
   const getInitialFormData = () => {
     if (editTask) {
       return {
-        developer: editTask.developer || "",
+        developer: editTask.developerId || editTask.assignedToId || "",
         task: editTask.content || "",
         description: editTask.description || "",
-        project: editTask.projectName || "",
+        project: editTask.project || "",
         startDate: editTask.startDate || "",
         dueDate: editTask.dueDate || "",
         status: editTask.status || "To Do",
         priority: editTask.priority || "MEDIUM",
       };
     }
+
     return {
       developer: "",
       task: "",
@@ -58,32 +64,30 @@ export default function TaskForm({ onAddTask, onClose, onUpdateTask, editTask })
       setLoadingUsers(false);
     }
   };
-const fetchProjects = async () => {
-  try {
-    setLoadingProjects(true);
-    const response = await taskService.getAllProjects();
+  const fetchProjects = async () => {
+    try {
+      setLoadingProjects(true);
+      const response = await taskService.getAllProjects();
 
-    
-    console.log("Projects API full response:", response);
-    console.log("response.data:", response.data);
-    console.log("Is response.data array?", Array.isArray(response.data));
+      console.log("Projects API full response:", response);
+      console.log("response.data:", response.data);
+      console.log("Is response.data array?", Array.isArray(response.data));
 
-    
-    const projectsData = Array.isArray(response.data) 
-      ? response.data 
-      : (response.data?.data && Array.isArray(response.data.data) 
-          ? response.data.data 
-          : []);
+      const projectsData = Array.isArray(response.data)
+        ? response.data
+        : response.data?.data && Array.isArray(response.data.data)
+          ? response.data.data
+          : [];
 
-    setProjects(projectsData);
-    console.log("Projects set to state:", projectsData);
-  } catch (error) {
-    console.error("Error fetching projects:", error);
-    setProjects([]); 
-  } finally {
-    setLoadingProjects(false);
-  }
-};
+      setProjects(projectsData);
+      console.log("Projects set to state:", projectsData);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      setProjects([]);
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
 
   const validateForm = () => {
     if (!formData.task.trim()) {
@@ -151,34 +155,47 @@ const fetchProjects = async () => {
   };
 
   return (
-    <div style={{
-      backgroundColor: "white",
-      borderRadius: "16px",
-      padding: "32px",
-      width: "90%",
-      maxWidth: "650px",
-      maxHeight: "90vh",
-      overflowY: "auto",
-      boxShadow: "0 24px 48px rgba(0, 0, 0, 0.15)",
-    }}>
+    <div
+      style={{
+        backgroundColor: "white",
+        borderRadius: "16px",
+        padding: "32px",
+        width: "90%",
+        maxWidth: "650px",
+        maxHeight: "90vh",
+        overflowY: "auto",
+        boxShadow: "0 24px 48px rgba(0, 0, 0, 0.15)",
+      }}
+    >
       {/* Header */}
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: "32px",
-        paddingBottom: "16px",
-        borderBottom: "2px solid #f0f0f0",
-      }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "32px",
+          paddingBottom: "16px",
+          borderBottom: "2px solid #f0f0f0",
+        }}
+      >
         <div>
-          <h2 style={{ margin: 0, color: "#1a1a1a", fontSize: "26px", fontWeight: "700" }}>
+          <h2
+            style={{
+              margin: 0,
+              color: "#1a1a1a",
+              fontSize: "26px",
+              fontWeight: "700",
+            }}
+          >
             {editTask ? "Edit Task" : "Assign New Task"}
           </h2>
           <p style={{ margin: "4px 0 0 0", color: "#666", fontSize: "14px" }}>
-            {editTask ? "Update task details below" : "Fill in the details to assign a new task"}
+            {editTask
+              ? "Update task details below"
+              : "Fill in the details to assign a new task"}
           </p>
         </div>
-        <button 
+        <button
           onClick={onClose}
           type="button"
           style={{
@@ -211,18 +228,20 @@ const fetchProjects = async () => {
 
       {/* Error Message */}
       {formError && (
-        <div style={{
-          backgroundColor: "#fff3f3",
-          color: "#d32f2f",
-          padding: "14px 16px",
-          borderRadius: "10px",
-          marginBottom: "24px",
-          fontSize: "14px",
-          border: "1px solid #ffcdd2",
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-        }}>
+        <div
+          style={{
+            backgroundColor: "#fff3f3",
+            color: "#d32f2f",
+            padding: "14px 16px",
+            borderRadius: "10px",
+            marginBottom: "24px",
+            fontSize: "14px",
+            border: "1px solid #ffcdd2",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
           <span style={{ fontSize: "18px" }}>⚠️</span>
           <span>{formError}</span>
         </div>
@@ -231,14 +250,17 @@ const fetchProjects = async () => {
       <form onSubmit={handleSubmit}>
         {/* Developer Field */}
         <div style={{ marginBottom: "24px" }}>
-          <label style={{
-            display: "block",
-            marginBottom: "10px",
-            fontWeight: "600",
-            color: "#333",
-            fontSize: "15px",
-          }}>
-            Assign To<span style={{ color: "#f44336", marginLeft: "4px" }}>*</span>
+          <label
+            style={{
+              display: "block",
+              marginBottom: "10px",
+              fontWeight: "600",
+              color: "#333",
+              fontSize: "15px",
+            }}
+          >
+            Assign To
+            <span style={{ color: "#f44336", marginLeft: "4px" }}>*</span>
           </label>
           <select
             name="developer"
@@ -280,14 +302,17 @@ const fetchProjects = async () => {
 
         {/* Task Title Field */}
         <div style={{ marginBottom: "24px" }}>
-          <label style={{
-            display: "block",
-            marginBottom: "10px",
-            fontWeight: "600",
-            color: "#333",
-            fontSize: "15px",
-          }}>
-            Task Title<span style={{ color: "#f44336", marginLeft: "4px" }}>*</span>
+          <label
+            style={{
+              display: "block",
+              marginBottom: "10px",
+              fontWeight: "600",
+              color: "#333",
+              fontSize: "15px",
+            }}
+          >
+            Task Title
+            <span style={{ color: "#f44336", marginLeft: "4px" }}>*</span>
           </label>
           <input
             type="text"
@@ -319,15 +344,24 @@ const fetchProjects = async () => {
 
         {/* Description Field */}
         <div style={{ marginBottom: "24px" }}>
-          <label style={{
-            display: "block",
-            marginBottom: "10px",
-            fontWeight: "600",
-            color: "#333",
-            fontSize: "15px",
-          }}>
+          <label
+            style={{
+              display: "block",
+              marginBottom: "10px",
+              fontWeight: "600",
+              color: "#333",
+              fontSize: "15px",
+            }}
+          >
             Description
-            <span style={{ color: "#999", fontWeight: "400", marginLeft: "6px", fontSize: "13px" }}>
+            <span
+              style={{
+                color: "#999",
+                fontWeight: "400",
+                marginLeft: "6px",
+                fontSize: "13px",
+              }}
+            >
               (Optional)
             </span>
           </label>
@@ -363,16 +397,24 @@ const fetchProjects = async () => {
 
         {/* Project Field */}
         <div style={{ marginBottom: "24px" }}>
-          <label style={{
-            display: "block",
-            marginBottom: "10px",
-            fontWeight: "600",
-            color: "#333",
-            fontSize: "15px",
-          }}>
+          <label
+            style={{
+              display: "block",
+              marginBottom: "10px",
+              fontWeight: "600",
+              color: "#333",
+              fontSize: "15px",
+            }}
+          >
             Project
-            <span style={{ color: "#999", fontWeight: "400", marginLeft: "6px", fontSize: "13px" }}>
-            </span>
+            <span
+              style={{
+                color: "#999",
+                fontWeight: "400",
+                marginLeft: "6px",
+                fontSize: "13px",
+              }}
+            ></span>
           </label>
           <select
             name="project"
@@ -416,33 +458,40 @@ const fetchProjects = async () => {
             )}
           </select>
           {projects.length === 0 && !loadingProjects && (
-            <p style={{ 
-              margin: "8px 0 0 0", 
-              color: "#999", 
-              fontSize: "12px",
-              fontStyle: "italic" 
-            }}>
+            <p
+              style={{
+                margin: "8px 0 0 0",
+                color: "#999",
+                fontSize: "12px",
+                fontStyle: "italic",
+              }}
+            >
               No projects available
             </p>
           )}
         </div>
 
         {/* Date Fields */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "20px",
-          marginBottom: "24px",
-        }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "20px",
+            marginBottom: "24px",
+          }}
+        >
           <div>
-            <label style={{
-              display: "block",
-              marginBottom: "10px",
-              fontWeight: "600",
-              color: "#333",
-              fontSize: "15px",
-            }}>
-              Start Date<span style={{ color: "#f44336", marginLeft: "4px" }}>*</span>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "10px",
+                fontWeight: "600",
+                color: "#333",
+                fontSize: "15px",
+              }}
+            >
+              Start Date
+              <span style={{ color: "#f44336", marginLeft: "4px" }}>*</span>
             </label>
             <input
               type="date"
@@ -471,16 +520,19 @@ const fetchProjects = async () => {
               required
             />
           </div>
-          
+
           <div>
-            <label style={{
-              display: "block",
-              marginBottom: "10px",
-              fontWeight: "600",
-              color: "#333",
-              fontSize: "15px",
-            }}>
-              Due Date<span style={{ color: "#f44336", marginLeft: "4px" }}>*</span>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "10px",
+                fontWeight: "600",
+                color: "#333",
+                fontSize: "15px",
+              }}
+            >
+              Due Date
+              <span style={{ color: "#f44336", marginLeft: "4px" }}>*</span>
             </label>
             <input
               type="date"
@@ -514,18 +566,20 @@ const fetchProjects = async () => {
 
         {/* Priority Field */}
         <div style={{ marginBottom: "24px" }}>
-          <label style={{
-            display: "block",
-            marginBottom: "12px",
-            fontWeight: "600",
-            color: "#333",
-            fontSize: "15px",
-          }}>
+          <label
+            style={{
+              display: "block",
+              marginBottom: "12px",
+              fontWeight: "600",
+              color: "#333",
+              fontSize: "15px",
+            }}
+          >
             Priority Level
           </label>
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            {['LOW', 'MEDIUM', 'HIGH'].map((priority) => (
-              <label 
+            {["LOW", "MEDIUM", "HIGH"].map((priority) => (
+              <label
                 key={priority}
                 style={{
                   flex: "1",
@@ -537,25 +591,34 @@ const fetchProjects = async () => {
                   padding: "12px 16px",
                   borderRadius: "10px",
                   border: `2px solid ${
-                    formData.priority === priority 
-                      ? (priority === 'HIGH' ? '#f44336' : priority === 'MEDIUM' ? '#ff9800' : '#4caf50')
-                      : '#e8e8e8'
+                    formData.priority === priority
+                      ? priority === "HIGH"
+                        ? "#f44336"
+                        : priority === "MEDIUM"
+                          ? "#ff9800"
+                          : "#4caf50"
+                      : "#e8e8e8"
                   }`,
-                  backgroundColor: formData.priority === priority 
-                    ? (priority === 'HIGH' ? '#fff5f5' : priority === 'MEDIUM' ? '#fff8f0' : '#f1f8f4')
-                    : 'white',
+                  backgroundColor:
+                    formData.priority === priority
+                      ? priority === "HIGH"
+                        ? "#fff5f5"
+                        : priority === "MEDIUM"
+                          ? "#fff8f0"
+                          : "#f1f8f4"
+                      : "white",
                   transition: "all 0.2s ease",
                 }}
                 onMouseEnter={(e) => {
                   if (formData.priority !== priority) {
-                    e.currentTarget.style.borderColor = '#d0d0d0';
-                    e.currentTarget.style.backgroundColor = '#fafafa';
+                    e.currentTarget.style.borderColor = "#d0d0d0";
+                    e.currentTarget.style.backgroundColor = "#fafafa";
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (formData.priority !== priority) {
-                    e.currentTarget.style.borderColor = '#e8e8e8';
-                    e.currentTarget.style.backgroundColor = 'white';
+                    e.currentTarget.style.borderColor = "#e8e8e8";
+                    e.currentTarget.style.backgroundColor = "white";
                   }
                 }}
               >
@@ -565,20 +628,27 @@ const fetchProjects = async () => {
                   value={priority}
                   checked={formData.priority === priority}
                   onChange={handleChange}
-                  style={{ 
+                  style={{
                     marginRight: "8px",
                     cursor: "pointer",
                     width: "16px",
                     height: "16px",
                   }}
                 />
-                <span style={{
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  color: formData.priority === priority
-                    ? (priority === 'HIGH' ? '#f44336' : priority === 'MEDIUM' ? '#ff9800' : '#4caf50')
-                    : '#666',
-                }}>
+                <span
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    color:
+                      formData.priority === priority
+                        ? priority === "HIGH"
+                          ? "#f44336"
+                          : priority === "MEDIUM"
+                            ? "#ff9800"
+                            : "#4caf50"
+                        : "#666",
+                  }}
+                >
                   {priority}
                 </span>
               </label>
@@ -588,18 +658,20 @@ const fetchProjects = async () => {
 
         {/* Status Field */}
         <div style={{ marginBottom: "32px" }}>
-          <label style={{
-            display: "block",
-            marginBottom: "12px",
-            fontWeight: "600",
-            color: "#333",
-            fontSize: "15px",
-          }}>
+          <label
+            style={{
+              display: "block",
+              marginBottom: "12px",
+              fontWeight: "600",
+              color: "#333",
+              fontSize: "15px",
+            }}
+          >
             Task Status
           </label>
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            {['To Do', 'In Progress', 'Done'].map((status) => (
-              <label 
+            {["To Do", "In Progress", "Done"].map((status) => (
+              <label
                 key={status}
                 style={{
                   flex: "1",
@@ -611,25 +683,34 @@ const fetchProjects = async () => {
                   padding: "12px 16px",
                   borderRadius: "10px",
                   border: `2px solid ${
-                    formData.status === status 
-                      ? (status === 'To Do' ? '#FF9800' : status === 'In Progress' ? '#2196F3' : '#4CAF50')
-                      : '#e8e8e8'
+                    formData.status === status
+                      ? status === "To Do"
+                        ? "#FF9800"
+                        : status === "In Progress"
+                          ? "#2196F3"
+                          : "#4CAF50"
+                      : "#e8e8e8"
                   }`,
-                  backgroundColor: formData.status === status 
-                    ? (status === 'To Do' ? '#fff8f0' : status === 'In Progress' ? '#f0f7ff' : '#f1f8f4')
-                    : 'white',
+                  backgroundColor:
+                    formData.status === status
+                      ? status === "To Do"
+                        ? "#fff8f0"
+                        : status === "In Progress"
+                          ? "#f0f7ff"
+                          : "#f1f8f4"
+                      : "white",
                   transition: "all 0.2s ease",
                 }}
                 onMouseEnter={(e) => {
                   if (formData.status !== status) {
-                    e.currentTarget.style.borderColor = '#d0d0d0';
-                    e.currentTarget.style.backgroundColor = '#fafafa';
+                    e.currentTarget.style.borderColor = "#d0d0d0";
+                    e.currentTarget.style.backgroundColor = "#fafafa";
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (formData.status !== status) {
-                    e.currentTarget.style.borderColor = '#e8e8e8';
-                    e.currentTarget.style.backgroundColor = 'white';
+                    e.currentTarget.style.borderColor = "#e8e8e8";
+                    e.currentTarget.style.backgroundColor = "white";
                   }
                 }}
               >
@@ -639,20 +720,27 @@ const fetchProjects = async () => {
                   value={status}
                   checked={formData.status === status}
                   onChange={handleChange}
-                  style={{ 
+                  style={{
                     marginRight: "8px",
                     cursor: "pointer",
                     width: "16px",
                     height: "16px",
                   }}
                 />
-                <span style={{
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  color: formData.status === status
-                    ? (status === 'To Do' ? '#FF9800' : status === 'In Progress' ? '#2196F3' : '#4CAF50')
-                    : '#666',
-                }}>
+                <span
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    color:
+                      formData.status === status
+                        ? status === "To Do"
+                          ? "#FF9800"
+                          : status === "In Progress"
+                            ? "#2196F3"
+                            : "#4CAF50"
+                        : "#666",
+                  }}
+                >
                   {status}
                 </span>
               </label>
@@ -661,13 +749,15 @@ const fetchProjects = async () => {
         </div>
 
         {/* Form Actions */}
-        <div style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          gap: "12px",
-          paddingTop: "24px",
-          borderTop: "2px solid #f0f0f0",
-        }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "12px",
+            paddingTop: "24px",
+            borderTop: "2px solid #f0f0f0",
+          }}
+        >
           <button
             type="button"
             onClick={onClose}
@@ -700,12 +790,14 @@ const fetchProjects = async () => {
             disabled={loadingUsers || loadingProjects}
             style={{
               padding: "14px 32px",
-              backgroundColor: (loadingUsers || loadingProjects) ? "#ccc" : "#4169E1",
+              backgroundColor:
+                loadingUsers || loadingProjects ? "#ccc" : "#4169E1",
               border: "none",
               borderRadius: "10px",
               fontSize: "15px",
               fontWeight: "600",
-              cursor: (loadingUsers || loadingProjects) ? "not-allowed" : "pointer",
+              cursor:
+                loadingUsers || loadingProjects ? "not-allowed" : "pointer",
               color: "white",
               transition: "all 0.2s ease",
               boxShadow: "0 4px 12px rgba(65, 105, 225, 0.3)",

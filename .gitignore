@@ -39,6 +39,5 @@ parcel-cache/
 coverage/
 
 # Uploads (optional)
-uploads/
 public/uploads/
 config.bat

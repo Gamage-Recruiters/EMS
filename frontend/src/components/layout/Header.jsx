@@ -140,9 +140,7 @@ const Header = () => {
               <button
                 className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
                 onClick={() => {
-                  if (user?._id) {
-                    navigate(`/dashboard/user-profile/${user._id}`);
-                  }
+                  navigate("/dashboard/user-profile");
                   setMenuOpen(false);
                 }}
               >

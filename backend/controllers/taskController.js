@@ -50,6 +50,18 @@ export const createTask = async (req, res) => {
       });
     }
 
+    // Check for existing task with same title assigned to same user (prevent duplicates - T004)
+    const existingTask = await Task.findOne({
+      title: title.trim(),
+      assignedTo,
+    });
+    if (existingTask) {
+      return res.status(400).json({
+        success: false,
+        message: `A task with title "${title.trim()}" is already assigned to this user`,
+      });
+    }
+
     // assignedBy comes from logged in user
     const assignedBy = req.user.id;
 

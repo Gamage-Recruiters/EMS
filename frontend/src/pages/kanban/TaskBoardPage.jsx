@@ -20,30 +20,40 @@ export default function TaskBoardPage() {
 
 
   useEffect(() => {
-    fetchTasks();
-    // Get user role from localStorage or context
+    // Get user role from localStorage BEFORE fetching tasks
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     setUserRole(user.role);
     setUserId(user._id);
-    fetchTasks();
+    // Only call fetchTasks once (was called twice causing duplication - T004)
+    fetchTasks(user.role, user._id);
   }, []);
 
-  const fetchTasks = async () => {
+  const fetchTasks = async (currentRole, currentUserId) => {
+    // Read role/userId from params (passed from useEffect) or fallback to localStorage
+    // This fixes T005: state-based userRole/userId were always null on first render
+    const role = currentRole ?? (() => {
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      return u.role;
+    })();
+    const uid = currentUserId ?? (() => {
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      return u._id;
+    })();
+
     try {
       setLoading(true);
       const response = await taskService.allTasks();
-      let tasks = response.data?.data || response.data ||[];
+      let tasks = response.data?.data || response.data || [];
 
-      // If logged user is DEVELOPER → only his tasks
-      const isDeveloper = String(userRole || "").toUpperCase() === "DEVELOPER";
+      // If logged user is DEVELOPER → only show their own tasks (T005 fix)
+      const isDeveloper = String(role || "").toUpperCase() === "DEVELOPER";
 
-      if (isDeveloper) {
+      if (isDeveloper && uid) {
         tasks = tasks.filter((task) => {
           const assignedToId = task.assignedTo?._id || task.assignedTo;
-          return String(assignedToId) === String(userId);
+          return String(assignedToId) === String(uid);
         });
       }
-      console.log("Fetched tasks:", tasks); // Debug log
 
       const organizedTasks = {
         "To Do": { title: "To Do", items: [] },
@@ -51,7 +61,14 @@ export default function TaskBoardPage() {
         "Done": { title: "Done", items: [] },
       };
 
- tasks.forEach((task) => {
+      // Use a Set to prevent duplicate task IDs from being rendered (T004 fix)
+      const seenIds = new Set();
+
+      tasks.forEach((task) => {
+        // Skip duplicates
+        if (seenIds.has(task._id)) return;
+        seenIds.add(task._id);
+
         const status = task.status || "To Do";
         if (!organizedTasks[status]) return;
 
@@ -61,7 +78,7 @@ export default function TaskBoardPage() {
         const item = {
           id: task._id,
           content: task.title || "",
-          assignedToId: assignedId,                    // ← most important fix
+          assignedToId: assignedId,
           developerName: assignedToObj?.firstName || assignedToObj?.name || "Unassigned",
           developerEmail: assignedToObj?.email || "",
           description: task.description || "",
@@ -426,7 +443,22 @@ export default function TaskBoardPage() {
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                 <span style={{ fontSize: "16px" }}>📅</span>
                 <span style={{ color: "#555", fontWeight: "500" }}>Timeline:</span>
-                <span style={{ color: "#333" }}>{selectedTask.startDate} → {selectedTask.dueDate}</span>
+                <span style={{ color: "#333" }}>{selectedTask.startDate} → </span>
+                {(() => {
+                  const isOverdue = selectedTask.dueDate && new Date(selectedTask.dueDate) < new Date(new Date().toISOString().split("T")[0]) && selectedTask.status !== "Done";
+                  return (
+                    <span style={{
+                      color: isOverdue ? "#d32f2f" : "#333",
+                      fontWeight: isOverdue ? "700" : "normal",
+                      backgroundColor: isOverdue ? "#ffebee" : "transparent",
+                      padding: isOverdue ? "2px 8px" : "0",
+                      borderRadius: isOverdue ? "4px" : "0",
+                    }}>
+                      {selectedTask.dueDate}
+                      {isOverdue && " ⚠️ OVERDUE"}
+                    </span>
+                  );
+                })()}
               </div>
               
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
@@ -759,19 +791,39 @@ export default function TaskBoardPage() {
                             </div>
                           )}
 
-                          {item.dueDate && (
-                            <div
-                              style={{
-                                fontSize: "11px",
-                                color: "#888",
-                                marginTop: "4px",
-                                paddingTop: "4px",
-                                borderTop: "1px solid #eee",
-                              }}
-                            >
-                              📅 Due: {item.dueDate}
-                            </div>
-                          )}
+                          {item.dueDate && (() => {
+                            const isOverdue = new Date(item.dueDate) < new Date(new Date().toISOString().split("T")[0]) && item.status !== "Done";
+                            return (
+                              <div
+                                style={{
+                                  fontSize: "11px",
+                                  color: isOverdue ? "#d32f2f" : "#888",
+                                  fontWeight: isOverdue ? "600" : "normal",
+                                  marginTop: "4px",
+                                  paddingTop: "4px",
+                                  borderTop: "1px solid #eee",
+                                  backgroundColor: isOverdue ? "#ffebee" : "transparent",
+                                  padding: isOverdue ? "4px 8px" : "4px 0 0 0",
+                                  borderRadius: isOverdue ? "4px" : "0",
+                                }}
+                              >
+                                {isOverdue ? "⚠️" : "📅"} Due: {item.dueDate}
+                                {isOverdue && (
+                                  <span style={{
+                                    marginLeft: "6px",
+                                    fontSize: "10px",
+                                    color: "#fff",
+                                    backgroundColor: "#d32f2f",
+                                    padding: "1px 6px",
+                                    borderRadius: "8px",
+                                    fontWeight: "bold",
+                                  }}>
+                                    OVERDUE
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
                     </Draggable>

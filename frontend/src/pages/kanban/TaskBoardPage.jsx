@@ -30,91 +30,43 @@ export default function TaskBoardPage() {
   const [selectedProjectFilter, setSelectedProjectFilter] = useState("ALL");
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    setUserRole(user?.role || "");
-    setUserId(user?._id || "");
+
+    // Get user role from localStorage BEFORE fetching tasks
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    setUserRole(user.role);
+    setUserId(user._id);
+    // Only call fetchTasks once (was called twice causing duplication - T004)
+    fetchTasks(user.role, user._id);
   }, []);
 
-  useEffect(() => {
-    if (!userId) return;
-    fetchTasks();
-  }, [userId]);
+  const fetchTasks = async (currentRole, currentUserId) => {
+    // Read role/userId from params (passed from useEffect) or fallback to localStorage
+    // This fixes T005: state-based userRole/userId were always null on first render
+    const role = currentRole ?? (() => {
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      return u.role;
+    })();
+    const uid = currentUserId ?? (() => {
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      return u._id;
+    })();
 
-  const roleUpper = String(userRole).toUpperCase();
-  const isDeveloper = roleUpper === "DEVELOPER";
-  const canCreateTask = ["TL", "ATL", "PM"].includes(roleUpper);
-  const canEditOrDelete = ["TL", "ATL"].includes(roleUpper);
-  const canDragAnyTask = ["TL", "ATL", "PM"].includes(roleUpper);
-
-  const fetchTasks = async () => {
     try {
       setLoading(true);
       const response = await taskService.allTasks();
-      const tasks = response.data?.data || [];
-      setAllTasks(tasks);
-      setError("");
-    } catch (err) {
-      console.error("Error fetching tasks:", err);
-      setError(err.response?.data?.message || "Failed to load tasks");
-    } finally {
-      setLoading(false);
-    }
-  };
+      let tasks = response.data?.data || response.data || [];
 
-  const normalizedTasks = useMemo(() => {
-    return allTasks.map((task) => {
-      const assignedToObj = task.assignedTo || null;
-      const assignedId = assignedToObj?._id || assignedToObj || "";
+      // If logged user is DEVELOPER → only show their own tasks (T005 fix)
+      const isDeveloper = String(role || "").toUpperCase() === "DEVELOPER";
 
-      return {
-        id: task._id,
-        content: task.title || "",
-        description: task.description || "",
-        status: task.status || "To Do",
-        priority: task.priority || "MEDIUM",
-
-        assignedToId: assignedId,
-        developerId: assignedId,
-        developerName:
-          `${assignedToObj?.firstName || ""} ${assignedToObj?.lastName || ""}`.trim() ||
-          assignedToObj?.name ||
-          "Unassigned",
-        developerEmail: assignedToObj?.email || "",
-
-        assignedById: task.assignedBy?._id || "",
-        assignedByName:
-          `${task.assignedBy?.firstName || ""} ${task.assignedBy?.lastName || ""}`.trim() ||
-          task.assignedBy?.name ||
-          "",
-
-        project: task.project?._id || "",
-        projectName: task.project?.projectName || "No Project",
-
-        startDate: task.startDate
-          ? new Date(task.startDate).toISOString().split("T")[0]
-          : "",
-        dueDate: task.dueDate
-          ? new Date(task.dueDate).toISOString().split("T")[0]
-          : "",
-      };
-    });
-  }, [allTasks]);
-
-  const projectOptions = useMemo(() => {
-    const map = new Map();
-
-    normalizedTasks.forEach((task) => {
-      if (
-        task.project &&
-        task.projectName &&
-        task.projectName !== "No Project"
-      ) {
-        map.set(task.project, {
-          id: task.project,
-          name: task.projectName,
+      if (isDeveloper && uid) {
+        tasks = tasks.filter((task) => {
+          const assignedToId = task.assignedTo?._id || task.assignedTo;
+          return String(assignedToId) === String(uid);
         });
       }
-    });
+
+   
 
     return Array.from(map.values()).sort((a, b) =>
       a.name.localeCompare(b.name),
@@ -139,25 +91,39 @@ export default function TaskBoardPage() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const due = new Date(dueDate);
-    due.setHours(0, 0, 0, 0);
 
-    const diff = today - due;
-    return Math.floor(diff / (1000 * 60 * 60 * 24));
-  };
+      // Use a Set to prevent duplicate task IDs from being rendered (T004 fix)
+      const seenIds = new Set();
 
-  const filteredTasks = useMemo(() => {
-    let result = [...normalizedTasks];
-    const term = searchTerm.trim().toLowerCase();
+      tasks.forEach((task) => {
+        // Skip duplicates
+        if (seenIds.has(task._id)) return;
+        seenIds.add(task._id);
 
-    if (term) {
-      result = result.filter((task) => {
-        return (
-          task.content.toLowerCase().includes(term) ||
-          task.developerName.toLowerCase().includes(term) ||
-          task.developerEmail.toLowerCase().includes(term) ||
-          task.projectName.toLowerCase().includes(term)
-        );
+        const status = task.status || "To Do";
+        if (!organizedTasks[status]) return;
+
+        const assignedToObj = task.assignedTo || null;
+        const assignedId = assignedToObj?._id || assignedToObj || "";
+
+        const item = {
+          id: task._id,
+          content: task.title || "",
+          assignedToId: assignedId,
+          developerName: assignedToObj?.firstName || assignedToObj?.name || "Unassigned",
+          developerEmail: assignedToObj?.email || "",
+          description: task.description || "",
+          project: task.project?._id || null,
+          projectName: task.project?.projectName || "No Project",
+          startDate: task.startDate ? new Date(task.startDate).toISOString().split("T")[0] : "",
+          dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : "",
+          priority: task.priority || "MEDIUM",
+          status: status,
+          assignedByName: task.assignedBy?.firstName || task.assignedBy?.name || "",
+        };
+
+        organizedTasks[status].items.push(item);
+
       });
     }
 
@@ -644,35 +610,84 @@ export default function TaskBoardPage() {
               boxShadow: "0 18px 40px rgba(0,0,0,0.18)",
             }}
           >
-            <h3 style={{ marginTop: 0, color: "#0f172a" }}>
-              {selectedTask.content}
-            </h3>
-            <p style={{ color: "#64748b", lineHeight: 1.6 }}>
-              {selectedTask.description || "No description provided."}
-            </p>
 
-            <div style={{ display: "grid", gap: "10px", marginTop: "20px" }}>
-              <InfoRow label="Assigned To" value={selectedTask.developerName} />
-              <InfoRow
-                label="Assigned By"
-                value={selectedTask.assignedByName || "-"}
-              />
-              <InfoRow label="Project" value={selectedTask.projectName} />
-              <InfoRow
-                label="Start Date"
-                value={selectedTask.startDate || "-"}
-              />
-              <InfoRow label="Due Date" value={selectedTask.dueDate || "-"} />
-              <InfoRow label="Priority" value={selectedTask.priority} />
-              <InfoRow label="Status" value={selectedTask.status} />
-              <InfoRow
-                label="Expired"
-                value={
-                  isTaskExpired(selectedTask)
-                    ? `Yes - ${getDaysLate(selectedTask.dueDate)} day(s) late`
-                    : "No"
-                }
-              />
+            <h3 style={{ marginTop: 0, color: "#333" }}>{selectedTask.content}</h3>
+            {selectedTask.description && (
+              <p style={{ color: "#666", marginBottom: "20px" }}>{selectedTask.description}</p>
+            )}
+            
+            <div style={{ marginBottom: "15px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                <span style={{ fontSize: "16px" }}>👤</span>
+                <span style={{ color: "#555", fontWeight: "500" }}>Assigned To:</span>
+                <span style={{ color: "#333" }}>{selectedTask.developerName}</span>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                <span style={{ fontSize: "16px" }}>✋</span>
+                <span style={{ color: "#555", fontWeight: "500" }}>Assigned By:</span>
+                <span style={{ color: "#333" }}>{selectedTask.assignedByName}</span>
+              </div>
+              
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                <span style={{ fontSize: "16px" }}>📁</span>
+                <span style={{ color: "#555", fontWeight: "500" }}>Project:</span>
+                <span style={{ color: "#333" }}>{selectedTask.projectName}</span>
+              </div>
+              
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                <span style={{ fontSize: "16px" }}>📅</span>
+                <span style={{ color: "#555", fontWeight: "500" }}>Timeline:</span>
+                <span style={{ color: "#333" }}>{selectedTask.startDate} → </span>
+                {(() => {
+                  const isOverdue = selectedTask.dueDate && new Date(selectedTask.dueDate) < new Date(new Date().toISOString().split("T")[0]) && selectedTask.status !== "Done";
+                  return (
+                    <span style={{
+                      color: isOverdue ? "#d32f2f" : "#333",
+                      fontWeight: isOverdue ? "700" : "normal",
+                      backgroundColor: isOverdue ? "#ffebee" : "transparent",
+                      padding: isOverdue ? "2px 8px" : "0",
+                      borderRadius: isOverdue ? "4px" : "0",
+                    }}>
+                      {selectedTask.dueDate}
+                      {isOverdue && " ⚠️ OVERDUE"}
+                    </span>
+                  );
+                })()}
+              </div>
+              
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                <span style={{ fontSize: "16px" }}>⚡</span>
+                <span style={{ color: "#555", fontWeight: "500" }}>Priority:</span>
+                <span style={{
+                  padding: "2px 8px",
+                  borderRadius: "4px",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  color: "white",
+                  backgroundColor: selectedTask.priority === "HIGH" ? "#f44336" : 
+                                  selectedTask.priority === "MEDIUM" ? "#ff9800" : "#4caf50",
+                }}>
+                  {selectedTask.priority}
+                </span>
+              </div>
+              
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "16px" }}>📊</span>
+                <span style={{ color: "#555", fontWeight: "500" }}>Status:</span>
+                <span style={{
+                  padding: "2px 8px",
+                  borderRadius: "4px",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  color: "white",
+                  backgroundColor: selectedTask.status === 'To Do' ? "#FF9800" : 
+                                  selectedTask.status === 'In Progress' ? "#2196F3" : "#4CAF50",
+                }}>
+                  {selectedTask.status}
+                </span>
+              </div>
+
             </div>
 
             <div
@@ -938,15 +953,128 @@ export default function TaskBoardPage() {
                               )}
                             </div>
                           )}
-                        </Draggable>
-                      );
-                    })}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            );
-          })}
+
+
+                          {/* Show "Your Task" badge for own tasks */}
+                          {String(item.assignedToId) === String(userId) && !canEditOrDelete && (
+                            <div
+                              style={{
+                                fontSize: "10px",
+                                color: "white",
+                                backgroundColor: "#4CAF50",
+                                padding: "2px 8px",
+                                borderRadius: "10px",
+                                display: "inline-block",
+                                marginBottom: "4px",
+                                fontWeight: "600",
+                                marginRight: "4px",
+                              }}
+                            >
+                              ✓ Your Task
+                            </div>
+                          )}
+
+                          {/* Show assigned by info for TL/ATL */}
+                          {canEditOrDelete && item.assignedByName && (
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "#0066cc",
+                                marginBottom: "6px",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "4px",
+                                backgroundColor: "#f0f7ff",
+                                padding: "4px 8px",
+                                borderRadius: "4px",
+                              }}
+                            >
+                              ✋ <strong>by {item.assignedByName}</strong>
+                            </div>
+                          )}
+
+                          {item.projectName && item.projectName !== "No Project" && (
+                            <div
+                              style={{
+                                fontSize: "11px",
+                                color: "#7b1fa2",
+                                backgroundColor: "#f3e5f5",
+                                padding: "2px 8px",
+                                borderRadius: "10px",
+                                display: "inline-block",
+                                marginBottom: "4px",
+                              }}
+                            >
+                              📁 <strong>{item.projectName}</strong>
+                            </div>
+                          )}
+
+                          {item.priority && (
+                            <div
+                              style={{
+                                fontSize: "11px",
+                                display: "flex",
+                                color: "#fff",
+                                backgroundColor:
+                                  item.priority === "HIGH"
+                                    ? "#f44336"
+                                    : item.priority === "MEDIUM"
+                                    ? "#ff9800"
+                                    : "#4caf50",
+                                padding: "2px 8px",
+                                borderRadius: "10px",
+                                marginRight: "4px",
+                                marginTop: "4px",
+                                width: "fit-content",
+                              }}
+                            >
+                              {item.priority}
+                            </div>
+                          )}
+
+                          {item.dueDate && (() => {
+                            const isOverdue = new Date(item.dueDate) < new Date(new Date().toISOString().split("T")[0]) && item.status !== "Done";
+                            return (
+                              <div
+                                style={{
+                                  fontSize: "11px",
+                                  color: isOverdue ? "#d32f2f" : "#888",
+                                  fontWeight: isOverdue ? "600" : "normal",
+                                  marginTop: "4px",
+                                  paddingTop: "4px",
+                                  borderTop: "1px solid #eee",
+                                  backgroundColor: isOverdue ? "#ffebee" : "transparent",
+                                  padding: isOverdue ? "4px 8px" : "4px 0 0 0",
+                                  borderRadius: isOverdue ? "4px" : "0",
+                                }}
+                              >
+                                {isOverdue ? "⚠️" : "📅"} Due: {item.dueDate}
+                                {isOverdue && (
+                                  <span style={{
+                                    marginLeft: "6px",
+                                    fontSize: "10px",
+                                    color: "#fff",
+                                    backgroundColor: "#d32f2f",
+                                    padding: "1px 6px",
+                                    borderRadius: "8px",
+                                    fontWeight: "bold",
+                                  }}>
+                                    OVERDUE
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          ))}
+
         </div>
       </DragDropContext>
     </div>

@@ -1,4 +1,6 @@
 import DailyTask from "../models/DailyTask.js";
+import Task from "../models/Task.js";
+import Project from "../models/Project.js";
 
 /**
  * CREATE DAILY TASK
@@ -34,7 +36,44 @@ export const createDailyTask = async (req, res) => {
       });
     }
 
-    // ================= CREATE TASK =================
+    // ================= SYNC WITH KANBAN TASK =================
+    // Try to find if Project exists by name to link it in the Task model
+    let projectId = null;
+    if (project) {
+      const proj = await Project.findOne({ projectName: { $regex: new RegExp("^" + project + "$", "i") } });
+      if (proj) projectId = proj._id;
+    }
+
+    let mappedTaskStatus = "To Do";
+    if (status === "In Progress") mappedTaskStatus = "In Progress";
+    if (status === "Completed") mappedTaskStatus = "Done";
+
+    const existingTask = await Task.findOne({
+      title: { $regex: new RegExp("^" + task.trim() + "$", "i") },
+      assignedTo: req.user.id
+    });
+
+    if (existingTask) {
+      // Update its status
+      existingTask.status = mappedTaskStatus;
+      if (!existingTask.project && projectId) {
+        existingTask.project = projectId;
+      }
+      await existingTask.save();
+    } else {
+      // Create a matching kanban Task so it appears on Developer Dashboard and Task Board
+      await Task.create({
+        title: task.trim(),
+        assignedTo: req.user.id,
+        assignedBy: req.user.id,
+        status: mappedTaskStatus,
+        project: projectId,
+        startDate: new Date(),
+        description: "Created via Daily Task Sheet",
+      });
+    }
+
+    // ================= CREATE DAILY TASK ENTRY =================
     const dailyTask = await DailyTask.create({
       task,
       project,

@@ -1,26 +1,21 @@
 import { useEffect, useState } from "react";
-import { FiUsers, FiRefreshCw, FiTrash2, FiAlertCircle, FiEdit2 } from "react-icons/fi";
+import {
+  FiUsers,
+  FiRefreshCw,
+  FiTrash2,
+  FiAlertCircle,
+  FiEdit2,
+} from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { teamService } from "../../../services/teamService";
 import { useRequireRole } from "../../../hooks/useRequireRole";
 
-
 export default function TeamListTab() {
-
-
   const { loadinguser, isAuthorized } = useRequireRole([
     "CEO",
     "SystemAdmin",
     "TL",
-    ]);
-  
-    if (loadinguser) {
-      return <div className="p-8">Checking permissions…</div>;
-    }
-  
-    if (!isAuthorized) {
-      return null; 
-    }
+  ]);
 
   const navigate = useNavigate();
 
@@ -28,14 +23,22 @@ export default function TeamListTab() {
   const [teams, setTeams] = useState([]);
   const [error, setError] = useState(null);
 
+  if (loadinguser) {
+    return <div className="p-8">Checking permissions…</div>;
+  }
+
+  if (!isAuthorized) {
+    return null;
+  }
+
   async function load() {
     setLoading(true);
     setError(null);
+
     try {
       const res = await teamService.list();
       const d = res?.data;
 
-      // normalize: backend may return { success, count, data: [] } OR { teams: [] } OR []
       let list = [];
       if (Array.isArray(d)) list = d;
       else if (Array.isArray(d?.data)) list = d.data;
@@ -57,9 +60,10 @@ export default function TeamListTab() {
 
   async function remove(id) {
     if (!window.confirm("Delete this team?")) return;
+
     try {
       await teamService.remove(id);
-      load();
+      await load();
     } catch (err) {
       console.error("Failed to delete team", err);
       setError(err?.response?.data?.message || "Failed to delete team");
@@ -67,9 +71,6 @@ export default function TeamListTab() {
   }
 
   function editTeam(id) {
-    // IMPORTANT: change this path if your tabs are not controlled via query params.
-    // Typical pattern:
-    // - Employees page reads ?tab=team-creation and renders <TeamCreationTab />
     navigate(`/dashboard/employees?tab=team-creation&mode=edit&id=${id}`);
   }
 
@@ -99,7 +100,7 @@ export default function TeamListTab() {
         </button>
       </div>
 
-      {/* Error Alert */}
+      {/* Error */}
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
           <FiAlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -107,7 +108,7 @@ export default function TeamListTab() {
         </div>
       )}
 
-      {/* Table Container */}
+      {/* Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <table className="w-full">
           <thead>
@@ -133,6 +134,7 @@ export default function TeamListTab() {
           <tbody>
             {teams.map((t, idx) => {
               const id = t._id ?? t.id;
+
               return (
                 <tr
                   key={id}
@@ -162,7 +164,11 @@ export default function TeamListTab() {
                     <div>
                       <p className="font-medium text-gray-900">
                         {t.teamLead
-                          ? `${t.teamLead.firstName ?? ""} ${t.teamLead.lastName ?? ""}`.trim()
+                          ? `${t.teamLead.firstName ?? ""} ${
+                              t.teamLead.lastName ?? ""
+                            }`.trim() ||
+                            t.teamLead.name ||
+                            "-"
                           : "-"}
                       </p>
                       {t.teamLead?.email && (

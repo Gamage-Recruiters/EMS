@@ -21,6 +21,7 @@ import meetingRoutes from "./routes/meetingRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import dailyTaskRoutes from "./routes/dailyTaskRoutes.js";
 import complaintRoutes from "./routes/complaintRoutes.js";
+import projectRoutes from "./routes/projectRoutes.js";
 
 // Middlewares
 import errorHandler from "./middlewares/errorMiddleware.js";
@@ -68,7 +69,12 @@ app.options("*", cors(corsOptions)); // for preflight support
 
 // Body parsers
 app.use(express.json({ limit: process.env.BODY_LIMIT || "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: process.env.BODY_LIMIT || "10mb" }));
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: process.env.BODY_LIMIT || "10mb",
+  }),
+);
 
 // Health check / base route
 app.get("/", (req, res) => {
@@ -91,6 +97,7 @@ app.use("/api/tasks", taskRoutes);
 app.use("/api/daily-tasks", dailyTaskRoutes);
 app.use("/api/complaints", complaintRoutes);
 app.use("/api/availability", availabilityRoutes);
+app.use("/api/projects", projectRoutes);
 
 // Global Error Handler
 app.use(errorHandler);

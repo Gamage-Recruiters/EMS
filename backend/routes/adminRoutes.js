@@ -5,7 +5,7 @@ import {
   deleteUserByAdmin,
   getAllEmployees,
   getEmployeeById,
-  getEmployeesByName
+  getEmployeesByName,
 } from "../controllers/adminController.js";
 import { protect, authorize } from "../middlewares/authMiddleware.js";
 import upload from "../middlewares/uploadMiddleware.js";
@@ -18,45 +18,45 @@ router.use(protect);
 // Add a user (Developer / PM / etc.)
 router.post(
   "/add-user",
-  authorize("CEO", "SystemAdmin"),
+  authorize("CEO", "SystemAdmin", "TL", "PM"),
   upload.single("profileImage"),
-  addUserByAdmin
+  addUserByAdmin,
 );
 
 // Update developer profile
 router.put(
   "/developer/:userId",
-  authorize("CEO", "SystemAdmin"),
+  authorize("CEO", "SystemAdmin", "TL", "PM"),
   upload.single("profileImage"),
-  updateUserByAdmin
+  updateUserByAdmin,
 );
 
 // Delete developer
 router.delete(
   "/developer/:userId",
-  authorize("CEO", "SystemAdmin"),
-  deleteUserByAdmin
+  authorize("CEO", "SystemAdmin", "TL", "PM"),
+  deleteUserByAdmin,
 );
 
 // Get all employees
 router.get(
   "/employees",
-  authorize("CEO", "SystemAdmin", "TL"),
-  getAllEmployees
+  authorize("CEO", "SystemAdmin", "TL", "PM"),
+  getAllEmployees,
 );
 
 // Get employee by ID
 router.get(
   "/employee/:userId",
-  authorize("CEO", "SystemAdmin", "TL"),
-  getEmployeeById
+  authorize("CEO", "SystemAdmin", "TL", "PM"),
+  getEmployeeById,
 );
 
 // Search employees by name
 router.get(
   "/employees/search",
-  authorize("CEO", "SystemAdmin"),
-  getEmployeesByName
+  authorize("CEO", "SystemAdmin", "TL", "PM"),
+  getEmployeesByName,
 );
 
 export default router;

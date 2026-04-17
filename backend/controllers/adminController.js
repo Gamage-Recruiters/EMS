@@ -2,16 +2,8 @@ import User from "../models/User.js";
 import AppError from "../utils/AppError.js";
 import bcrypt from "bcryptjs";
 
-//System owner or CEO add a developer
 export const addUserByAdmin = async (req, res, next) => {
   try {
-    const actorRole = req.user.role;
-
-    // Authorization check
-    if (actorRole !== 'CEO' && actorRole !== 'SystemAdmin') {
-      return next(new AppError('Not authorized to add users', 403));
-    }
-
     const {
       firstName,
       lastName,
@@ -23,18 +15,18 @@ export const addUserByAdmin = async (req, res, next) => {
       contactNumber,
       address,
       city,
-      education
+      education,
     } = req.body;
 
     // Basic validation
     if (!firstName || !lastName || !email || !password || !role) {
-      return next(new AppError('Missing required fields', 400));
+      return next(new AppError("Missing required fields", 400));
     }
 
     // Check existing user
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return next(new AppError('User already exists with this email', 400));
+      return next(new AppError("User already exists with this email", 400));
     }
 
     // Hash password
@@ -50,23 +42,25 @@ export const addUserByAdmin = async (req, res, next) => {
       role,
       designation,
       department,
-      contactNumber: contactNumber || '',
-      address: address || '',
-      city: city || '',
-      profileImage: req.file ? req.file.filename : '',
+      contactNumber: contactNumber || "",
+      address: address || "",
+      city: city || "",
+      profileImage: req.file ? req.file.filename : "",
       education: {
-        institution: education?.institution || '',
-        department: education?.department || '',
-        degree: education?.degree || '',
-        location: education?.location || '',
-        startDate: education?.startDate ? new Date(education.startDate) : undefined,
-        endDate: education?.endDate ? new Date(education.endDate) : undefined
+        institution: education?.institution || "",
+        department: education?.department || "",
+        degree: education?.degree || "",
+        location: education?.location || "",
+        startDate: education?.startDate
+          ? new Date(education.startDate)
+          : undefined,
+        endDate: education?.endDate ? new Date(education.endDate) : undefined,
       },
-      status: 'Active'
+      status: "Active",
     });
 
     res.status(201).json({
-      message: 'User added successfully',
+      message: "User added successfully",
       user: {
         _id: user._id,
         firstName: user.firstName,
@@ -79,26 +73,16 @@ export const addUserByAdmin = async (req, res, next) => {
         address: user.address,
         city: user.city,
         profileImage: user.profileImage,
-        education: user.education
-      }
+        education: user.education,
+      },
     });
-
   } catch (error) {
     next(error);
   }
 };
 
-
-// System owner or CEO update user profile
 export const updateUserByAdmin = async (req, res, next) => {
   try {
-    const actorRole = req.user.role;
-
-    // Authorization
-    if (actorRole !== "CEO" && actorRole !== "SystemAdmin") {
-      return next(new AppError("Not authorized to update users", 403));
-    }
-
     const { userId } = req.params;
     const {
       firstName,
@@ -112,7 +96,7 @@ export const updateUserByAdmin = async (req, res, next) => {
       contactNumber,
       address,
       city,
-      education
+      education,
     } = req.body;
 
     const user = await User.findById(userId);
@@ -131,15 +115,25 @@ export const updateUserByAdmin = async (req, res, next) => {
     if (address !== undefined) user.address = address;
     if (city !== undefined) user.city = city;
     if (req.file) user.profileImage = req.file.filename;
-    
+
     // Update education fields
     if (education !== undefined) {
-      if (education.institution !== undefined) user.education.institution = education.institution;
-      if (education.department !== undefined) user.education.department = education.department;
-      if (education.degree !== undefined) user.education.degree = education.degree;
-      if (education.location !== undefined) user.education.location = education.location;
-      if (education.startDate !== undefined) user.education.startDate = education.startDate ? new Date(education.startDate) : null;
-      if (education.endDate !== undefined) user.education.endDate = education.endDate ? new Date(education.endDate) : null;
+      if (education.institution !== undefined)
+        user.education.institution = education.institution;
+      if (education.department !== undefined)
+        user.education.department = education.department;
+      if (education.degree !== undefined)
+        user.education.degree = education.degree;
+      if (education.location !== undefined)
+        user.education.location = education.location;
+      if (education.startDate !== undefined)
+        user.education.startDate = education.startDate
+          ? new Date(education.startDate)
+          : null;
+      if (education.endDate !== undefined)
+        user.education.endDate = education.endDate
+          ? new Date(education.endDate)
+          : null;
     }
 
     // Role change (optional)
@@ -150,7 +144,9 @@ export const updateUserByAdmin = async (req, res, next) => {
     // Password update (if provided)
     if (password) {
       if (password.length < 6) {
-        return next(new AppError("Password must be at least 6 characters", 400));
+        return next(
+          new AppError("Password must be at least 6 characters", 400),
+        );
       }
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(password, salt);
@@ -173,26 +169,16 @@ export const updateUserByAdmin = async (req, res, next) => {
         address: user.address,
         city: user.city,
         profileImage: user.profileImage,
-        education: user.education
-      }
+        education: user.education,
+      },
     });
-
   } catch (error) {
     next(error);
   }
 };
 
-
-// System owner or CEO delete user profile
 export const deleteUserByAdmin = async (req, res, next) => {
   try {
-    const actorRole = req.user.role;
-
-    // Authorization
-    if (actorRole !== "CEO" && actorRole !== "SystemAdmin") {
-      return next(new AppError("Not authorized to delete users", 403));
-    }
-
     const { userId } = req.params;
 
     const user = await User.findById(userId);
@@ -203,61 +189,43 @@ export const deleteUserByAdmin = async (req, res, next) => {
     await User.deleteOne({ _id: userId });
 
     res.status(200).json({
-      message: "User removed successfully"
+      message: "User removed successfully",
     });
-
   } catch (error) {
     next(error);
   }
 };
 
-
 // View all employees
 export const getAllEmployees = async (req, res, next) => {
   try {
-    const actorRole = req.user.role;
-
-    if (actorRole !== "CEO" && actorRole !== "SystemAdmin") {
-      return next(new AppError("Not authorized to view employees", 403));
-    }
-
     const employees = await User.find()
       .select("-password -refreshToken") // Security: exclude sensitive fields
       .sort({ createdAt: -1 });
 
     res.status(200).json({
       count: employees.length,
-      employees
+      employees,
     });
-
   } catch (error) {
     next(error);
   }
 };
 
-
 // View single employee details
 export const getEmployeeById = async (req, res, next) => {
   try {
-    const actorRole = req.user.role;
-
-    if (actorRole !== "CEO" && actorRole !== "SystemAdmin") {
-      return next(new AppError("Not authorized to view employee details", 403));
-    }
-
     const { userId } = req.params;
 
-    const user = await User.findById(userId)
-      .select("-password -refreshToken");
+    const user = await User.findById(userId).select("-password -refreshToken");
 
     if (!user) {
       return next(new AppError("User not found", 404));
     }
 
     res.status(200).json({
-      user
+      user,
     });
-
   } catch (error) {
     next(error);
   }
@@ -266,12 +234,6 @@ export const getEmployeeById = async (req, res, next) => {
 // Get employees by name (firstName or lastName)
 export const getEmployeesByName = async (req, res, next) => {
   try {
-    const actorRole = req.user.role;
-
-    if (actorRole !== "CEO" && actorRole !== "SystemAdmin") {
-      return next(new AppError("Not authorized to view employees", 403));
-    }
-
     const { name } = req.query;
 
     if (!name) {
@@ -281,18 +243,15 @@ export const getEmployeesByName = async (req, res, next) => {
     const employees = await User.find({
       $or: [
         { firstName: { $regex: name, $options: "i" } },
-        { lastName: { $regex: name, $options: "i" } }
-      ]
+        { lastName: { $regex: name, $options: "i" } },
+      ],
     }).select("-password -refreshToken");
 
     res.status(200).json({
       count: employees.length,
-      employees
+      employees,
     });
-
   } catch (error) {
     next(error);
   }
 };
-
-

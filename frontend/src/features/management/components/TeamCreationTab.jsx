@@ -5,28 +5,17 @@ import { employeeService } from "../../../services/employeeService";
 import { teamService } from "../../../services/teamService";
 import { useRequireRole } from "../../../hooks/useRequireRole";
 
-
 export default function TeamCreationTab() {
-
-    const { loadinguser, isAuthorized } = useRequireRole([
+  const { loadinguser, isAuthorized } = useRequireRole([
     "CEO",
     "SystemAdmin",
     "TL",
-    ]);
-  
-    if (loadinguser) {
-      return <div className="p-8">Checking permissions…</div>;
-    }
-  
-    if (!isAuthorized) {
-      return null; 
-    }
-
+  ]);
 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const mode = searchParams.get("mode") || "add"; // add | edit
+  const mode = searchParams.get("mode") || "add";
   const teamId = searchParams.get("id");
   const isEdit = mode === "edit" && !!teamId;
 
@@ -43,55 +32,76 @@ export default function TeamCreationTab() {
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
 
-  // Load employees
+  if (loadinguser) {
+    return <div className="p-8">Checking permissions…</div>;
+  }
+
+  if (!isAuthorized) {
+    return null;
+  }
+
+  // load employees
   useEffect(() => {
     let ignore = false;
-    setLoadingEmployees(true);
 
-    employeeService
-      .list()
-      .then((res) => {
+    async function loadEmployees() {
+      setLoadingEmployees(true);
+      try {
+        const res = await employeeService.list();
         if (ignore) return;
-        const d = res?.data;
 
+        const d = res?.data;
         let list = [];
+
         if (Array.isArray(d)) list = d;
         else if (Array.isArray(d?.data)) list = d.data;
         else if (Array.isArray(d?.employees)) list = d.employees;
 
         setEmployees(list);
-      })
-      .catch(() => setEmployees([]))
-      .finally(() => setLoadingEmployees(false));
+      } catch (err) {
+        console.error("Failed to load employees", err);
+        if (!ignore) setEmployees([]);
+      } finally {
+        if (!ignore) setLoadingEmployees(false);
+      }
+    }
+
+    loadEmployees();
 
     return () => {
       ignore = true;
     };
   }, []);
 
-  const leadOptions = useMemo(
-    () => employees.filter((e) => ["CEO", "SystemAdmin", "TL", "ATL"].includes(e.role)),
-    [employees]
-  );
+  const leadOptions = useMemo(() => {
+    return employees.filter((e) =>
+      ["CEO", "SystemAdmin", "TL", "ATL"].includes(e.role),
+    );
+  }, [employees]);
 
-  // Load team in edit mode
+  // load team in edit mode
   useEffect(() => {
-    if (!isEdit) return;
+    if (!isEdit) {
+      setTeamName("");
+      setDescription("");
+      setTeamLead("");
+      setMembers([]);
+      setError(null);
+      setMessage(null);
+      return;
+    }
 
     let ignore = false;
-    setLoadingTeam(true);
-    setError(null);
-    setMessage(null);
 
-    teamService
-      .get(teamId)
-      .then((res) => {
+    async function loadTeam() {
+      setLoadingTeam(true);
+      setError(null);
+      setMessage(null);
+
+      try {
+        const res = await teamService.get(teamId);
         if (ignore) return;
 
-        // normalize common shapes:
-        // - { data: team }
-        // - { team: team }
-        // - team itself
         const d = res?.data?.data || res?.data?.team || res?.data;
 
         setTeamName(d?.teamName ?? "");
@@ -103,36 +113,59 @@ export default function TeamCreationTab() {
         const memberIds = Array.isArray(d?.members)
           ? d.members.map((m) => m?._id || m?.id || m).filter(Boolean)
           : [];
+
         setMembers(memberIds);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Failed to load team", err);
-        setError(err?.response?.data?.message || "Failed to load team for editing");
-      })
-      .finally(() => setLoadingTeam(false));
+        if (!ignore) {
+          setError(
+            err?.response?.data?.message || "Failed to load team for editing",
+          );
+        }
+      } finally {
+        if (!ignore) setLoadingTeam(false);
+      }
+    }
+
+    loadTeam();
 
     return () => {
       ignore = true;
     };
   }, [isEdit, teamId]);
 
+  // auto hide message
+  useEffect(() => {
+    if (!message && !error) return;
+
+    const timer = setTimeout(() => {
+      setMessage(null);
+      setError(null);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [message, error]);
+
   const handleMemberSelect = (e) => {
     const selected = Array.from(e.target.selectedOptions).map((o) => o.value);
     setMembers(selected);
   };
 
-  const canSubmit = teamName.trim() && teamLead && !submitting && !loadingTeam;
+  const canSubmit =
+    teamName.trim() !== "" && teamLead !== "" && !submitting && !loadingTeam;
 
   async function onSubmit() {
     setError(null);
     setMessage(null);
+
     if (!canSubmit) return;
 
     setSubmitting(true);
+
     try {
       const payload = {
         teamName: teamName.trim(),
-        description,
+        description: description.trim(),
         teamLead,
         members,
       };
@@ -140,19 +173,24 @@ export default function TeamCreationTab() {
       if (isEdit) {
         await teamService.update(teamId, payload);
         setMessage("Team updated successfully.");
+
+        setTimeout(() => {
+          navigate("/dashboard/employees?tab=teams", { replace: true });
+        }, 1000);
       } else {
         await teamService.create(payload);
         setMessage("Team created successfully.");
-        setTeamName("");
-        setDescription("");
-        setTeamLead("");
-        setMembers([]);
+
+        // after create also go to teams tab
+        setTimeout(() => {
+          navigate("/dashboard/employees?tab=teams", { replace: true });
+        }, 1000);
       }
     } catch (err) {
       console.error(err);
       setError(
         err?.response?.data?.message ||
-          (isEdit ? "Failed to update team" : "Failed to create team")
+          (isEdit ? "Failed to update team" : "Failed to create team"),
       );
     } finally {
       setSubmitting(false);
@@ -166,16 +204,10 @@ export default function TeamCreationTab() {
     setMembers([]);
     setMessage(null);
     setError(null);
-
-    // if editing, reset should go back to add mode cleanly
-    if (isEdit) {
-      navigate(`/employees?tab=team-creation&mode=add`);
-    }
   }
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-8">
-      {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-3">
           <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
@@ -194,7 +226,6 @@ export default function TeamCreationTab() {
         </div>
       </div>
 
-      {/* Messages */}
       {message && (
         <div className="mb-6 p-5 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-300 rounded-xl shadow-md flex items-start gap-3">
           <div className="p-1 bg-emerald-500 rounded-full">
@@ -217,7 +248,6 @@ export default function TeamCreationTab() {
         </div>
       )}
 
-      {/* Form Container */}
       <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-10 max-w-3xl mx-auto backdrop-blur-sm">
         {loadingTeam ? (
           <div className="py-10 text-center text-gray-600 font-medium">
@@ -225,7 +255,6 @@ export default function TeamCreationTab() {
           </div>
         ) : (
           <div className="space-y-7">
-            {/* Team Name */}
             <div>
               <label className="block text-sm font-bold text-gray-800 mb-2 tracking-wide">
                 Team Name <span className="text-red-500">*</span>
@@ -239,7 +268,6 @@ export default function TeamCreationTab() {
               />
             </div>
 
-            {/* Description */}
             <div>
               <label className="block text-sm font-bold text-gray-800 mb-2 tracking-wide">
                 Description
@@ -253,7 +281,6 @@ export default function TeamCreationTab() {
               />
             </div>
 
-            {/* Team Lead */}
             <div>
               <label className="block text-sm font-bold text-gray-800 mb-2 tracking-wide">
                 Team Lead <span className="text-red-500">*</span>
@@ -267,13 +294,13 @@ export default function TeamCreationTab() {
                 <option value="">Select team lead…</option>
                 {leadOptions.map((u) => (
                   <option key={u._id ?? u.id} value={u._id ?? u.id}>
-                    {u.firstName || u.name || ""} {u.lastName || ""} ({u.email}) — {u.role}
+                    {u.firstName || u.name || ""} {u.lastName || ""} ({u.email})
+                    — {u.role}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Members */}
             <div>
               <label className="block text-sm font-bold text-gray-800 mb-2 tracking-wide">
                 Team Members
@@ -287,8 +314,13 @@ export default function TeamCreationTab() {
                 size={7}
               >
                 {employees.map((u) => (
-                  <option key={u._id ?? u.id} value={u._id ?? u.id} className="py-2">
-                    {u.firstName || u.name || ""} {u.lastName || ""} ({u.email}) — {u.role}
+                  <option
+                    key={u._id ?? u.id}
+                    value={u._id ?? u.id}
+                    className="py-2"
+                  >
+                    {u.firstName || u.name || ""} {u.lastName || ""} ({u.email})
+                    — {u.role}
                   </option>
                 ))}
               </select>
@@ -303,22 +335,31 @@ export default function TeamCreationTab() {
               </div>
             </div>
 
-            {/* Action Buttons */}
             <div className="flex gap-4 pt-6 border-t-2 border-gray-100">
               <button
                 onClick={onSubmit}
                 disabled={!canSubmit}
                 className="flex-1 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
-                {submitting ? (isEdit ? "Updating…" : "Creating…") : (isEdit ? "Update Team" : "Create Team")}
+                {submitting
+                  ? isEdit
+                    ? "Updating…"
+                    : "Creating…"
+                  : isEdit
+                    ? "Update Team"
+                    : "Create Team"}
               </button>
 
-              <button
-                onClick={onReset}
-                className="px-8 py-4 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 font-bold rounded-xl hover:from-gray-200 hover:to-gray-300 transition-all duration-200 shadow-md hover:shadow-lg"
-              >
-                Reset
-              </button>
+              {/* show reset only in create mode */}
+              {!isEdit && (
+                <button
+                  type="button"
+                  onClick={onReset}
+                  className="px-8 py-4 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 font-bold rounded-xl hover:from-gray-200 hover:to-gray-300 transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  Reset
+                </button>
+              )}
             </div>
           </div>
         )}

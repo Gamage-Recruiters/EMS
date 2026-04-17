@@ -2,23 +2,7 @@ import React from "react";
 import { FiUsers, FiUserCheck } from "react-icons/fi";
 import { useRequireRole } from "../../../hooks/useRequireRole";
 
-
 function MemberCard({ member }) {
-
-    const { loadinguser, isAuthorized } = useRequireRole([
-    "CEO",
-    "SystemAdmin",
-    "TL",
-    ]);
-  
-    if (loadinguser) {
-      return <div className="p-8">Checking permissions…</div>;
-    }
-  
-    if (!isAuthorized) {
-      return null; 
-    }
-
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md hover:border-blue-300 transition">
       <div className="flex items-start gap-3">
@@ -37,12 +21,15 @@ function MemberCard({ member }) {
             />
           </svg>
         </div>
+
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-sm text-gray-900">
-            {member.name || member.firstName}
+            {`${member.firstName || ""} ${member.lastName || ""}`.trim() ||
+              member.name ||
+              "Unnamed Member"}
           </div>
           <div className="text-xs text-gray-500 truncate">
-            {member.role || member.designation}
+            {member.role || member.designation || "Member"}
           </div>
         </div>
       </div>
@@ -51,25 +38,51 @@ function MemberCard({ member }) {
 }
 
 export default function TeamHierarchyView({ team }) {
+  const { loadinguser, isAuthorized } = useRequireRole([
+    "CEO",
+    "SystemAdmin",
+    "TL",
+  ]);
+
+  if (loadinguser) {
+    return <div className="p-8">Checking permissions…</div>;
+  }
+
+  if (!isAuthorized) {
+    return null;
+  }
+
+  const safeMembers = Array.isArray(team?.members) ? team.members : [];
+
   return (
     <div className="space-y-6">
       {/* Team Header Card */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg p-8 text-white">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+            <div className="w-14 h-14 bg-white/20 rounded-lg flex items-center justify-center">
               <FiUsers className="w-8 h-8" />
             </div>
+
             <div>
-              <h2 className="text-3xl font-bold">{team.name}</h2>
+              <h2 className="text-3xl font-bold">
+                {team?.name || team?.teamName || "Unnamed Team"}
+              </h2>
               <div className="flex items-center gap-2 mt-2 opacity-90">
                 <FiUserCheck className="w-4 h-4" />
-                <span className="text-sm">Led by {team.lead}</span>
+                <span className="text-sm">
+                  Led by{" "}
+                  {team?.lead ||
+                    `${team?.teamLead?.firstName || ""} ${team?.teamLead?.lastName || ""}`.trim() ||
+                    team?.teamLead?.name ||
+                    "Not assigned"}
+                </span>
               </div>
             </div>
           </div>
-          <div className="text-right bg-white bg-opacity-20 rounded-lg px-4 py-2">
-            <div className="text-3xl font-bold">{team.members.length}</div>
+
+          <div className="text-right bg-white/20 rounded-lg px-4 py-2">
+            <div className="text-3xl font-bold">{safeMembers.length}</div>
             <div className="text-sm opacity-90">Members</div>
           </div>
         </div>
@@ -80,12 +93,14 @@ export default function TeamHierarchyView({ team }) {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
           Team Members
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {team.members.map((m, idx) => (
-            <MemberCard key={idx} member={m} />
-          ))}
-        </div>
-        {team.members.length === 0 && (
+
+        {safeMembers.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {safeMembers.map((m, idx) => (
+              <MemberCard key={m._id ?? m.id ?? idx} member={m} />
+            ))}
+          </div>
+        ) : (
           <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
             <FiUsers className="w-12 h-12 text-gray-300 mx-auto mb-2" />
             <p className="text-gray-600">No members in this team yet</p>

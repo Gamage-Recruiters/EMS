@@ -10,12 +10,14 @@ import {
 } from "../../services/complaintService";
 import { getAllMeetings } from "../../services/meetingService";
 import { teamService } from "../../services/teamService";
+import { projectService } from "../../services/projectService";
 
 const CeoDashboard = () => {
   const { user } = useAuth() || {};
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
+  const [projectsLoading, setProjectsLoading] = useState(true);
 
   const [teams, setTeams] = useState([]);
   const [attendance, setAttendance] = useState([]);
@@ -23,6 +25,7 @@ const CeoDashboard = () => {
   const [meetings, setMeetings] = useState([]);
   const [developerComplaints, setDeveloperComplaints] = useState([]);
   const [adminComplaints, setAdminComplaints] = useState([]);
+  const [projects, setProjects] = useState([]);
 
   const normalizeArray = (payload) => {
     if (Array.isArray(payload)) return payload;
@@ -93,8 +96,22 @@ const CeoDashboard = () => {
     }
   };
 
+  const fetchProjects = async () => {
+    try {
+      setProjectsLoading(true);
+      const response = await projectService.list();
+      setProjects(response?.data?.data || []);
+    } catch (error) {
+      console.error("CEO project fetch error:", error);
+      setProjects([]);
+    } finally {
+      setProjectsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchDashboardData();
+    fetchProjects();
   }, []);
 
   const now = new Date();
@@ -124,17 +141,16 @@ const CeoDashboard = () => {
     return developerComplaints.length + adminComplaints.length;
   }, [developerComplaints, adminComplaints]);
 
-  const ongoingProjects = useMemo(() => {
-    return teams.slice(0, 5).map((team, index) => ({
-      id: team?._id || index,
-      title: team?.name || team?.teamName || `Team ${index + 1}`,
-      project: `${Array.isArray(team?.members) ? team.members.length : 0} Members`,
-      status:
-        Array.isArray(team?.members) && team.members.length > 0
-          ? "completed"
-          : "pending",
+  const projectSummary = useMemo(() => {
+    return projects.slice(0, 3).map((project) => ({
+      id: project._id,
+      title: project.projectName,
+      project: project.endDate
+        ? `Ends ${new Date(project.endDate).toLocaleDateString()}`
+        : "No end date",
+      status: project.status || "Active",
     }));
-  }, [teams]);
+  }, [projects]);
 
   const upcomingMeetings = useMemo(() => {
     return meetings
@@ -147,7 +163,6 @@ const CeoDashboard = () => {
           meeting?.status || meeting?.meetingStatus || meeting?.state || "",
         ).toLowerCase();
 
-        // remove cancelled meetings
         if (
           status.includes("cancel") ||
           status.includes("cancelled") ||
@@ -156,7 +171,6 @@ const CeoDashboard = () => {
           return false;
         }
 
-        // only future or today meetings
         return new Date(rawDate) >= new Date();
       })
       .sort((a, b) => {
@@ -174,7 +188,6 @@ const CeoDashboard = () => {
   return (
     <div className="min-h-screen flex bg-[#F5F7FB]">
       <main className="flex-1 flex flex-col">
-        {/* Top header - TL style */}
         <header className="h-16 flex items-center justify-between px-8 border-b border-gray-200 bg-white/80 backdrop-blur">
           <div>
             <h1 className="text-lg md:text-xl font-semibold text-slate-900">
@@ -191,11 +204,16 @@ const CeoDashboard = () => {
 
           <div className="flex items-center gap-4">
             <button
-              onClick={fetchDashboardData}
+              onClick={() => {
+                fetchDashboardData();
+                fetchProjects();
+              }}
               className="rounded-md bg-[#2563EB] text-white text-xs font-medium px-4 py-2 flex items-center gap-2 shadow-sm hover:bg-[#1D4ED8] transition"
             >
               <span>↻</span>
-              <span>{loading ? "Refreshing..." : "Refresh"}</span>
+              <span>
+                {loading || projectsLoading ? "Refreshing..." : "Refresh"}
+              </span>
             </button>
 
             <button className="relative w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
@@ -204,9 +222,7 @@ const CeoDashboard = () => {
           </div>
         </header>
 
-        {/* Main content */}
         <div className="flex-1 px-6 md:px-8 py-6 flex flex-col gap-6 overflow-y-auto">
-          {/* KPI cards - TL theme */}
           <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <KpiCard
               icon="👥"
@@ -242,24 +258,25 @@ const CeoDashboard = () => {
             />
           </section>
 
-          {/* Middle row */}
           <section className="grid grid-cols-1 lg:grid-cols-[2fr,1fr] gap-6">
-            {/* Ongoing Projects */}
             <div className="bg-white rounded-3xl shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-sm font-semibold text-slate-900">
                   Ongoing Projects
                 </h2>
-                <button className="text-xs text-blue-600 font-medium hover:underline">
-                  View All
+                <button
+                  onClick={() => navigate("/dashboard/ceo/past-projects")}
+                  className="text-xs text-blue-600 font-medium hover:underline"
+                >
+                  View All Projects
                 </button>
               </div>
 
               <div className="space-y-3">
-                {loading ? (
+                {projectsLoading ? (
                   <p className="text-sm text-gray-500">Loading...</p>
-                ) : ongoingProjects.length > 0 ? (
-                  ongoingProjects.map((p) => (
+                ) : projectSummary.length > 0 ? (
+                  projectSummary.map((p) => (
                     <div
                       key={p.id}
                       className="flex items-center justify-between rounded-2xl border border-gray-100 bg-[#F9FBFF] px-4 py-3"
@@ -272,18 +289,15 @@ const CeoDashboard = () => {
                           {p.project}
                         </p>
                       </div>
-                      <StatusBadge status={p.status} />
+                      <ProjectStatusBadge status={p.status} />
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-gray-500">
-                    No team/project data found
-                  </p>
+                  <p className="text-sm text-gray-500">No project data found</p>
                 )}
               </div>
             </div>
 
-            {/* Quick Actions - TL style */}
             <QuickActions
               onNavigate={navigate}
               links={{
@@ -294,7 +308,6 @@ const CeoDashboard = () => {
             />
           </section>
 
-          {/* Bottom row */}
           <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <CalendarCard />
             <UpcomingMeetings
@@ -308,8 +321,6 @@ const CeoDashboard = () => {
     </div>
   );
 };
-
-/* ---------- Sub-components ---------- */
 
 const KpiCard = ({ icon, iconBg, label, value, badge, badgeColor }) => (
   <div className="bg-white rounded-3xl shadow-sm px-5 py-4 flex flex-col gap-2">
@@ -326,20 +337,36 @@ const KpiCard = ({ icon, iconBg, label, value, badge, badgeColor }) => (
   </div>
 );
 
-const StatusBadge = ({ status }) => {
+const ProjectStatusBadge = ({ status }) => {
   const normalized = String(status).toLowerCase();
 
+  if (normalized === "completed") {
+    return (
+      <span className="text-[11px] px-2 py-1 rounded-full bg-green-100 text-green-700">
+        Completed
+      </span>
+    );
+  }
+
+  if (normalized === "on hold") {
+    return (
+      <span className="text-[11px] px-2 py-1 rounded-full bg-yellow-100 text-yellow-700">
+        On Hold
+      </span>
+    );
+  }
+
+  if (normalized === "cancelled") {
+    return (
+      <span className="text-[11px] px-2 py-1 rounded-full bg-red-100 text-red-700">
+        Cancelled
+      </span>
+    );
+  }
+
   return (
-    <span
-      className={`text-[11px] px-2 py-1 rounded-full ${
-        normalized === "completed" || normalized === "resolved"
-          ? "bg-green-100 text-green-700"
-          : "bg-yellow-100 text-yellow-700"
-      }`}
-    >
-      {normalized === "completed" || normalized === "resolved"
-        ? "Completed"
-        : "Pending"}
+    <span className="text-[11px] px-2 py-1 rounded-full bg-indigo-100 text-indigo-700">
+      Active
     </span>
   );
 };
@@ -383,18 +410,15 @@ const CalendarCard = () => {
   const today = currentDate.getDate();
 
   const monthName = currentDate.toLocaleString("default", { month: "short" });
-
   const firstDayOfMonth = new Date(year, monthIndex, 1).getDay();
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
 
   const calendarCells = [];
 
-  // empty cells before first day
   for (let i = 0; i < firstDayOfMonth; i++) {
     calendarCells.push(null);
   }
 
-  // actual days
   for (let day = 1; day <= daysInMonth; day++) {
     calendarCells.push(day);
   }

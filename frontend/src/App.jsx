@@ -2,7 +2,6 @@
 // It uses React Router for navigation and includes guards for protected routes based on user roles.
 // The app also manages attendance check-in state and displays an attendance prompt when necessary.
 
-
 import { useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import RoleRedirect from "./routes/RoleRedirect.jsx";
@@ -106,12 +105,18 @@ export default function App() {
           <Route path="/dashboard" element={<RoleRedirect />} />
 
           {/* ================= COMMON ================= */}
-          <Route path="/dashboard/home" element={<DashboardPage checkInTime={checkInTime} />} />
+          <Route
+            path="/dashboard/home"
+            element={<DashboardPage checkInTime={checkInTime} />}
+          />
           <Route path="/dashboard/overview" element={<DashboardOverview />} />
           <Route path="/dashboard/attendance" element={<AttendancePage />} />
           <Route path="/dashboard/meetings" element={<MeetingOverview />} />
           <Route path="/dashboard/notifications" element={<Notifications />} />
-          <Route path="/dashboard/unassigned" element={<UnassignedDashboard />} />
+          <Route
+            path="/dashboard/unassigned"
+            element={<UnassignedDashboard />}
+          />
           <Route path="/dashboard/leave-form" element={<LeaveForm />} />
 
           {/* ================= CEO ================= */}
@@ -140,22 +145,35 @@ export default function App() {
             }
           />
 
-
-          <Route path="/dashboard/meetings/create" element={
-            <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL"]}>
-            <CreateMeetings />
-            </ProtectedRoute>
-          } />
-
-          <Route path="/dashboard/meetings/create" element={
-              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL"]}>
-            <CreateMeetings />
-             </ProtectedRoute>
+          <Route
+            path="/dashboard/ceo/past-projects"
+            element={
+              <ProtectedRoute allowedRoles={["CEO"]}>
+                <TLPastProjects />
+              </ProtectedRoute>
             }
-            />
+          />
 
-           {/* ================= Kanban ================= */}
-           <Route path="/dashboard/kanban" element={<TaskBoardPage />} />  
+          <Route
+            path="/dashboard/meetings/create"
+            element={
+              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL"]}>
+                <CreateMeetings />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dashboard/meetings/create"
+            element={
+              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL"]}>
+                <CreateMeetings />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ================= Kanban ================= */}
+          <Route path="/dashboard/kanban" element={<TaskBoardPage />} />
 
           {/* ================= DEVELOPER ================= */}
           <Route
@@ -241,10 +259,16 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="personal-details?mode=edit" replace />} />
+            <Route
+              index
+              element={<Navigate to="personal-details?mode=edit" replace />}
+            />
             <Route path="personal-details" element={<PersonalDetails />} />
             <Route path="contact-details" element={<ContactDetails />} />
-            <Route path="education-qualification" element={<EducationQualification />} />
+            <Route
+              path="education-qualification"
+              element={<EducationQualification />}
+            />
           </Route>
 
           {/* ================= EMPLOYEE PROFILE MANAGEMENT ================= */}
@@ -259,7 +283,10 @@ export default function App() {
             <Route index element={<Navigate to="personal-details" replace />} />
             <Route path="personal-details" element={<PersonalDetails />} />
             <Route path="contact-details" element={<ContactDetails />} />
-            <Route path="education-qualification" element={<EducationQualification />} />
+            <Route
+              path="education-qualification"
+              element={<EducationQualification />}
+            />
             <Route path="job-details" element={<JobDetails />} />
             <Route path="attendance" element={<AttendancePage />} />
           </Route>
@@ -283,7 +310,9 @@ export default function App() {
           />
           <Route
             path="/dashboard/tl/team-formation"
-            element={<Navigate to="/dashboard/employees?tab=team-creation" replace />}
+            element={
+              <Navigate to="/dashboard/employees?tab=team-creation" replace />
+            }
           />
           <Route
             path="/dashboard/tl/add-developer"
@@ -316,7 +345,7 @@ export default function App() {
           <Route
             path="/dashboard/tl/past-projects"
             element={
-              <ProtectedRoute allowedRoles={["TL"]}>
+              <ProtectedRoute allowedRoles={["TL", "CEO"]}>
                 <TLPastProjects />
               </ProtectedRoute>
             }

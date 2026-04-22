@@ -130,6 +130,25 @@ export default function UserManagementPage() {
 
   const safeEmployees = Array.isArray(employees) ? employees : [];
 
+  const filteredEmployees = safeEmployees.filter((emp) => {
+  const search = q.trim().toLowerCase();
+  const empName = `${emp.firstName || ""} ${emp.lastName || ""}`.toLowerCase();
+  const empEmail = (emp.email || "").toLowerCase();
+  const empRole = (emp.role || "").toLowerCase();
+
+  const matchesSearch =
+    !search ||
+    empName.includes(search) ||
+    empEmail.includes(search) ||
+    (emp.firstName || "").toLowerCase().includes(search) ||
+    (emp.lastName || "").toLowerCase().includes(search);
+
+  const matchesRole =
+    !role || empRole === role.toLowerCase();
+
+  return matchesSearch && matchesRole;
+});
+
   return (
     <div className="w-full min-h-screen bg-gray-50">
       {/* Tab Navigation */}
@@ -239,13 +258,21 @@ export default function UserManagementPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Role
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Filter by role…"
+                  {/**TC05 */ }
+                  <select
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
+                  >
+                    <option value="">All Roles</option>
+                    <option value="CEO">CEO</option>
+                    <option value="SystemAdmin">System Admin</option>
+                    <option value="TL">Team Lead</option>
+                    <option value="ATL">Assistant Team Lead</option>
+                    <option value="PM">Project Manager</option>
+                    <option value="Developer">Developer</option>
+                    <option value="Unassigned">Unassigned</option>
+                  </select>
                 </div>
 
                 <div className="flex items-end">
@@ -294,7 +321,7 @@ export default function UserManagementPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {safeEmployees.map((e) => (
+                  {filteredEmployees.map((e) => (
                     <UserRow
                       key={e._id ?? e.id}
                       user={e}
@@ -308,7 +335,7 @@ export default function UserManagementPage() {
                     />
                   ))}
 
-                  {!loading && safeEmployees.length === 0 && (
+                  {!loading && filteredEmployees.length === 0 && (
                     <tr>
                       <td colSpan={9} className="px-6 py-8 text-center">
                         <FiUsers className="w-12 h-12 text-gray-300 mx-auto mb-3" />

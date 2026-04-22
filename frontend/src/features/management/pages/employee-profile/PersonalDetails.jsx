@@ -25,8 +25,35 @@ export default function PersonalDetails() {
   }, [employee?.profileImage]);
 
   const handleImageChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  const maxSize = 5 * 1024 * 1024; // 5MB
+  const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+
+  // clear old file-related error first
+  setFieldErrors?.((prev) => ({
+    ...prev,
+    profileImage: undefined,
+  }));
+
+  if (!allowedTypes.includes(file.type)) {
+    setFieldErrors?.((prev) => ({
+      ...prev,
+      profileImage: "Only JPG, PNG, GIF, or WEBP images are allowed.",
+    }));
+    e.target.value = "";
+    return;
+  }
+
+  if (file.size > maxSize) {
+    setFieldErrors?.((prev) => ({
+      ...prev,
+      profileImage: "File size exceeds 5MB.",
+    }));
+    e.target.value = "";
+    return;
+  }
 
     const reader = new FileReader();
     reader.onload = (event) => {

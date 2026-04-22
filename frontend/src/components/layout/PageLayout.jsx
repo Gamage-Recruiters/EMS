@@ -11,14 +11,14 @@ export default function PageLayout() {
       </div>
 
       {/* Main area */}
-      <div className="flex flex-col flex-1 bg-[#f6f7fb]">
+      <div className="flex flex-col flex-1 bg-[#f6f7fb] min-w-0">
         {/* Header */}
         <div className="z-[9999]">
           <Header />
         </div>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-6 min-w-0">
           <Outlet />
         </main>
       </div>

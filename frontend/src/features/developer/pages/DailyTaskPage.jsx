@@ -12,23 +12,6 @@ import {
 import { useAuth } from "../../../context/AuthContext";
 
 // ================= DATE HELPERS =================
-// const isInCurrentWeek = (dateStr) => {
-//   const date = new Date(dateStr);
-//   const now = new Date();
-
-//   const day = now.getDay(); // 0 (Sun) - 6 (Sat)
-//   const monday = new Date(now);
-//   monday.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
-//   monday.setHours(0, 0, 0, 0);
-
-//   const friday = new Date(monday);
-//   friday.setDate(monday.getDate() + 4);
-//   friday.setHours(23, 59, 59, 999);
-
-//   return date >= monday && date <= friday;
-// };
-
-// ================= DATE HELPERS =================
 const getWeekNumber = (date) => {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
@@ -47,8 +30,6 @@ const isInCurrentWeek = (dateStr) => {
     date.getFullYear() === now.getFullYear() // make sure it's this year
   );
 };
-
-
 
 function DailyTaskPage() {
   const { user } = useAuth();
@@ -119,7 +100,7 @@ function DailyTaskPage() {
   }
 
   return (
-    <div className="flex-1 bg-slate-50 text-slate-900">
+    <div className="flex-1 min-w-0 bg-slate-50 text-slate-900">
       <div className="px-6 py-8 space-y-6">
         {/* ================= HEADER ================= */}
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -196,12 +177,12 @@ function DailyTaskPage() {
           </div>
 
           {/* ================= TABLE ================= */}
-          <div className="relative max-h-[420px] overflow-auto border rounded-lg">
+          <div className="relative max-h-[420px] w-full overflow-auto border rounded-lg">
             <table className="min-w-full text-sm">
               <thead className="sticky top-0 bg-slate-100 text-slate-600 z-10">
                 <tr>
                   <th className="px-3 py-2">#</th>
-                  <th className="px-3 py-2">Date</th>
+                  <th className="px-3 py-2 whitespace-nowrap">Date</th>
                   <th className="px-3 py-2">Task</th>
                   <th className="px-3 py-2">Description</th>
                   <th className="px-3 py-2">Project</th>
@@ -212,41 +193,74 @@ function DailyTaskPage() {
                   <th className="px-3 py-2">Hours</th>
                   <th className="px-3 py-2">PM</th>
                   <th className="px-3 py-2">TL</th>
-                  {canDelete && <th className="px-3 py-2">Action</th>}
+                  {canDelete && (
+                    <th className="px-3 py-2 sticky right-0 bg-slate-100 z-20 border-l border-slate-200">
+                      Action
+                    </th>
+                  )}
                 </tr>
               </thead>
 
               <tbody className="divide-y">
                 {filtered.map((task, idx) => (
-                  <tr key={task._id} className="hover:bg-slate-50">
+                  <tr key={task._id} className="group hover:bg-slate-50">
                     <td className="px-3 py-2">{idx + 1}</td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-2 whitespace-nowrap">
                       {new Date(task.date).toLocaleDateString()}
                     </td>
-                    <td className="px-3 py-2 font-medium">{task.task}</td>
-                    <td className="px-3 py-2 text-xs max-w-xs truncate">
-                      {task.facedIssues || "—"}
-                    </td>
-                    <td className="px-3 py-2">{task.project}</td>
-                    <td className="px-3 py-2 text-xs">
-                      {task.developer?.firstName && task.developer?.lastName
-                        ? `${task.developer.firstName} ${task.developer.lastName}`
-                        : "—"}
+                    <td className="px-3 py-2">
+                      {/* Wrappers added for true truncation in table cells */}
+                      <div
+                        className="font-medium max-w-[150px] lg:max-w-[200px] truncate"
+                        title={task.task}
+                      >
+                        {task.task}
+                      </div>
                     </td>
                     <td className="px-3 py-2">
+                      <div
+                        className="text-xs max-w-[150px] lg:max-w-[200px] truncate"
+                        title={task.facedIssues}
+                      >
+                        {task.facedIssues || "—"}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2">
+                      <div
+                        className="max-w-[120px] truncate"
+                        title={task.project}
+                      >
+                        {task.project}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2">
+                      <div
+                        className="text-xs max-w-[120px] truncate"
+                        title={
+                          task.developer?.firstName && task.developer?.lastName
+                            ? `${task.developer.firstName} ${task.developer.lastName}`
+                            : ""
+                        }
+                      >
+                        {task.developer?.firstName && task.developer?.lastName
+                          ? `${task.developer.firstName} ${task.developer.lastName}`
+                          : "—"}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap">
                       <StatusBadge label={task.status} />
                     </td>
-                    <td className="px-3 py-2">{task.startTime}</td>
-                    <td className="px-3 py-2">{task.endTime}</td>
-                    <td className="px-3 py-2">{task.workingHours}</td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-2 whitespace-nowrap">{task.startTime}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">{task.endTime}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">{task.workingHours}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">
                       <StatusBadge label={task.pmCheck} />
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-2 whitespace-nowrap">
                       <StatusBadge label={task.teamLeadCheck} />
                     </td>
                     {canDelete && (
-                      <td className="px-3 py-2 text-center">
+                      <td className="px-3 py-2 text-center sticky right-0 bg-white group-hover:bg-slate-50 z-10 border-l border-slate-200">
                         <button
                           onClick={() => handleDelete(task._id)}
                           className="text-red-600 hover:text-red-800"

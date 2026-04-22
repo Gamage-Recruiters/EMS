@@ -65,35 +65,13 @@ export default function TaskBoardPage() {
           return String(assignedToId) === String(uid);
         });
       }
-
-   
-
-    return Array.from(map.values()).sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
-  }, [normalizedTasks]);
-
-  const isTaskExpired = (task) => {
-    if (!task.dueDate) return false;
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const due = new Date(task.dueDate);
-    due.setHours(0, 0, 0, 0);
-
-    return due < today && task.status !== "Done";
-  };
-
-  const getDaysLate = (dueDate) => {
-    if (!dueDate) return 0;
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-
       // Use a Set to prevent duplicate task IDs from being rendered (T004 fix)
       const seenIds = new Set();
+      const organizedTasks = {
+        "To Do": { title: "To Do", items: [] },
+        "In Progress": { title: "In Progress", items: [] },
+        Done: { title: "Done", items: [] },
+      };
 
       tasks.forEach((task) => {
         // Skip duplicates
@@ -123,8 +101,103 @@ export default function TaskBoardPage() {
         };
 
         organizedTasks[status].items.push(item);
-
       });
+
+      setAllTasks(tasks);
+      setColumns(organizedTasks);
+      setLoading(false);
+      setError("");
+    } catch (err) {
+      console.error("Failed to load tasks:", err);
+      setError("Failed to load tasks");
+      setLoading(false);
+    }
+  };
+
+  // Permission flags
+  const isDeveloper = String(userRole || "").toUpperCase() === "DEVELOPER";
+  const canCreateTask = !isDeveloper;
+  const canEditOrDelete = !isDeveloper;
+  const canDragAnyTask = !isDeveloper;
+
+  const normalizedTasks = useMemo(() => {
+    const seenIds = new Set();
+    return allTasks
+      .filter((task) => {
+        if (seenIds.has(task._id)) return false;
+        seenIds.add(task._id);
+        return true;
+      })
+      .map((task) => {
+        const assignedToObj = task.assignedTo || null;
+        const assignedId = assignedToObj?._id || assignedToObj || "";
+
+        return {
+          id: task._id,
+          content: task.title || "",
+          assignedToId: assignedId,
+          developerName: assignedToObj?.firstName || assignedToObj?.name || "Unassigned",
+          developerEmail: assignedToObj?.email || "",
+          description: task.description || "",
+          project: task.project?._id || null,
+          projectName: task.project?.projectName || "No Project",
+          startDate: task.startDate ? new Date(task.startDate).toISOString().split("T")[0] : "",
+          dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : "",
+          priority: task.priority || "MEDIUM",
+          status: task.status || "To Do",
+          assignedByName: task.assignedBy?.firstName || task.assignedBy?.name || "",
+        };
+      });
+  }, [allTasks]);
+
+  const projectOptions = useMemo(() => {
+    const map = new Map();
+    normalizedTasks.forEach((task) => {
+      if (task.project) {
+        map.set(task.project, { id: task.project, name: task.projectName });
+      }
+    });
+    return Array.from(map.values()).sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+  }, [normalizedTasks]);
+
+  const isTaskExpired = (task) => {
+    if (!task.dueDate) return false;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const due = new Date(task.dueDate);
+    due.setHours(0, 0, 0, 0);
+
+    return due < today && task.status !== "Done";
+  };
+
+  const getDaysLate = (dueDate) => {
+    if (!dueDate) return 0;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const due = new Date(dueDate);
+    due.setHours(0, 0, 0, 0);
+
+    const diffMs = today - due;
+    return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+  };
+
+  const filteredTasks = useMemo(() => {
+    let result = [...normalizedTasks];
+
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(
+        (task) =>
+          task.content.toLowerCase().includes(term) ||
+          task.developerName.toLowerCase().includes(term) ||
+          task.projectName.toLowerCase().includes(term),
+      );
     }
 
     if (showOnlyMyTasks) {
@@ -953,127 +1026,15 @@ export default function TaskBoardPage() {
                               )}
                             </div>
                           )}
-
-
-                          {/* Show "Your Task" badge for own tasks */}
-                          {String(item.assignedToId) === String(userId) && !canEditOrDelete && (
-                            <div
-                              style={{
-                                fontSize: "10px",
-                                color: "white",
-                                backgroundColor: "#4CAF50",
-                                padding: "2px 8px",
-                                borderRadius: "10px",
-                                display: "inline-block",
-                                marginBottom: "4px",
-                                fontWeight: "600",
-                                marginRight: "4px",
-                              }}
-                            >
-                              ✓ Your Task
-                            </div>
-                          )}
-
-                          {/* Show assigned by info for TL/ATL */}
-                          {canEditOrDelete && item.assignedByName && (
-                            <div
-                              style={{
-                                fontSize: "12px",
-                                color: "#0066cc",
-                                marginBottom: "6px",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "4px",
-                                backgroundColor: "#f0f7ff",
-                                padding: "4px 8px",
-                                borderRadius: "4px",
-                              }}
-                            >
-                              ✋ <strong>by {item.assignedByName}</strong>
-                            </div>
-                          )}
-
-                          {item.projectName && item.projectName !== "No Project" && (
-                            <div
-                              style={{
-                                fontSize: "11px",
-                                color: "#7b1fa2",
-                                backgroundColor: "#f3e5f5",
-                                padding: "2px 8px",
-                                borderRadius: "10px",
-                                display: "inline-block",
-                                marginBottom: "4px",
-                              }}
-                            >
-                              📁 <strong>{item.projectName}</strong>
-                            </div>
-                          )}
-
-                          {item.priority && (
-                            <div
-                              style={{
-                                fontSize: "11px",
-                                display: "flex",
-                                color: "#fff",
-                                backgroundColor:
-                                  item.priority === "HIGH"
-                                    ? "#f44336"
-                                    : item.priority === "MEDIUM"
-                                    ? "#ff9800"
-                                    : "#4caf50",
-                                padding: "2px 8px",
-                                borderRadius: "10px",
-                                marginRight: "4px",
-                                marginTop: "4px",
-                                width: "fit-content",
-                              }}
-                            >
-                              {item.priority}
-                            </div>
-                          )}
-
-                          {item.dueDate && (() => {
-                            const isOverdue = new Date(item.dueDate) < new Date(new Date().toISOString().split("T")[0]) && item.status !== "Done";
-                            return (
-                              <div
-                                style={{
-                                  fontSize: "11px",
-                                  color: isOverdue ? "#d32f2f" : "#888",
-                                  fontWeight: isOverdue ? "600" : "normal",
-                                  marginTop: "4px",
-                                  paddingTop: "4px",
-                                  borderTop: "1px solid #eee",
-                                  backgroundColor: isOverdue ? "#ffebee" : "transparent",
-                                  padding: isOverdue ? "4px 8px" : "4px 0 0 0",
-                                  borderRadius: isOverdue ? "4px" : "0",
-                                }}
-                              >
-                                {isOverdue ? "⚠️" : "📅"} Due: {item.dueDate}
-                                {isOverdue && (
-                                  <span style={{
-                                    marginLeft: "6px",
-                                    fontSize: "10px",
-                                    color: "#fff",
-                                    backgroundColor: "#d32f2f",
-                                    padding: "1px 6px",
-                                    borderRadius: "8px",
-                                    fontWeight: "bold",
-                                  }}>
-                                    OVERDUE
-                                  </span>
-                                )}
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
+                        </Draggable>
+                      );
+                    })}
                   {provided.placeholder}
                 </div>
               )}
             </Droppable>
-          ))}
+            );
+          })}
 
         </div>
       </DragDropContext>

@@ -138,6 +138,9 @@ export default function PersonalDetails() {
             <div className="text-sm text-gray-600">
               <p className="font-medium mb-2">Upload photo</p>
               <p className="text-xs">JPG, PNG or GIF (Max. 5MB)</p>
+              {fieldErrors?.profileImage && (
+                <p className="text-xs text-red-600 mt-2">{fieldErrors.profileImage}</p>
+              )}
             </div>
           </div>
         </div>

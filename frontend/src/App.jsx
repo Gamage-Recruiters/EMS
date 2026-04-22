@@ -675,7 +675,7 @@ export default function App() {
           <Route
             path="/dashboard/profile"
             element={
-              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin"]}>
+              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL"]}>
                 <EmployeeProfile />
               </ProtectedRoute>
             }

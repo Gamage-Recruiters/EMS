@@ -8,7 +8,7 @@ import {
   getTodayAttendance,
   checkOut,
 } from "../../services/attendanceService";
-import { getMyDailyTasks } from "../../services/dailyTaskService";
+import { taskService } from "../../services/taskService";
 import { useNavigate } from "react-router-dom";
 
 const DevDashboard = () => {
@@ -42,16 +42,18 @@ const DevDashboard = () => {
   const fetchRecentTasks = async () => {
     try {
       setTasksLoading(true);
-      const res = await getMyDailyTasks();
+      // Use taskService.myTasks() to fetch kanban board tasks assigned to logged-in user
+      // This connects DevDashboard to the same data source as TaskBoardPage
+      const res = await taskService.myTasks();
       if (res.data && res.data.data) {
         const fetchedTasks = res.data.data;
         setAllTasks(fetchedTasks);
         const stats = {
           pending: fetchedTasks.filter(
-            (t) => t.status === "Not Started" || t.status === "Blocked",
+            (t) => t.status === "To Do",
           ).length,
           inProgress: fetchedTasks.filter((t) => t.status === "In Progress").length,
-          completed: fetchedTasks.filter((t) => t.status === "Completed").length,
+          completed: fetchedTasks.filter((t) => t.status === "Done").length,
         };
         setTaskStats(stats);
       }
@@ -100,9 +102,9 @@ const DevDashboard = () => {
     .filter(
       (t) =>
         searchQuery === "" ||
-        t.task.toLowerCase().includes(searchQuery.toLowerCase()),
+        (t.title && t.title.toLowerCase().includes(searchQuery.toLowerCase())),
     )
-    .slice(0, 3);
+    .slice(0, 5);
 
   return (
     <div className="min-h-screen flex bg-[#F5F7FB]">
@@ -163,10 +165,10 @@ const DevDashboard = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <DevKpiCard
-                  label="Pending Tasks"
+                  label="To Do"
                   value={taskStats.pending}
-                  subtitle={`+${Math.max(0, taskStats.pending - 0)} pending`}
-                  accent="text-emerald-500"
+                  subtitle={`${taskStats.pending} pending`}
+                  accent="text-orange-500"
                 />
                 <DevKpiCard
                   label="In Progress"
@@ -197,20 +199,36 @@ const DevDashboard = () => {
                 ) : displayedTasks.length === 0 ? (
                   <p className="text-sm text-gray-500 py-4">No tasks yet. Create one to get started!</p>
                 ) : (
-                  displayedTasks.map((t) => (
+                  displayedTasks.map((t) => {
+                    const isOverdue = t.dueDate && new Date(t.dueDate) < new Date(new Date().toISOString().split("T")[0]) && t.status !== "Done";
+                    return (
                     <div
                       key={t._id}
-                      className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3"
+                      className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 hover:bg-gray-100 transition-colors cursor-pointer"
+                      onClick={() => navigate("/dashboard/dev/task-board")}
                     >
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">{t.task}</p>
-                        {t.project && (
-                          <p className="text-xs text-gray-500 mt-1">Project: {t.project}</p>
-                        )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-900">{t.title}</p>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          {t.project?.projectName && (
+                            <span className="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">📁 {t.project.projectName}</span>
+                          )}
+                          {t.priority && (
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium text-white ${
+                              t.priority === "HIGH" ? "bg-red-500" : t.priority === "MEDIUM" ? "bg-orange-400" : "bg-green-500"
+                            }`}>{t.priority}</span>
+                          )}
+                          {t.dueDate && (
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${isOverdue ? "bg-red-100 text-red-700 font-semibold" : "text-gray-500"}`}>
+                              📅 {new Date(t.dueDate).toLocaleDateString()}{isOverdue ? " ⚠️" : ""}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <StatusBadge status={t.status} />
                     </div>
-                  ))
+                  );
+                  })
                 )}
               </div>
             </section>
@@ -240,14 +258,18 @@ const DevKpiCard = ({ label, value, subtitle, accent }) => (
 );
 
 const StatusBadge = ({ status }) => {
-  const isCompleted = status === "completed";
+  const styles = {
+    "Done": "bg-[#E6FFEC] text-[#1E9C4D]",
+    "In Progress": "bg-[#E3F2FD] text-[#1565C0]",
+    "To Do": "bg-[#FFF3D6] text-[#D98A00]",
+  };
   return (
     <span
-      className={`px-3 py-1 rounded-full text-xs font-medium ${
-        isCompleted ? "bg-[#E6FFEC] text-[#1E9C4D]" : "bg-[#FFF3D6] text-[#D98A00]"
+      className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+        styles[status] || "bg-gray-100 text-gray-600"
       }`}
     >
-      {isCompleted ? "Completed" : "pending"}
+      {status || "To Do"}
     </span>
   );
 };

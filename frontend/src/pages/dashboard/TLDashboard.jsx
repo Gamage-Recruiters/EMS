@@ -1,11 +1,11 @@
-// frontend/src/pages/dashboard/TLDashboard.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import {
   checkIn,
   getTodayAttendance,
   checkOut,
 } from "../../services/attendanceService";
+import { projectService } from "../../services/projectService";
 import { useNavigate } from "react-router-dom";
 
 const TLDashboard = () => {
@@ -13,6 +13,8 @@ const TLDashboard = () => {
   const navigate = useNavigate();
   const [todayAttendance, setTodayAttendance] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [projectsLoading, setProjectsLoading] = useState(true);
+  const [projects, setProjects] = useState([]);
 
   const notifications = [
     {
@@ -26,30 +28,6 @@ const TLDashboard = () => {
       desc: "Team Beta has overlapping meeting times.",
       time: "3h ago",
       type: "info",
-    },
-  ];
-
-  const projects = [
-    {
-      name: "Project ATS",
-      team: "Frontend Team • Due: Dec 1, 2025",
-      percent: 78,
-      status: "On Track",
-      color: "bg-[#4F46E5]", // purple
-    },
-    {
-      name: "Project Beta - Mobile App Redesign",
-      team: "Mobile Team • Due: Jan 13, 2025",
-      percent: 45,
-      status: "At Risk",
-      color: "bg-[#F59E0B]", // amber
-    },
-    {
-      name: "Project Gamma - Backend API Migration",
-      team: "Backend Team • Due: Dec 05, 2024",
-      percent: 62,
-      status: "Delayed",
-      color: "bg-[#EF4444]", // red
     },
   ];
 
@@ -107,8 +85,9 @@ const TLDashboard = () => {
 
   useEffect(() => {
     if (user) {
-      fetchTodayAttendance(); // if user is available fetch attendance
+      fetchTodayAttendance();
     }
+    fetchProjects();
   }, [user]);
 
   const fetchTodayAttendance = async () => {
@@ -117,7 +96,86 @@ const TLDashboard = () => {
       setTodayAttendance(result.data.data);
     }
   };
-  // handle Check-In
+
+  const fetchProjects = async () => {
+    try {
+      setProjectsLoading(true);
+      const response = await projectService.list();
+      setProjects(response?.data?.data || []);
+    } catch (error) {
+      console.error("Failed to fetch projects:", error);
+      setProjects([]);
+    } finally {
+      setProjectsLoading(false);
+    }
+  };
+
+  const dashboardProjects = useMemo(() => {
+    const mapStatus = (status) => {
+      if (status === "Completed") {
+        return {
+          label: "Completed",
+          color: "bg-[#16A34A]",
+          percent: 100,
+        };
+      }
+
+      if (status === "On Hold") {
+        return {
+          label: "On Hold",
+          color: "bg-[#F59E0B]",
+          percent: 45,
+        };
+      }
+
+      if (status === "Cancelled") {
+        return {
+          label: "Cancelled",
+          color: "bg-[#EF4444]",
+          percent: 15,
+        };
+      }
+
+      return {
+        label: "Active",
+        color: "bg-[#4F46E5]",
+        percent: 70,
+      };
+    };
+
+    return projects.slice(0, 5).map((project) => {
+      const statusMeta = mapStatus(project.status);
+
+      return {
+        id: project._id,
+        name: project.projectName,
+        team: `${
+          project.startDate
+            ? `Start: ${new Date(project.startDate).toLocaleDateString()}`
+            : "Start: Not set"
+        } • ${
+          project.endDate
+            ? `End: ${new Date(project.endDate).toLocaleDateString()}`
+            : "End: Not set"
+        }`,
+        percent: statusMeta.percent,
+        status: statusMeta.label,
+        color: statusMeta.color,
+      };
+    });
+  }, [projects]);
+
+  const totalProjects = projects.length;
+  const activeProjectsCount = projects.filter(
+    (p) => p.status === "Active",
+  ).length;
+  const onHoldProjectsCount = projects.filter(
+    (p) => p.status === "On Hold",
+  ).length;
+  const completedProjectsCount = projects.filter(
+    (p) => p.status === "Completed",
+  ).length;
+
   const handleCheckIn = async () => {
     setLoading(true);
     const result = await checkIn();
@@ -130,7 +188,6 @@ const TLDashboard = () => {
     setLoading(false);
   };
 
-  // Handle Check-Out
   const handleCheckOut = async () => {
     setLoading(true);
     const result = await checkOut();
@@ -141,7 +198,7 @@ const TLDashboard = () => {
       }));
       alert("Successfully checked out!");
       setTimeout(() => {
-        navigate("dashboard/tl/daily-task-update"); // navigate daily task update page
+        navigate("dashboard/tl/daily-task-update");
       }, 100);
     } else {
       alert(result.error || "Failed to check out. Please try again.");
@@ -149,13 +206,14 @@ const TLDashboard = () => {
     setLoading(false);
   };
 
-  const isCheckedIn = todayAttendance?.checkInTime && !todayAttendance?.checkOutTime; // user checked in but not yet checked out
-  const isCheckedOut = todayAttendance?.checkInTime && todayAttendance?.checkOutTime; // user checked in and checked out
-  const notCheckedIn = !todayAttendance?.checkInTime; // user has not checked in yet
+  const isCheckedIn =
+    todayAttendance?.checkInTime && !todayAttendance?.checkOutTime;
+  const isCheckedOut =
+    todayAttendance?.checkInTime && todayAttendance?.checkOutTime;
+  const notCheckedIn = !todayAttendance?.checkInTime;
 
   return (
     <div className="min-h-screen flex bg-[#F5F7FB]">
-      {/* Right main area */}
       <main className="flex-1 flex flex-col">
         {/* Top header */}
         <header className="h-16 flex items-center justify-between px-8 border-b border-gray-200 bg-white/80 backdrop-blur">
@@ -170,35 +228,7 @@ const TLDashboard = () => {
             </p>
           </div>
 
-          {/* <div className="flex items-center gap-4"> */}
-          {/* Search box */}
-          {/* <div className="relative hidden md:block">
-              <input
-                type="text"
-                placeholder="Search..."
-                className="w-56 rounded-full border border-gray-300 pl-9 pr-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-              <span className="absolute left-3 top-1.5 text-gray-400 text-sm">
-                🔍
-              </span>
-            </div> */}
-
-          {/* Notification bell */}
-          {/* <button className="relative w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
-              <span className="text-lg">🔔</span>
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500" />
-            </button> */}
-          {/* Avatar placeholder */}
-          {/* <Link
-              to="/profile/personal"
-              className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-xs font-semibold text-white hover:opacity-90"
-            >
-              {user?.email ? user.email[0].toUpperCase() : "C"}
-            </Link>
-          </div> */}
-
           <div className="flex items-center gap-4">
-            {/* Check-in/out button - Dynamic based on attendance status */}
             {notCheckedIn && (
               <button
                 onClick={handleCheckIn}
@@ -228,7 +258,6 @@ const TLDashboard = () => {
               </div>
             )}
 
-            {/* Notification & avatar */}
             <button className="relative w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
               <span className="text-lg">🔔</span>
             </button>
@@ -240,42 +269,41 @@ const TLDashboard = () => {
           {/* KPI Row */}
           <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <KpiCard
-              icon="🧑‍💻"
+              icon="📁"
               iconBg="bg-[#EEF2FF]"
-              label="Active Developers"
-              value="47"
-              badge="+12% vs last week"
-              badgeColor="text-green-600"
+              label="Total Projects"
+              value={projectsLoading ? "..." : totalProjects}
+              badge="All project records"
+              badgeColor="text-indigo-600"
             />
             <KpiCard
-              icon="👥"
+              icon="🚀"
               iconBg="bg-[#ECFDF3]"
-              label="Active Teams"
-              value="8"
-              badge="Stable"
+              label="Active Projects"
+              value={projectsLoading ? "..." : activeProjectsCount}
+              badge="Currently running"
               badgeColor="text-emerald-600"
             />
             <KpiCard
-              icon="⚠️"
+              icon="⏸"
               iconBg="bg-[#FEF3C7]"
-              label="Pending Approvals"
-              value="3"
-              badge="Urgent"
-              badgeColor="text-red-600"
+              label="On Hold Projects"
+              value={projectsLoading ? "..." : onHoldProjectsCount}
+              badge="Needs attention"
+              badgeColor="text-amber-600"
             />
             <KpiCard
-              icon="📅"
-              iconBg="bg-[#EEF2FF]"
-              label="Scheduled Meetings"
-              value="12"
-              badge="This Week"
-              badgeColor="text-indigo-600"
+              icon="✅"
+              iconBg="bg-[#DCFCE7]"
+              label="Completed Projects"
+              value={projectsLoading ? "..." : completedProjectsCount}
+              badge="Finished work"
+              badgeColor="text-green-600"
             />
           </section>
 
           {/* Notifications + Quick Actions */}
           <section className="grid grid-cols-1 lg:grid-cols-[2fr,1fr] gap-6">
-            {/* Notifications card */}
             <div className="bg-white rounded-3xl shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-sm font-semibold text-slate-900">
@@ -296,7 +324,6 @@ const TLDashboard = () => {
               </div>
             </div>
 
-            {/* Quick actions card */}
             <QuickActions
               onNavigate={navigate}
               links={{
@@ -322,13 +349,21 @@ const TLDashboard = () => {
             </div>
 
             <div className="space-y-4">
-              {projects.map((p, idx) => (
-                <ProjectProgress key={idx} project={p} />
-              ))}
+              {projectsLoading ? (
+                <p className="text-sm text-gray-500">Loading projects...</p>
+              ) : dashboardProjects.length > 0 ? (
+                dashboardProjects.map((p) => (
+                  <ProjectProgress key={p.id} project={p} />
+                ))
+              ) : (
+                <div className="rounded-2xl border border-gray-100 bg-[#F9FBFF] px-4 py-6 text-sm text-gray-500">
+                  No projects found.
+                </div>
+              )}
             </div>
           </section>
 
-          {/* Bottom row: Deadlines + Meetings */}
+          {/* Bottom row */}
           <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <UpcomingDeadlines deadlines={deadlines} />
             <MeetingsThisWeek meetings={meetings} />
@@ -428,11 +463,13 @@ const ProjectProgress = ({ project }) => (
       </div>
       <span
         className={`text-[11px] px-2 py-1 rounded-full ${
-          project.status === "On Track"
+          project.status === "Completed"
             ? "bg-green-100 text-green-700"
-            : project.status === "At Risk"
-            ? "bg-yellow-100 text-yellow-700"
-            : "bg-red-100 text-red-700"
+            : project.status === "On Hold"
+              ? "bg-yellow-100 text-yellow-700"
+              : project.status === "Cancelled"
+                ? "bg-red-100 text-red-700"
+                : "bg-indigo-100 text-indigo-700"
         }`}
       >
         {project.status}

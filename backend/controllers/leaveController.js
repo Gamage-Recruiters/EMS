@@ -11,15 +11,38 @@ export const createLeaveRequest = async (req, res, next) => {
     try {
         const { startDate, endDate, leaveType, reason } = req.body;
 
+        if (!startDate || String(startDate).trim() === '') {
+            return next(new AppError('Start date is required', 400));
+        }
+
+        if (!endDate || String(endDate).trim() === '') {
+            return next(new AppError('End date is required', 400));
+        }
+
+        if (!leaveType || String(leaveType).trim() === '') {
+            return next(new AppError('Leave type is required', 400));
+        }
+
+        const parsedStartDate = new Date(startDate);
+        const parsedEndDate = new Date(endDate);
+
+        if (Number.isNaN(parsedStartDate.getTime())) {
+            return next(new AppError('Start date is invalid', 400));
+        }
+
+        if (Number.isNaN(parsedEndDate.getTime())) {
+            return next(new AppError('End date is invalid', 400));
+        }
+
         // Validate dates
-        if (new Date(startDate) > new Date(endDate)) {
+        if (parsedStartDate > parsedEndDate) {
             return next(new AppError('End date must be after start date', 400));
         }
 
         const leaveRequest = await LeaveRequest.create({
             employee: req.user._id,
-            startDate,
-            endDate,
+            startDate: parsedStartDate,
+            endDate: parsedEndDate,
             leaveType,
             reason,
         });

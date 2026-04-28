@@ -32,7 +32,7 @@ export const createLeaveRequest = async (req, res, next) => {
 
         if (Number.isNaN(parsedEndDate.getTime())) {
             return next(new AppError('End date is invalid', 400));
-        }
+        }//TC-04 Also done
 
         // Validate dates
         if (parsedStartDate > parsedEndDate) {

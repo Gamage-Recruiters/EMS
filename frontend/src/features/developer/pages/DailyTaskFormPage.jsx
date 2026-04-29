@@ -25,9 +25,11 @@ function DailyTaskFormPage() {
   const goBack = () => navigate("/dashboard/dev/weekly-summary");
 
   // ================= SUBMIT =================
-  const handleSubmit = async () => {
-    if (!form.task || !form.project) {
-      toast.error("Task and Project are required");
+  const handleSubmit = async (e) => {
+    e.preventDefault(); 
+
+    if (form.startTime >= form.endTime) {
+      toast.error("Start time cannot be later than end time");
       return;
     }
 
@@ -72,7 +74,7 @@ function DailyTaskFormPage() {
         </header>
 
         {/* ================= FORM ================= */}
-        <section className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-6">
           {/* Developer (Read Only) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label className="space-y-1 text-sm font-medium text-slate-700">
@@ -94,6 +96,7 @@ function DailyTaskFormPage() {
                 onChange={update("task")}
                 placeholder="E.g., Implement meeting module"
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-100"
+                required
               />
             </label>
 
@@ -104,6 +107,7 @@ function DailyTaskFormPage() {
                 onChange={update("project")}
                 placeholder="EMS"
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-100"
+                required
               />
             </label>
 
@@ -128,6 +132,7 @@ function DailyTaskFormPage() {
                 onChange={update("workingHours")}
                 placeholder="08:00"
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                required
               />
             </label>
 
@@ -138,6 +143,7 @@ function DailyTaskFormPage() {
                 value={form.startTime}
                 onChange={update("startTime")}
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                required
               />
             </label>
 
@@ -148,6 +154,7 @@ function DailyTaskFormPage() {
                 value={form.endTime}
                 onChange={update("endTime")}
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                required
               />
             </label>
           </div>
@@ -192,7 +199,7 @@ function DailyTaskFormPage() {
               {loading ? "Saving..." : "Save Task"}
             </button>
           </div>
-        </section>
+       </form>
       </div>
     </div>
   );

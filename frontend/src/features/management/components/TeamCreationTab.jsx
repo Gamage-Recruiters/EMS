@@ -110,6 +110,9 @@ export default function TeamCreationTab() {
         const leadId = d?.teamLead?._id || d?.teamLead?.id || d?.teamLead || "";
         setTeamLead(leadId);
 
+        // BUG FIX (TC003): Extract only the string IDs from the members array.
+        // This ensures compatibility with the multi-select dropdown, as React state
+        // must contain primitive IDs to match the option values correctly.
         const memberIds = Array.isArray(d?.members)
           ? d.members.map((m) => m?._id || m?.id || m).filter(Boolean)
           : [];

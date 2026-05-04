@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
 import { useAuth } from "../../context/AuthContext";
@@ -10,6 +10,7 @@ import MeetingForm from "../../components/meeting/MeetingForm";
 import ParticipantsPanel from "../../components/meeting/ParticipantsPanel";
 
 const CreateMeetings = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   // 🔒 ROLE GUARD
@@ -90,6 +91,11 @@ const CreateMeetings = () => {
       });
 
       toast.success("Meeting scheduled successfully");
+
+      // Redirect to overview so user can see the new meeting
+      setTimeout(() => {
+        navigate("/dashboard/meetings");
+      }, 1500);
 
       setMeetingData({
         title: "",

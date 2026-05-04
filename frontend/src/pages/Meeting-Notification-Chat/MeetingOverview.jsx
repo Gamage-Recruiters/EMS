@@ -130,13 +130,30 @@ const MeetingOverview = () => {
   /* ================= FILTER ================= */
   const filteredEvents = events.filter((e) => {
     const m = e.extendedProps;
-    const now = new Date();
-    const d = new Date(e.start);
+    
+    // Create a 'today' object set to 00:00:00 for accurate date-only comparison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const meetingDate = new Date(m.date);
+    meetingDate.setHours(0, 0, 0, 0);
 
     if (activeTab === "All") return true;
-    if (activeTab === "Upcoming") return d > now && m.status !== "Cancelled";
-    if (activeTab === "Past") return d < now && m.status !== "Cancelled";
-    if (activeTab === "Cancelled") return m.status === "Cancelled";
+    
+    if (activeTab === "Upcoming") {
+      // Upcoming: Date is today or in the future, and not cancelled
+      return meetingDate >= today && m.status !== "Cancelled";
+    }
+    
+    if (activeTab === "Past") {
+      // Past: Date is strictly before today, and not cancelled
+      return meetingDate < today && m.status !== "Cancelled";
+    }
+    
+    if (activeTab === "Cancelled") {
+      return m.status === "Cancelled";
+    }
+    
     return true;
   });
 

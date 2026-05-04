@@ -3,7 +3,7 @@ import React from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { Link, useLocation } from "react-router-dom";
 
-const Sidebar = () => {
+const Sidebar = ({ onClose }) => {
   const { user } = useAuth();
   const location = useLocation();
 
@@ -84,6 +84,7 @@ const Sidebar = () => {
               <li key={item.path}>
                 <Link
                   to={item.path}
+                  onClick={onClose}
                   className={`block px-5 py-2.5 text-sm rounded-xl transition-colors ${
                     isActive
                       ? "bg-[#E6F0FF] text-blue-700 font-medium"

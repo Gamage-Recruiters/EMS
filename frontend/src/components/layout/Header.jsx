@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Menu } from "lucide-react";
 import {
   setAvailability,
   getMyAvailability,
@@ -6,7 +7,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 
-const Header = () => {
+const Header = ({ onMenuClick }) => {
   /* ================= DATE ================= */
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -109,7 +110,15 @@ const Header = () => {
   /* ================= UI ================= */
   return (
     <header className="flex justify-between items-center px-6 py-3 bg-white border-b border-gray-100 shadow-sm sticky top-0 z-10">
-      <div className="text-sm font-normal text-gray-500">{today}</div>
+      <div className="flex items-center gap-4">
+        <button 
+          onClick={onMenuClick}
+          className="p-2 -ml-2 rounded-lg hover:bg-gray-100 md:hidden text-gray-600"
+        >
+          <Menu size={20} />
+        </button>
+        <div className="text-sm font-normal text-gray-500 hidden sm:block">{today}</div>
+      </div>
 
       {user && (
         <div className="relative flex items-center space-x-4">

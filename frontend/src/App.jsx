@@ -11,6 +11,7 @@ import PageLayout from "./components/layout/PageLayout";
 import AttendancePrompt from "./components/AttendancePrompt";
 import PrivateRoute from "./routes/PrivateRoute";
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
+import { Toaster } from "react-hot-toast";
 
 // Auth
 import LoginPage from "./pages/auth/Login";
@@ -75,7 +76,9 @@ export default function App() {
   };
 
   return (
-    <Routes>
+    <>
+      <Toaster position="top-right" reverseOrder={false} />
+      <Routes>
       {/* ================= PUBLIC ================= */}
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
@@ -359,5 +362,6 @@ export default function App() {
       {/* ================= GLOBAL ================= */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
+    </>
   );
 }

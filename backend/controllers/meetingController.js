@@ -163,7 +163,19 @@ export const getUsersForParticipants = async (req, res) => {
  */
 export const getAllMeetings = async (req, res) => {
   try {
-    const meetings = await Meeting.find()
+    const { filter } = req.query;
+    let query = {};
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (filter === "upcoming") {
+      query = { date: { $gte: today }, status: { $ne: "Cancelled" } };
+    } else if (filter === "past") {
+      query = { date: { $lt: today }, status: { $ne: "Cancelled" } };
+    }
+
+    const meetings = await Meeting.find(query)
       .populate({
         path: "createdBy",
         select: "firstName lastName email role profileImage",
@@ -335,11 +347,24 @@ export const rescheduleMeeting = async (req, res) => {
 export const getMyAssignedMeetings = async (req, res) => {
   try {
     const userId = req.user.id;
+    const { filter } = req.query;
 
-    const meetings = await Meeting.find({
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let query = {
       "participants.user": userId,
-      status: { $ne: "Cancelled" }, // optional: hide cancelled
-    })
+    };
+
+    if (filter === "upcoming") {
+      query.date = { $gte: today };
+      query.status = { $ne: "Cancelled" };
+    } else if (filter === "past") {
+      query.date = { $lt: today };
+      query.status = { $ne: "Cancelled" };
+    }
+
+    const meetings = await Meeting.find(query)
       .populate({
         path: "createdBy",
         select: "firstName lastName email role profileImage",

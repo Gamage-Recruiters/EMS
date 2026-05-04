@@ -22,6 +22,7 @@ import taskRoutes from "./routes/taskRoutes.js";
 import dailyTaskRoutes from "./routes/dailyTaskRoutes.js";
 import complaintRoutes from "./routes/complaintRoutes.js";
 import projectRoutes from "./routes/projectRoutes.js";
+import testRoutes from "./routes/testRoutes.js";
 
 // Middlewares
 import errorHandler from "./middlewares/errorMiddleware.js";
@@ -98,12 +99,13 @@ app.use("/api/daily-tasks", dailyTaskRoutes);
 app.use("/api/complaints", complaintRoutes);
 app.use("/api/availability", availabilityRoutes);
 app.use("/api/projects", projectRoutes);
+app.use("/api/test", testRoutes);
 
 // Global Error Handler
 app.use(errorHandler);
 
 // Start Server
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📡 Socket.IO server ready`);

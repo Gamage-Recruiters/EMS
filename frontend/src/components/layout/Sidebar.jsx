@@ -16,7 +16,7 @@ const Sidebar = ({ onClose }) => {
       { name: "Daily Task Sheet", path: "/dashboard/ceo/daily-task-sheet" },
       {
         name: "Weekly Progress History",
-        path: "/dashboard/dev/weekly-summary",
+        path: "/dashboard/ceo/daily-task-sheet",
       },
       { name: "CEO Attendance Summary", path: "/dashboard/attendance" },
       { name: "CEO Meeting Display", path: "/dashboard/meetings" },

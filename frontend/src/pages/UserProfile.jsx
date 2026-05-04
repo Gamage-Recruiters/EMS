@@ -305,16 +305,22 @@ export default function UserProfile() {
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <button
                   onClick={() => {
-                    if (isDeveloper) {
+                    const currentUserRole = (authUser?.role || "").toLowerCase();
+                    
+                    // Developers use their own profile page
+                    if (currentUserRole === "developer") {
                       navigate("/dashboard/my-profile/personal-details?mode=edit");
                       return;
                     }
-
-                    navigate(
-                      `/dashboard/profile/personal-details?mode=edit${
-                        profile?._id ? `&id=${profile._id}` : ""
-                      }`
-                    );
+                    
+                    // CEO, SystemAdmin, TL edit current user's profile
+                    if (["ceo", "systemadmin", "tl"].includes(currentUserRole)) {
+                      navigate("/dashboard/profile/personal-details?mode=edit");
+                      return;
+                    }
+                    
+                    // Fallback for other roles - edit own profile (create a new route for this)
+                    navigate("/dashboard/user-profile");
                   }}
                   className="inline-flex w-full items-center justify-center rounded-xl bg-[#0F62FE] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#004ED8] sm:w-auto"
                 >

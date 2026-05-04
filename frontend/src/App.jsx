@@ -60,6 +60,7 @@ import MeetingOverview from "./pages/Meeting-Notification-Chat/MeetingOverview";
 import CreateMeetings from "./pages/Meeting-Notification-Chat/CreateMeetings";
 import Notifications from "./pages/Meeting-Notification-Chat/Notifications";
 import ChatPage from "./pages/Meeting-Notification-Chat/ChatPage";
+import NoticeBroadcasting from "./pages/Meeting-Notification-Chat/ceo/NoticeBroadcasting";
 import UnassignedDashboard from "./pages/dashboard/UnassignedDashboard.jsx";
 import TLPastProjects from "./pages/dashboard/TLPastProjects";
 
@@ -136,6 +137,14 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={["CEO"]}>
                 <LeaveApproval />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notice-broadcasting"
+            element={
+              <ProtectedRoute allowedRoles={["CEO"]}>
+                <NoticeBroadcasting />
               </ProtectedRoute>
             }
           />

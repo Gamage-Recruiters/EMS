@@ -9,6 +9,7 @@ import {
   getAdminComplaints,
   getMyComplaints,
   updateComplaintStatus,
+  getAllComplaints,
 } from "../../../services/complaintService";
 
 import ComplaintStatusBadge from "../../developer/components/ComplaintStatusBadge";
@@ -23,15 +24,13 @@ export default function ComplaintReviewDashboard() {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const [devComplaints, setDevComplaints] = useState([]);
-  const [adminComplaints, setAdminComplaints] = useState([]);
-
+  const [complaintsList, setComplaintsList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [previewImage, setPreviewImage] = useState(null);
   const [viewComplaint, setViewComplaint] = useState(null);
   const [viewRequiredAction, setViewRequiredAction] = useState(null);
 
-  const [scope, setScope] = useState("developers"); // developers | admin
+  const [scope, setScope] = useState("all"); // all | developer | admin | teamlead
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
 
@@ -41,12 +40,20 @@ export default function ComplaintReviewDashboard() {
       try {
         setLoading(true);
 
-        const devRes = await getDeveloperComplaints();
-        setDevComplaints(devRes.data.data);
-
-        if (["CEO", "PM", "TL"].includes(user.role)) {
-          const adminRes = await getAdminComplaints();
-          setAdminComplaints(adminRes.data.data);
+        if (user.role === "CEO") {
+          const res = await getAllComplaints(scope);
+          setComplaintsList(res.data.data);
+        } else {
+          // Keep old behavior for PM / TL
+          if (scope === "developer" || scope === "all") {
+             const devRes = await getDeveloperComplaints();
+             setComplaintsList(devRes.data.data);
+          } else if (scope === "admin") {
+             const adminRes = await getAdminComplaints();
+             setComplaintsList(adminRes.data.data);
+          } else {
+             setComplaintsList([]);
+          }
         }
       } catch {
         toast.error("Failed to load complaints");
@@ -55,9 +62,9 @@ export default function ComplaintReviewDashboard() {
       }
     };
     load();
-  }, [user.role]);
+  }, [user.role, scope]);
 
-  const activeList = scope === "developers" ? devComplaints : adminComplaints;
+  const activeList = complaintsList;
 
   /* ================= FILTER ================= */
   const filtered = useMemo(() => {
@@ -71,9 +78,13 @@ export default function ComplaintReviewDashboard() {
   }, [activeList, search, status]);
 
   /* ================= PERMISSION ================= */
-  const canUpdateStatus = () => {
-    if (scope === "developers") return ["PM", "TL", "CEO"].includes(user.role);
-    return scope === "admin" && user.role === "CEO";
+  const canUpdateStatus = (complaintUserId, complaintUserRole) => {
+    if (user.role === "CEO") return true; // CEO can update any complaint status
+    if (["PM", "TL"].includes(user.role)) {
+      // PMs and TLs can only update developer complaints or their own scope
+      return complaintUserRole === "Developer" || scope === "developer";
+    }
+    return false;
   };
 
   const handleStatusUpdate = async (id, newStatus) => {
@@ -81,12 +92,9 @@ export default function ComplaintReviewDashboard() {
       await updateComplaintStatus(id, newStatus);
       toast.success("Status updated");
 
-      const updater = (list) =>
-        list.map((c) => (c._id === id ? { ...c, status: newStatus } : c));
-
-      scope === "developers"
-        ? setDevComplaints(updater)
-        : setAdminComplaints(updater);
+      setComplaintsList((list) =>
+        list.map((c) => (c._id === id ? { ...c, status: newStatus } : c))
+      );
     } catch {
       toast.error("Failed to update status");
     }
@@ -107,13 +115,28 @@ export default function ComplaintReviewDashboard() {
           </p>
         </div>
 
-        <button
-          onClick={() => navigate("/dashboard/complaints/new-admin")}
-          className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
-        >
-          <FiPlus /> Create Admin Complaint
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => navigate("/dashboard/complaints/new")}
+            className="inline-flex items-center gap-2 bg-slate-100 text-slate-700 px-3 py-2 border rounded text-sm hover:bg-slate-200"
+          >
+            <FiPlus /> Create Developer Complaint
+          </button>
+          <button
+            onClick={() => navigate("/dashboard/complaints/new-admin?type=teamlead")}
+            className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-3 py-2 border border-indigo-200 rounded text-sm hover:bg-indigo-100"
+          >
+            <FiPlus /> Create Team Lead Complaint
+          </button>
+          <button
+            onClick={() => navigate("/dashboard/complaints/new-admin")}
+            className="inline-flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700"
+          >
+            <FiPlus /> Create Admin Complaint
+          </button>
+        </div>
       </div>
+
 
       {/* ================= FILTER BAR ================= */}
       <div className="bg-white border rounded-xl shadow-sm p-4 flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
@@ -133,9 +156,20 @@ export default function ComplaintReviewDashboard() {
             onChange={(e) => setScope(e.target.value)}
             className="border rounded px-3 py-2 text-sm"
           >
-            <option value="developers">Developer Complaints</option>
-            {["CEO", "PM", "TL"].includes(user.role) && (
-              <option value="admin">Admin Complaints</option>
+            {user.role === "CEO" && (
+              <>
+                <option value="all">All Complaints</option>
+                <option value="developer">Developer Complaints</option>
+                <option value="admin">Admin Complaints</option>
+                <option value="teamlead">Team Lead Complaints</option>
+              </>
+            )}
+            
+            {["PM", "TL"].includes(user.role) && (
+              <>
+                <option value="developer">Developer Complaints</option>
+                <option value="admin">Admin Complaints</option>
+              </>
             )}
           </select>
 
@@ -209,7 +243,7 @@ export default function ComplaintReviewDashboard() {
                 )}
 
                 <td className="px-3 py-2">
-                  {canUpdateStatus() ? (
+                  {canUpdateStatus(c.user?._id, c.user?.role) ? (
                     <select
                       value={c.status}
                       onChange={(e) =>

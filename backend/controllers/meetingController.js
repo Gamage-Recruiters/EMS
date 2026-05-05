@@ -16,6 +16,7 @@ const normalizeParticipantRole = (role) => {
  */
 export const createMeeting = async (req, res) => {
   try {
+    console.log("DEBUG: createMeeting body:", req.body);
     const {
       title,
       date,
@@ -36,6 +37,7 @@ export const createMeeting = async (req, res) => {
       !meetingType ||
       !locationType
     ) {
+      console.log("DEBUG: Validation failed - missing fields");
       return res.status(400).json({
         success: false,
         message: "All required fields must be filled",
@@ -61,6 +63,7 @@ export const createMeeting = async (req, res) => {
     let formattedParticipants = [];
 
     if (Array.isArray(participants) && participants.length > 0) {
+      console.log("DEBUG: Processing participants:", participants);
       for (const p of participants) {
         let user = null;
 
@@ -77,6 +80,7 @@ export const createMeeting = async (req, res) => {
           user = await User.findById(p);
         } 
         else {
+          console.log("DEBUG: Invalid participant format:", p);
           return res.status(400).json({
             success: false,
             message: "Each participant must contain a valid email or user id",
@@ -84,6 +88,7 @@ export const createMeeting = async (req, res) => {
         }
 
         if (!user) {
+          console.log("DEBUG: User not found for participant:", p);
           return res.status(404).json({
             success: false,
             message: `User not found`,
@@ -92,12 +97,13 @@ export const createMeeting = async (req, res) => {
 
         formattedParticipants.push({
           user: user._id,
-          role: user.role || "Developer",
+          role: normalizeParticipantRole(user.role),
         });
       }
     }
 
     // ================= CREATE MEETING =================
+    console.log("DEBUG: Creating meeting in DB with participants:", formattedParticipants);
     const meeting = await Meeting.create({
       title,
       date,
@@ -110,6 +116,7 @@ export const createMeeting = async (req, res) => {
       participants: formattedParticipants,
     });
 
+    console.log("DEBUG: Meeting created successfully:", meeting._id);
     return res.status(201).json({
       success: true,
       message: "Meeting scheduled successfully",

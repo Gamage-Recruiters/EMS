@@ -7,6 +7,7 @@ import {
   getTeamByName,
   getAllTeams,
   getTeamById,
+  updateTeamDepartments,
 } from "../controllers/teamController.js";
 import { protect, authorize } from "../middlewares/authMiddleware.js";
 
@@ -43,6 +44,14 @@ router.put(
   protect,
   authorize("CEO", "SystemAdmin", "TL", "PM"),
   editTeamDetails,
+);
+
+// Update team departments hierarchy (CEO, SystemAdmin, TL, PM only)
+router.put(
+  "/:id/departments",
+  protect,
+  authorize("CEO", "SystemAdmin", "TL", "PM"),
+  updateTeamDepartments,
 );
 
 // Delete a team (CEO, SystemAdmin and TL , 'PM'only)

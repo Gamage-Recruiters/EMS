@@ -55,6 +55,8 @@ const CreateMeetings = () => {
 
   /* ================= SUBMIT ================= */
   const handleSubmit = async () => {
+    if (loading) return; // Prevent double-clicks
+
     const {
       title,
       date,
@@ -109,8 +111,7 @@ const CreateMeetings = () => {
       setParticipants([]);
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to create meeting");
-    } finally {
-      setLoading(false);
+      setLoading(false); // Only set to false on error, so redirect blocks further clicks
     }
   };
 
@@ -122,6 +123,7 @@ const CreateMeetings = () => {
           title="Schedule Meeting"
           subtitle="Plan and organize team meetings"
           submitLabel={loading ? "Saving..." : "Create Meeting"}
+          disabled={loading}
           onSubmit={handleSubmit}
           onCancel={() => window.history.back()}
         />

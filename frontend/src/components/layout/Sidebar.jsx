@@ -13,10 +13,11 @@ const Sidebar = ({ onClose }) => {
       { name: "Dashboard", path: "/dashboard/ceo" },
       { name: "Task Board", path: "/dashboard/dev/task-board" },
       { name: "Employee Details", path: "/dashboard/employees" },
+      { name: "Notice Broadcasting", path: "/dashboard/ceo/notices" },
       { name: "Daily Task Sheet", path: "/dashboard/ceo/daily-task-sheet" },
       {
         name: "Weekly Progress History",
-        path: "/dashboard/ceo/daily-task-sheet",
+        path: "/dashboard/dev/weekly-summary",
       },
       { name: "CEO Attendance Summary", path: "/dashboard/attendance" },
       { name: "CEO Meeting Display", path: "/dashboard/meetings" },
@@ -81,7 +82,7 @@ const Sidebar = ({ onClose }) => {
             const isActive = location.pathname === item.path;
 
             return (
-              <li key={item.path}>
+              <li key={item.name}>
                 <Link
                   to={item.path}
                   onClick={onClose}

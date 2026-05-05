@@ -32,11 +32,14 @@ const AttendancePrompt = ({ onCheckIn }) => {
           error: null,
         });
 
-        // If CEO, auto check-in
+        // If CEO, auto check-in (CEOs don't need the prompt)
         if (userRole === "CEO") {
+          console.log("DEBUG: User is CEO, auto-unlocking dashboard");
           onCheckIn(new Date());
           setHasCheckedInToday(true);
           setAttendanceLoading(false);
+        } else {
+          console.log("DEBUG: User is NOT CEO, checking attendance status...");
         }
       } catch (err) {
         setProfile({

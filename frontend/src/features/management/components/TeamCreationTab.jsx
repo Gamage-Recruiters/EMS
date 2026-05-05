@@ -253,8 +253,9 @@ export default function TeamCreationTab() {
 
       <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-10 max-w-3xl mx-auto backdrop-blur-sm">
         {loadingTeam ? (
-          <div className="py-10 text-center text-gray-600 font-medium">
-            Loading team…
+          <div className="bg-white rounded-xl p-16 flex flex-col items-center justify-center min-h-[300px]">
+            <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+            <p className="text-gray-500 font-medium animate-pulse">Loading team...</p>
           </div>
         ) : (
           <div className="space-y-7">

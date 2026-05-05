@@ -35,6 +35,7 @@ export const createComplaint = async (req, res) => {
       subject,
       description,
       image: imagePath,
+      targetCategory: "Developer",
       // urgency, department, requiredAction -> admin only
       // status -> default "In Review"
     });
@@ -219,8 +220,10 @@ export const createAdminComplaint = async (req, res) => {
       requiredAction,
       image: imagePath,
       type: null, // explicitly no type
+      targetCategory: req.body.targetCategory || "Admin",
       status: "In Review",
     });
+
 
     res.status(201).json({
       success: true,
@@ -279,6 +282,69 @@ export const getAdminComplaints = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to retrieve admin complaints",
+    });
+  }
+};
+
+/**
+ * @desc    Get all complaints with filtering (CEO only)
+ * @route   GET /api/complaints/all
+ * @access  Private (CEO)
+ */
+export const getAllComplaints = async (req, res) => {
+  try {
+    if (req.user.role !== "CEO") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Only CEO can view all complaints.",
+      });
+    }
+
+    const { type } = req.query;
+    let roleFilter = [];
+    let targetCat = "";
+
+    if (type === "developer") {
+      roleFilter = ["Developer"];
+      targetCat = "Developer";
+    } else if (type === "teamlead") {
+      roleFilter = ["TL", "ATL"];
+      targetCat = "TeamLead";
+    } else if (type === "admin") {
+      roleFilter = ["PM", "CEO", "SystemAdmin"];
+      targetCat = "Admin";
+    }
+
+    let query = {};
+
+    if (targetCat) {
+      const users = await User.find({ role: { $in: roleFilter } }, { _id: 1 });
+      const userIds = users.map((u) => u._id);
+      
+      query.$or = [
+        { targetCategory: targetCat },
+        { targetCategory: { $exists: false }, user: { $in: userIds } },
+        { targetCategory: "General", user: { $in: userIds } }
+      ];
+    }
+
+    const complaints = await Complaint.find(query)
+      .populate({
+        path: "user",
+        select: "firstName lastName email role profileImage",
+      })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: complaints.length,
+      data: complaints,
+    });
+  } catch (error) {
+    console.error("Get all complaints error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve all complaints",
     });
   }
 };

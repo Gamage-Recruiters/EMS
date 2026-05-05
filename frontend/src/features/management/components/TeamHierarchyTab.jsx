@@ -9,9 +9,28 @@ export default function TeamHierarchyTab() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [draggedMember, setDraggedMember] = useState(null);
+
   // Store departments per team ID
   const [departmentsByTeam, setDepartmentsByTeam] = useState({});
+  const [draggedMember, setDraggedMember] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  const saveDepartments = async () => {
+    if (!selectedTeamId) return;
+    const deptsToSave = departmentsByTeam[selectedTeamId];
+    if (!deptsToSave) return; // Nothing to save
+
+    setSaving(true);
+    try {
+      await teamService.updateDepartments(selectedTeamId, deptsToSave);
+      alert("Hierarchy saved successfully!");
+    } catch (err) {
+      console.error("Failed to save departments", err);
+      alert("Failed to save hierarchy.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   async function loadTeams() {
 
@@ -170,14 +189,23 @@ export default function TeamHierarchyTab() {
             </p>
           </div>
         </div>
-        <button
-          onClick={loadTeams}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 disabled:opacity-50 transition"
-        >
-          <FiRefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-          {loading ? "Loading…" : "Refresh"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={saveDepartments}
+            disabled={saving || !selectedTeamId}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition"
+          >
+            {saving ? "Saving…" : "Save"}
+          </button>
+          <button
+            onClick={loadTeams}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 disabled:opacity-50 transition"
+          >
+            <FiRefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            {loading ? "Loading…" : "Refresh"}
+          </button>
+        </div>
       </div>
 
       {/* Error Alert */}
@@ -212,7 +240,12 @@ export default function TeamHierarchyTab() {
       </div>
 
       {/* Hierarchy Display */}
-      {selectedTeam ? (
+      {loading ? (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-16 flex flex-col items-center justify-center min-h-[300px]">
+          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-500 font-medium animate-pulse">Loading team hierarchy...</p>
+        </div>
+      ) : selectedTeam ? (
         <div className="space-y-8">
           {/* Team Lead - kept as is */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">

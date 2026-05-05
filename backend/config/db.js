@@ -13,7 +13,7 @@ const dnsServers = shouldOverrideDns
   : [];
 
 if (shouldOverrideDns && dnsServers.length) {
-  dns.setServers(dnsServers);
+  dns.setServers(dnsServers); // Enabled custom DNS to fix SRV resolution issues
 }
 
 const connectDB = async () => {

@@ -141,7 +141,7 @@ export default function App() {
             }
           />
           <Route
-            path="/notice-broadcasting"
+            path="/dashboard/ceo/notices"
             element={
               <ProtectedRoute allowedRoles={["CEO"]}>
                 <NoticeBroadcasting />
@@ -175,14 +175,6 @@ export default function App() {
             }
           />
 
-          <Route
-            path="/dashboard/meetings/create"
-            element={
-              <ProtectedRoute allowedRoles={["CEO", "SystemAdmin", "TL"]}>
-                <CreateMeetings />
-              </ProtectedRoute>
-            }
-          />
 
           {/* ================= Kanban ================= */}
           <Route path="/dashboard/kanban" element={<TaskBoardPage />} />
@@ -229,7 +221,7 @@ export default function App() {
           <Route
             path="/dashboard/complaints/new"
             element={
-              <ProtectedRoute allowedRoles={["Developer"]}>
+              <ProtectedRoute allowedRoles={["Developer", "CEO", "SystemAdmin", "PM", "TL"]}>
                 <DeveloperComplaintForm />
               </ProtectedRoute>
             }

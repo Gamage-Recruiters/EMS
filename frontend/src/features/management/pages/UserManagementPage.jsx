@@ -251,6 +251,19 @@ export default function UserManagementPage() {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Team
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Filter by team…"
+                    value={team}
+                    onChange={(e) => setTeam(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
                 <div className="flex items-end">
                   <button
                     onClick={() => load()}
@@ -267,8 +280,14 @@ export default function UserManagementPage() {
 
             {/* Employees Table */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <table className="w-full">
-                <thead>
+              {loading ? (
+                <div className="bg-white p-16 flex flex-col items-center justify-center min-h-[300px]">
+                  <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+                  <p className="text-gray-500 font-medium animate-pulse">Loading employees...</p>
+                </div>
+              ) : (
+                <table className="w-full">
+                  <thead>
                   <tr className="border-b border-gray-200 bg-gray-50">
                     <th className="text-left px-6 py-2 text-sm font-semibold text-gray-700">
                       Employee
@@ -324,6 +343,7 @@ export default function UserManagementPage() {
                   )}
                 </tbody>
               </table>
+              )}
             </div>
 
             {/* Delete Modal */}

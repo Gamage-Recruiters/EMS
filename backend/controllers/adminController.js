@@ -199,7 +199,32 @@ export const deleteUserByAdmin = async (req, res, next) => {
 // View all employees
 export const getAllEmployees = async (req, res, next) => {
   try {
-    const employees = await User.find()
+    const { q, role, team } = req.query;
+    
+    let query = {};
+    
+    // Apply search filter (name or email)
+    if (q) {
+      query.$or = [
+        { firstName: { $regex: q, $options: "i" } },
+        { lastName: { $regex: q, $options: "i" } },
+        { email: { $regex: q, $options: "i" } },
+      ];
+    }
+
+    // Apply role filter
+    if (role) {
+      query.role = { $regex: new RegExp(`^${role}$`, "i") }; // exact match case-insensitive, or just partial match if preferred. Actually, let's use partial match like a typical filter
+      // Actually, standard role filters use partial or exact. Let's do partial:
+      query.role = { $regex: role, $options: "i" };
+    }
+
+    // Apply team/department filter
+    if (team) {
+      query.department = { $regex: team, $options: "i" };
+    }
+
+    const employees = await User.find(query)
       .select("-password -refreshToken") // Security: exclude sensitive fields
       .sort({ createdAt: -1 });
 

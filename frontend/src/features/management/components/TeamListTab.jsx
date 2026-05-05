@@ -110,8 +110,14 @@ export default function TeamListTab() {
 
       {/* Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <table className="w-full">
-          <thead>
+        {loading ? (
+          <div className="bg-white p-16 flex flex-col items-center justify-center min-h-[300px]">
+            <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+            <p className="text-gray-500 font-medium animate-pulse">Loading teams...</p>
+          </div>
+        ) : (
+          <table className="w-full">
+            <thead>
             <tr className="border-b border-gray-200 bg-gray-50">
               <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">
                 Team Name
@@ -234,6 +240,7 @@ export default function TeamListTab() {
             )}
           </tbody>
         </table>
+        )}
       </div>
     </div>
   );

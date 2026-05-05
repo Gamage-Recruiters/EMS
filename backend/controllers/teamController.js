@@ -165,6 +165,37 @@ export const editTeamDetails = async (req, res, next) => {
   }
 };
 
+// @desc    Update team departments hierarchy
+// @route   PUT /api/team/:id/departments
+// @access  Private (CEO, SystemAdmin, TL, PM)
+export const updateTeamDepartments = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { departments } = req.body;
+
+    const team = await Team.findById(id);
+    if (!team) {
+      return next(new AppError('Team not found', 404));
+    }
+
+    if (departments) {
+      team.departments = departments;
+      await team.save();
+    }
+
+    await team.populate('teamLead', 'firstName lastName email role profileImage');
+    await team.populate('members', 'firstName lastName email role profileImage');
+
+    res.status(200).json({
+      success: true,
+      data: team
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
 // @desc    Delete a team
 // @route   DELETE /api/team/:id
 // @access  Private (CEO, SystemAdmin, TL)

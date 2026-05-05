@@ -1,7 +1,7 @@
 import React from "react";
 import { ArrowLeft } from "lucide-react";
 
-const MeetingHeader = ({ title, subtitle, onSubmit, onCancel, submitLabel }) => {
+const MeetingHeader = ({ title, subtitle, onSubmit, onCancel, submitLabel, disabled }) => {
   return (
     <div className="bg-white p-6 rounded-2xl shadow-md">
     <div className="flex items-center justify-between">
@@ -20,7 +20,10 @@ const MeetingHeader = ({ title, subtitle, onSubmit, onCancel, submitLabel }) => 
 
         <button
           onClick={onSubmit}
-          className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 shadow"
+          disabled={disabled}
+          className={`px-4 py-2 rounded-xl shadow ${
+            disabled ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+          } text-white`}
         >
           {submitLabel}
         </button>

@@ -50,3 +50,9 @@ export const createAdminComplaint = (formData) =>
  * Get admin complaints (CEO / PM)
  */
 export const getAdminComplaints = () => api.get("/complaints/admin");
+
+/**
+ * Get all complaints with filtering (CEO)
+ */
+export const getAllComplaints = (type) => 
+  api.get(`/complaints/all${type && type !== 'all' ? `?type=${type}` : ''}`);

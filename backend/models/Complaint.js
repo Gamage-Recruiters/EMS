@@ -60,6 +60,14 @@ const complaintSchema = new mongoose.Schema(
       enum: ["In Review", "Solved"],
       default: "In Review",
     },
+
+    // ================= EXPLICIT CATEGORY =================
+    targetCategory: {
+      type: String,
+      enum: ["Developer", "TeamLead", "Admin", "General"],
+      default: "General",
+    },
+
   },
   { timestamps: true }
 );

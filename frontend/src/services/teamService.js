@@ -15,4 +15,6 @@ export const teamService = {
   addMember: (id, memberId) => api.put(`/team/${id}/add-member`, { memberId }),
   // Delete team
   remove: (id) => api.delete(`/team/${id}`),
+  // Update team departments hierarchy
+  updateDepartments: (id, departments) => api.put(`/team/${id}/departments`, { departments }),
 };

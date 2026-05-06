@@ -304,18 +304,7 @@ export default function UserProfile() {
               {/* Action buttons */}
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <button
-                  onClick={() => {
-                    if (isDeveloper) {
-                      navigate("/dashboard/my-profile/personal-details?mode=edit");
-                      return;
-                    }
-
-                    navigate(
-                      `/dashboard/profile/personal-details?mode=edit${
-                        profile?._id ? `&id=${profile._id}` : ""
-                      }`
-                    );
-                  }}
+                  onClick={() => navigate("/dashboard/my-profile/personal-details?mode=edit")}
                   className="inline-flex w-full items-center justify-center rounded-xl bg-[#0F62FE] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#004ED8] sm:w-auto"
                 >
                   Edit Profile

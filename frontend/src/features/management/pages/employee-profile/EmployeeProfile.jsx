@@ -95,7 +95,7 @@ export default function EmployeeProfile() {
   useEffect(() => {
     if (isView) return;
     if (currentStepIndex > maxUnlockedStep) {
-      navigate(`/profile/${STEP_ROUTES[maxUnlockedStep].path}${qs}`, {
+      navigate(`/dashboard/profile/${STEP_ROUTES[maxUnlockedStep].path}${qs}`, {
         replace: true,
       });
     }

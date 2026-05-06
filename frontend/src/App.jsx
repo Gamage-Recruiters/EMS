@@ -254,11 +254,11 @@ export default function App() {
           />
           <Route path="/dashboard/user-profile" element={<UserProfile />} />
 
-          {/* ================= DEVELOPER SELF PROFILE ================= */}
+          {/* ================= USER SELF PROFILE ================= */}
           <Route
             path="/dashboard/my-profile"
             element={
-              <ProtectedRoute allowedRoles={["Developer"]}>
+              <ProtectedRoute>
                 <DevSelfProfileEditPage />
               </ProtectedRoute>
             }

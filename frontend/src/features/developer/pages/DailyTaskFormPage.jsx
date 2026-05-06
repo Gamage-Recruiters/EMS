@@ -194,9 +194,16 @@ function DailyTaskFormPage() {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm disabled:opacity-60"
+              className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm disabled:opacity-60 flex items-center justify-center gap-2 min-w-[120px] hover:bg-blue-700 transition-colors"
             >
-              {loading ? "Saving..." : "Save Task"}
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Saving...
+                </>
+              ) : (
+                "Save Task"
+              )}
             </button>
           </div>
        </form>

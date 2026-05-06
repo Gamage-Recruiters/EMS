@@ -344,9 +344,16 @@ export default function ComplaintSubmissionPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-blue-600 to-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition hover:-translate-y-0.3 hover:from-blue-500 hover:to-slate-800 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+              className="inline-flex items-center justify-center gap-2 min-w-[160px] rounded-md bg-gradient-to-r from-blue-600 to-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition hover:-translate-y-0.5 hover:from-blue-500 hover:to-slate-800 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
             >
-              {submitting ? "Submitting..." : "Submit Complaint"}
+              {submitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Submitting...
+                </>
+              ) : (
+                "Submit Complaint"
+              )}
             </button>
           </div>
         </form>

@@ -42,7 +42,14 @@ export default function ComplaintDashboard() {
   }, [complaints, search, status]);
 
   if (loading) {
-    return <div className="p-6 text-slate-500">Loading complaints…</div>;
+    return (
+      <div className="flex-1 min-w-0 bg-slate-50 flex items-center justify-center p-16">
+        <div className="bg-white p-12 rounded-xl shadow-sm border border-slate-200 flex flex-col items-center justify-center min-h-[300px] w-full max-w-lg">
+          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+          <p className="text-slate-500 font-medium animate-pulse">Loading complaints...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

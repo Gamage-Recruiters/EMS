@@ -114,6 +114,7 @@ const CeoDashboard = () => {
     fetchProjects();
   }, []);
 
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const now = new Date();
 
   const todayAttendanceCount = useMemo(() => {
@@ -309,11 +310,16 @@ const CeoDashboard = () => {
           </section>
 
           <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <CalendarCard />
-            <UpcomingMeetings
-              meetings={upcomingMeetings}
+            <CalendarCard 
+              meetings={meetings} 
+              selectedDate={selectedDate} 
+              onSelectDate={setSelectedDate} 
+            />
+            <EventsPanel
+              meetings={meetings}
               loading={loading}
               availableCount={availableCount}
+              selectedDate={selectedDate}
             />
           </section>
         </div>
@@ -403,136 +409,253 @@ const QuickActionButton = ({ label, icon, onClick }) => (
   </button>
 );
 
-const CalendarCard = () => {
-  const currentDate = new Date();
-  const monthIndex = currentDate.getMonth();
-  const year = currentDate.getFullYear();
-  const today = currentDate.getDate();
+const HOLIDAYS = {
+  "0-1": "New Year's Day",
+  "0-14": "Tamil Thai Pongal Day",
+  "1-4": "Independence Day",
+  "3-13": "Sinhala & Tamil New Year's Eve",
+  "3-14": "Sinhala & Tamil New Year's Day",
+  "4-1": "May Day",
+  "11-25": "Christmas Day"
+};
 
-  const monthName = currentDate.toLocaleString("default", { month: "short" });
+const CalendarCard = ({ meetings = [], selectedDate, onSelectDate }) => {
+  const [currentMonth, setCurrentMonth] = useState(new Date(selectedDate || new Date()));
+
+  const year = currentMonth.getFullYear();
+  const monthIndex = currentMonth.getMonth();
+  const monthName = currentMonth.toLocaleString("default", { month: "long" });
+
   const firstDayOfMonth = new Date(year, monthIndex, 1).getDay();
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
 
+  const handlePrevMonth = () => setCurrentMonth(new Date(year, monthIndex - 1, 1));
+  const handleNextMonth = () => setCurrentMonth(new Date(year, monthIndex + 1, 1));
+  const handleToday = () => {
+    const today = new Date();
+    setCurrentMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+    onSelectDate(today);
+  };
+
+  const daysWithMeetings = useMemo(() => {
+    const days = new Set();
+    meetings.forEach((m) => {
+      const rawDate = m?.date || m?.meetingDate || m?.scheduledAt;
+      if (rawDate) {
+        const d = new Date(rawDate);
+        if (d.getFullYear() === year && d.getMonth() === monthIndex) {
+          days.add(d.getDate());
+        }
+      }
+    });
+    return days;
+  }, [meetings, year, monthIndex]);
+
+  // holidays are defined globally now
+
   const calendarCells = [];
-
-  for (let i = 0; i < firstDayOfMonth; i++) {
-    calendarCells.push(null);
-  }
-
-  for (let day = 1; day <= daysInMonth; day++) {
-    calendarCells.push(day);
-  }
+  for (let i = 0; i < firstDayOfMonth; i++) calendarCells.push(null);
+  for (let day = 1; day <= daysInMonth; day++) calendarCells.push(day);
 
   return (
-    <section className="bg-white rounded-3xl shadow-sm p-5">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex gap-2">
-          <select
-            className="text-xs border border-gray-200 rounded-md px-2 py-1 text-gray-600 bg-white"
-            value={monthName}
-            readOnly
+    <section className="bg-white rounded-3xl shadow-sm p-6 flex flex-col h-full">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-sm font-semibold text-slate-900">Calendar</h2>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={handlePrevMonth} 
+            className="w-7 h-7 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 transition"
           >
-            <option>{monthName}</option>
-          </select>
-          <select
-            className="text-xs border border-gray-200 rounded-md px-2 py-1 text-gray-600 bg-white"
-            value={year}
-            readOnly
+            &lt;
+          </button>
+          <div className="text-xs font-semibold w-28 text-center text-slate-800">
+            {monthName} {year}
+          </div>
+          <button 
+            onClick={handleNextMonth} 
+            className="w-7 h-7 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 transition"
           >
-            <option>{year}</option>
-          </select>
-        </div>
-        <div className="text-xs text-gray-500 font-medium">
-          {currentDate.toLocaleDateString("en-CA")} •{" "}
-          {currentDate.toLocaleDateString("en-US", { weekday: "long" })}
+            &gt;
+          </button>
+          <button 
+            onClick={handleToday}
+            className="ml-2 text-[10px] uppercase tracking-wider font-bold text-blue-600 hover:text-blue-800 transition"
+          >
+            Today
+          </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-7 text-[11px] text-center text-gray-400 mb-2">
+      <div className="grid grid-cols-7 text-[11px] font-medium text-center text-gray-400 mb-3">
         {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
           <span key={d}>{d}</span>
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-y-1 text-[11px] text-center">
+      <div className="grid grid-cols-7 gap-y-3 text-[12px] text-center flex-1">
         {calendarCells.map((day, index) => {
-          if (!day) {
-            return <div key={`empty-${index}`} className="w-7 h-7 mx-auto" />;
-          }
+          if (!day) return <div key={`empty-${index}`} />;
 
-          const isSelected = day === today;
+          const isSelected = selectedDate && 
+            selectedDate.getDate() === day && 
+            selectedDate.getMonth() === monthIndex && 
+            selectedDate.getFullYear() === year;
+          
+          const today = new Date();
+          const isToday = today.getDate() === day && 
+            today.getMonth() === monthIndex && 
+            today.getFullYear() === year;
+
+          const hasMeeting = daysWithMeetings.has(day);
+          const holidayName = HOLIDAYS[`${monthIndex}-${day}`];
 
           return (
-            <button
-              key={day}
-              className={`w-7 h-7 mx-auto rounded-full flex items-center justify-center ${
-                isSelected
-                  ? "bg-slate-900 text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              {day}
-            </button>
+            <div key={day} className="flex flex-col items-center justify-center relative">
+              <button
+                onClick={() => onSelectDate(new Date(year, monthIndex, day))}
+                title={holidayName || (hasMeeting ? "Has events" : "")}
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                  isSelected
+                    ? "bg-[#2563EB] text-white font-semibold shadow-md shadow-blue-200 scale-110"
+                    : holidayName
+                    ? "bg-[#FEF2F2] text-[#DC2626] font-bold border border-[#FCA5A5]"
+                    : isToday
+                    ? "bg-slate-100 text-blue-600 font-bold"
+                    : "text-slate-700 hover:bg-gray-50 hover:scale-110"
+                }`}
+              >
+                {day}
+              </button>
+              
+              {/* Event Indicator */}
+              {hasMeeting && (
+                <span className={`absolute bottom-0 w-1.5 h-1.5 rounded-full ${
+                  isSelected ? "bg-white" : "bg-[#4F46E5] border border-white"
+                }`} />
+              )}
+            </div>
           );
         })}
+      </div>
+      
+      <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-4 text-[11px] text-gray-500">
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-[#4F46E5]"></span>
+          Events
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+          Holidays
+        </div>
       </div>
     </section>
   );
 };
 
-const UpcomingMeetings = ({ meetings, loading, availableCount }) => (
-  <div className="bg-white rounded-3xl shadow-sm p-6">
-    <h2 className="text-sm font-semibold text-slate-900 mb-3">
-      Upcoming Meetings
-    </h2>
+const EventsPanel = ({ meetings = [], loading, availableCount, selectedDate }) => {
+  const selectedDateEvents = useMemo(() => {
+    const events = meetings.filter((meeting) => {
+      const rawDate = meeting?.date || meeting?.meetingDate || meeting?.scheduledAt;
+      if (!rawDate) return false;
+      const mDate = new Date(rawDate);
+      return (
+        mDate.getFullYear() === selectedDate.getFullYear() &&
+        mDate.getMonth() === selectedDate.getMonth() &&
+        mDate.getDate() === selectedDate.getDate()
+      );
+    });
 
-    <div className="mb-4 rounded-2xl bg-[#F9FBFF] px-4 py-3">
-      <p className="text-xs text-gray-500">Available team members</p>
-      <p className="text-xl font-semibold text-slate-900 mt-1">
-        {loading ? "..." : availableCount}
-      </p>
-    </div>
+    const holidayName = HOLIDAYS[`${selectedDate.getMonth()}-${selectedDate.getDate()}`];
+    if (holidayName) {
+      events.unshift({
+        _id: `holiday-${selectedDate.getTime()}`,
+        title: holidayName,
+        description: "Public Holiday",
+        isHoliday: true
+      });
+    }
 
-    <div className="space-y-3">
-      {loading ? (
-        <p className="text-sm text-gray-500">Loading meetings...</p>
-      ) : meetings.length > 0 ? (
-        meetings.map((meeting, index) => {
-          const rawDate =
-            meeting?.date || meeting?.meetingDate || meeting?.scheduledAt;
+    return events;
+  }, [meetings, selectedDate]);
 
-          const meetingDate = rawDate ? new Date(rawDate) : null;
+  return (
+    <div className="bg-white rounded-3xl shadow-sm p-6 flex flex-col h-full">
+      <h2 className="text-sm font-semibold text-slate-900 mb-4">
+        Events for {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+      </h2>
 
-          const weekday = meetingDate
-            ? meetingDate.toLocaleDateString("en-US", { weekday: "short" })
-            : "--";
+      <div className="mb-5 rounded-2xl bg-[#F9FBFF] px-4 py-3 flex items-center justify-between border border-blue-50">
+        <div>
+          <p className="text-[11px] font-medium text-blue-600 uppercase tracking-wide">Team Availability</p>
+          <p className="text-2xl font-bold text-slate-900 mt-1">
+            {loading ? "..." : availableCount}
+          </p>
+        </div>
+        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-lg">
+          👥
+        </div>
+      </div>
 
-          const formattedDate = meetingDate
-            ? meetingDate.toLocaleDateString()
-            : "No date";
+      <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar flex-1">
+        {loading ? (
+          <p className="text-sm text-gray-500 text-center py-4">Loading events...</p>
+        ) : selectedDateEvents.length > 0 ? (
+          selectedDateEvents.map((meeting, index) => {
+            if (meeting.isHoliday) {
+              return (
+                <div
+                  key={meeting._id}
+                  className="flex items-start gap-3 rounded-2xl border border-[#FCA5A5] px-4 py-3 bg-[#FEF2F2] hover:bg-[#FEE2E2] transition-colors shadow-sm"
+                >
+                  <div className="w-12 h-12 rounded-xl flex flex-col items-center justify-center text-[20px] bg-white text-[#DC2626] shrink-0 border border-[#FECACA] shadow-sm">
+                    🎉
+                  </div>
+                  <div className="flex-1 min-w-0 py-0.5">
+                    <p className="text-sm font-bold text-[#991B1B] truncate">
+                      {meeting.title}
+                    </p>
+                    <p className="text-[11px] font-medium text-[#DC2626] mt-1">
+                      {meeting.description}
+                    </p>
+                  </div>
+                </div>
+              );
+            }
 
-          return (
-            <div
-              key={meeting?._id || index}
-              className="flex items-center gap-3 rounded-2xl border border-gray-100 px-4 py-3 bg-[#F9FBFF]"
-            >
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center text-[11px] font-semibold bg-[#EEF2FF] text-[#4F46E5]">
-                {weekday}
+            const rawDate = meeting?.date || meeting?.meetingDate || meeting?.scheduledAt;
+            const mDate = rawDate ? new Date(rawDate) : null;
+            const time = mDate ? mDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "All day";
+
+            return (
+              <div
+                key={meeting?._id || index}
+                className="flex items-start gap-3 rounded-2xl border border-gray-100 px-4 py-3 bg-white hover:bg-[#F9FBFF] transition-colors shadow-sm"
+              >
+                <div className="w-12 h-12 rounded-xl flex flex-col items-center justify-center text-[11px] font-semibold bg-[#EEF2FF] text-[#4F46E5] shrink-0 border border-indigo-50">
+                  <span className="text-xs">{time.split(' ')[0]}</span>
+                  <span className="text-[9px] opacity-70">{time.split(' ')[1]}</span>
+                </div>
+                <div className="flex-1 min-w-0 py-0.5">
+                  <p className="text-sm font-semibold text-slate-900 truncate">
+                    {meeting?.title || meeting?.topic || "Scheduled Meeting"}
+                  </p>
+                  <p className="text-[11px] text-gray-500 mt-1 line-clamp-2">
+                    {meeting?.description || meeting?.agenda || "No additional details provided."}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-slate-900">
-                  {meeting?.title || meeting?.topic || "Meeting"}
-                </p>
-                <p className="text-[11px] text-gray-600">{formattedDate}</p>
-              </div>
-            </div>
-          );
-        })
-      ) : (
-        <p className="text-sm text-gray-500">No upcoming meetings</p>
-      )}
+            );
+          })
+        ) : (
+          <div className="flex flex-col items-center justify-center h-32 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+            <span className="text-3xl mb-2 grayscale opacity-50">📅</span>
+            <p className="text-xs font-medium text-gray-500">No events scheduled</p>
+            <p className="text-[10px] text-gray-400 mt-1">Select a different date to view past or upcoming events.</p>
+          </div>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default CeoDashboard;

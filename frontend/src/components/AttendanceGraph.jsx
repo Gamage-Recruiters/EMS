@@ -92,8 +92,13 @@ const AttendanceGraph = ({
         setLoading(true);
         setError(null);
         
-        // Pass selectedEmployee value only if a specific one is selected
-        const empIdParam = selectedEmployee !== "all" ? selectedEmployee : "";
+        // Pass selectedEmployee value only if a specific valid one is selected
+        const empIdParam = (
+          selectedEmployee && 
+          selectedEmployee !== "all" && 
+          selectedEmployee !== "undefined" && 
+          selectedEmployee !== "null"
+        ) ? selectedEmployee : "";
         const res = await getMonthlyAttendanceSummary(selectedYear, empIdParam);
         
         if (res.success) {

@@ -302,7 +302,12 @@ export const getMonthlySummary = async (req, res, next) => {
 
     // Role Based Employee Filtering (CEO and PM can view all/selected employees)
     if (role === "CEO" || role === "PM") {
-      if (queryEmployeeId && queryEmployeeId !== "all" && queryEmployeeId !== "") {
+      if (queryEmployeeId && 
+          queryEmployeeId !== "all" && 
+          queryEmployeeId !== "" && 
+          queryEmployeeId !== "undefined" && 
+          queryEmployeeId !== "null" && 
+          mongoose.isValidObjectId(queryEmployeeId)) {
         matchQuery.employee = new mongoose.Types.ObjectId(queryEmployeeId);
       }
     } else if (role === "TL") {
@@ -312,14 +317,19 @@ export const getMonthlySummary = async (req, res, next) => {
       memberIds.push(userId.toString()); // Include TL themselves
       const uniqueMembers = [...new Set(memberIds)];
 
-      if (queryEmployeeId && queryEmployeeId !== "all" && queryEmployeeId !== "") {
+      if (queryEmployeeId && 
+          queryEmployeeId !== "all" && 
+          queryEmployeeId !== "" && 
+          queryEmployeeId !== "undefined" && 
+          queryEmployeeId !== "null" && 
+          mongoose.isValidObjectId(queryEmployeeId)) {
         if (uniqueMembers.includes(queryEmployeeId)) {
           matchQuery.employee = new mongoose.Types.ObjectId(queryEmployeeId);
         } else {
           return next(new AppError("Not authorized to view this employee's attendance summary", 403));
         }
       } else {
-        matchQuery.employee = { $in: uniqueMembers.map(id => new mongoose.Types.ObjectId(id)) };
+        matchQuery.employee = { $in: uniqueMembers.filter(id => mongoose.isValidObjectId(id)).map(id => new mongoose.Types.ObjectId(id)) };
       }
     } else {
       // Developer / Regular user

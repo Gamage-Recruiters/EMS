@@ -1,4 +1,6 @@
+import mongoose from "mongoose";
 import Attendance from "../models/Attendance.js";
+import Team from "../models/Team.js";
 import AppError from "../utils/AppError.js";
 import { clearAvailabilityOnCheckout } from "./availabilityController.js";
 
@@ -274,6 +276,116 @@ export const getAttendanceById = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: attendance,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get monthly attendance summary (Present, Absent, Late, Leave) grouped by month
+ * @route   GET /api/attendance/monthly-summary
+ * @access  Private
+ */
+export const getMonthlySummary = async (req, res, next) => {
+  try {
+    const { role, _id: userId } = req.user;
+    const year = parseInt(req.query.year) || new Date().getFullYear();
+    const queryEmployeeId = req.query.employeeId;
+
+    const startOfYear = new Date(Date.UTC(year, 0, 1, 0, 0, 0, 0));
+    const endOfYear = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
+
+    const matchQuery = {
+      date: { $gte: startOfYear, $lte: endOfYear }
+    };
+
+    // Role Based Employee Filtering (CEO and PM can view all/selected employees)
+    if (role === "CEO" || role === "PM") {
+      if (queryEmployeeId && queryEmployeeId !== "all" && queryEmployeeId !== "") {
+        matchQuery.employee = new mongoose.Types.ObjectId(queryEmployeeId);
+      }
+    } else if (role === "TL") {
+      // Find teams led by TL
+      const teams = await Team.find({ teamLead: userId });
+      const memberIds = teams.flatMap(team => (team.members || []).map(member => member.toString()));
+      memberIds.push(userId.toString()); // Include TL themselves
+      const uniqueMembers = [...new Set(memberIds)];
+
+      if (queryEmployeeId && queryEmployeeId !== "all" && queryEmployeeId !== "") {
+        if (uniqueMembers.includes(queryEmployeeId)) {
+          matchQuery.employee = new mongoose.Types.ObjectId(queryEmployeeId);
+        } else {
+          return next(new AppError("Not authorized to view this employee's attendance summary", 403));
+        }
+      } else {
+        matchQuery.employee = { $in: uniqueMembers.map(id => new mongoose.Types.ObjectId(id)) };
+      }
+    } else {
+      // Developer / Regular user
+      matchQuery.employee = new mongoose.Types.ObjectId(userId);
+    }
+
+    const results = await Attendance.aggregate([
+      { $match: matchQuery },
+      {
+        $group: {
+          _id: { $month: "$date" },
+          present: {
+            $sum: { $cond: [{ $eq: ["$status", "Present"] }, 1, 0] }
+          },
+          absent: {
+            $sum: { $cond: [{ $eq: ["$status", "Absent"] }, 1, 0] }
+          },
+          late: {
+            $sum: { $cond: [{ $eq: ["$status", "Late"] }, 1, 0] }
+          },
+          leave: {
+            $sum: {
+              $cond: [
+                {
+                  $or: [
+                    { $eq: ["$status", "On Leave"] },
+                    { $eq: ["$status", "leave"] }
+                  ]
+                },
+                1,
+                0
+              ]
+            }
+          }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthlySummary = Array.from({ length: 12 }, (_, i) => ({
+      month: monthNames[i],
+      present: 0,
+      absent: 0,
+      late: 0,
+      leave: 0
+    }));
+
+    results.forEach(item => {
+      const monthIdx = item._id - 1;
+      if (monthIdx >= 0 && monthIdx < 12) {
+        monthlySummary[monthIdx].present = item.present;
+        monthlySummary[monthIdx].absent = item.absent;
+        monthlySummary[monthIdx].late = item.late;
+        monthlySummary[monthIdx].leave = item.leave;
+      }
+    });
+
+    // Filter out months that have no attendance activity (all 0s)
+    const filteredSummary = monthlySummary.filter(
+      item => item.present > 0 || item.absent > 0 || item.late > 0 || item.leave > 0
+    );
+
+    res.status(200).json({
+      success: true,
+      data: filteredSummary
     });
   } catch (error) {
     next(error);

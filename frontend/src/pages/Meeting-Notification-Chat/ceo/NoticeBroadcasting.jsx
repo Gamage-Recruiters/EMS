@@ -117,26 +117,34 @@ export default function NoticeBroadcasting() {
               <EmployeeSearch value={search} onChange={setSearch} />
 
               <div className="space-y-1 overflow-y-auto mt-2">
-                {loading && <p className="text-xs text-center p-4">Loading...</p>}
-                {!loading && filteredRooms.length === 0 && (
-                  <p className="text-xs text-center p-4 text-gray-400">No channels found</p>
-                )}
-                {filteredRooms.map((room) => (
-                  <div
-                    key={room._id}
-                    onClick={() => setActiveNoticeRoom(room)}
-                    className={`
-                      px-3 py-2 rounded cursor-pointer text-sm
-                      ${
-                        activeNoticeRoom?._id === room._id
-                          ? "bg-[#F0F0F0] font-semibold text-[#1F1F1F]"
-                          : "hover:bg-[#F0F0F0] text-[#4D4D4D]"
-                      }
-                    `}
-                  >
-                    {room.name}
+                {loading ? (
+                  <div className="space-y-2 p-1 animate-pulse">
+                    <div className="h-9 bg-[#F0F0F0] rounded w-full"></div>
+                    <div className="h-9 bg-[#F0F0F0] rounded w-5/6"></div>
+                    <div className="h-9 bg-[#F0F0F0] rounded w-full"></div>
+                    <div className="h-9 bg-[#F0F0F0] rounded w-4/5"></div>
+                    <div className="h-9 bg-[#F0F0F0] rounded w-11/12"></div>
                   </div>
-                ))}
+                ) : filteredRooms.length === 0 ? (
+                  <p className="text-xs text-center p-4 text-gray-400">No channels found</p>
+                ) : (
+                  filteredRooms.map((room) => (
+                    <div
+                      key={room._id}
+                      onClick={() => setActiveNoticeRoom(room)}
+                      className={`
+                        px-3 py-2 rounded cursor-pointer text-sm transition-colors duration-200
+                        ${
+                          activeNoticeRoom?._id === room._id
+                            ? "bg-[#F0F0F0] font-semibold text-[#1F1F1F]"
+                            : "hover:bg-[#F0F0F0] text-[#4D4D4D]"
+                        }
+                      `}
+                    >
+                      {room.name}
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 

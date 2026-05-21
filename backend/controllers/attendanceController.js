@@ -289,7 +289,8 @@ export const getAttendanceById = async (req, res, next) => {
  */
 export const getMonthlySummary = async (req, res, next) => {
   try {
-    const { role, _id: userId } = req.user;
+    const role = req.user.role;
+    const userId = req.user._id || req.user.id;
     const year = parseInt(req.query.year) || new Date().getFullYear();
     const queryEmployeeId = req.query.employeeId;
 
@@ -308,13 +309,16 @@ export const getMonthlySummary = async (req, res, next) => {
           queryEmployeeId !== "undefined" && 
           queryEmployeeId !== "null" && 
           mongoose.isValidObjectId(queryEmployeeId)) {
-        matchQuery.employee = new mongoose.Types.ObjectId(queryEmployeeId);
+        matchQuery.employee = new mongoose.Types.ObjectId(queryEmployeeId.toString());
       }
     } else if (role === "TL") {
       // Find teams led by TL
-      const teams = await Team.find({ teamLead: userId });
+      const teamLeadId = userId ? new mongoose.Types.ObjectId(userId.toString()) : undefined;
+      const teams = await Team.find({ teamLead: teamLeadId });
       const memberIds = teams.flatMap(team => (team.members || []).map(member => member.toString()));
-      memberIds.push(userId.toString()); // Include TL themselves
+      if (userId) {
+        memberIds.push(userId.toString()); // Include TL themselves
+      }
       const uniqueMembers = [...new Set(memberIds)];
 
       if (queryEmployeeId && 
@@ -323,17 +327,21 @@ export const getMonthlySummary = async (req, res, next) => {
           queryEmployeeId !== "undefined" && 
           queryEmployeeId !== "null" && 
           mongoose.isValidObjectId(queryEmployeeId)) {
-        if (uniqueMembers.includes(queryEmployeeId)) {
-          matchQuery.employee = new mongoose.Types.ObjectId(queryEmployeeId);
+        if (uniqueMembers.includes(queryEmployeeId.toString())) {
+          matchQuery.employee = new mongoose.Types.ObjectId(queryEmployeeId.toString());
         } else {
           return next(new AppError("Not authorized to view this employee's attendance summary", 403));
         }
       } else {
-        matchQuery.employee = { $in: uniqueMembers.filter(id => mongoose.isValidObjectId(id)).map(id => new mongoose.Types.ObjectId(id)) };
+        matchQuery.employee = { $in: uniqueMembers.filter(id => mongoose.isValidObjectId(id)).map(id => new mongoose.Types.ObjectId(id.toString())) };
       }
     } else {
       // Developer / Regular user
-      matchQuery.employee = new mongoose.Types.ObjectId(userId);
+      if (userId && mongoose.isValidObjectId(userId)) {
+        matchQuery.employee = new mongoose.Types.ObjectId(userId.toString());
+      } else {
+        return next(new AppError("Invalid or missing user ID in session", 400));
+      }
     }
 
     const results = await Attendance.aggregate([

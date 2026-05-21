@@ -1,5 +1,5 @@
 import express from 'express';
-import { checkIn, checkOut, deleteAttendance, getAllAttendance, getAttendanceById, getMyAttendance, getTodayAttendance, getMonthlySummary } from '../controllers/attendanceController.js';
+import { checkIn, checkOut, deleteAttendance, getAllAttendance, getAttendanceById, getMyAttendance, getTodayAttendance } from '../controllers/attendanceController.js';
 import { authorize, protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -10,7 +10,6 @@ router.put('/checkout',protect ,checkOut);
 router.get('/',protect,authorize('CEO','TL','PM'),getAllAttendance);
 router.get('/myAttendance',protect,getMyAttendance);
 router.get('/todayAttendance',protect,getTodayAttendance);
-router.get('/monthly-summary',protect,getMonthlySummary);
 router.get('/:id',protect,getAttendanceById);
 router.delete('/:id',protect,authorize("CEO"),deleteAttendance);
 

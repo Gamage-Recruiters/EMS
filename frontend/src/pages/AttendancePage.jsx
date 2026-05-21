@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Users, Clock, TrendingUp, Trash2, Eye } from 'lucide-react';
-import { getAllAttendance, deleteAttendanceRecord, getMyAttendance } from '../services/attendanceService';
+import { getAllAttendance, deleteAttendanceRecord } from '../services/attendanceService';
 import { useAuth } from "../context/AuthContext";
 import { Navigate } from "react-router-dom";
-import AttendanceGraph from '../components/AttendanceGraph';
 
 
 const AttendancePage = () => {
@@ -18,16 +17,12 @@ const AttendancePage = () => {
     const [monthlyStats, setMonthlyStats] = useState(null);
     const [deleteLoading, setDeleteLoading] = useState(null);
 
-    // Shared Filter States for Syncing Graph & Table
-    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-    const [selectedEmployee, setSelectedEmployee] = useState("all");
-
      // 🔐 ROLE GUARD
     if (!user) {
         return <Navigate to="/login" replace />;
     }
 
-    if (!["PM", "TL", "CEO", "Developer"].includes(user.role)) {
+    if (!["PM", "TL", "CEO"].includes(user.role)) {
         return <Navigate to="/dashboard" replace />;
     }
 
@@ -40,7 +35,7 @@ const AttendancePage = () => {
     const fetchAllAttendance = async () => {
         try {
             // setLoading(true);
-            const response = user.role === "Developer" ? await getMyAttendance() : await getAllAttendance();
+            const response = await getAllAttendance();
             if (response.success) {
                 setAllAttendanceData(response.data.data || []);
             } else {
@@ -52,58 +47,20 @@ const AttendancePage = () => {
         }
     };
 
-    // Helper to change view modes and seamlessly map date formats (YYYY-MM-DD vs YYYY-MM)
-    const handleSetViewMode = (mode) => {
-        setViewMode(mode);
-        if (mode === 'daily') {
-            if (selectedDate.length === 7) {
-                setSelectedDate(`${selectedDate}-01`);
-            }
-        } else if (mode === 'monthly') {
-            if (selectedDate.length === 10) {
-                setSelectedDate(selectedDate.substring(0, 7));
-            }
-        }
-    };
-
-    // Filter data when date, view mode or selectedEmployee changes
+    // Filter data when date or view mode changes
     useEffect(() => {
         if (allAttendanceData.length === 0) return;
 
-        let filtered = [...allAttendanceData];
-
-        // 1. Filter by Employee if one is selected in the graph dropdown
-        if (selectedEmployee && selectedEmployee !== 'all') {
-            filtered = filtered.filter(record => record.employee?._id === selectedEmployee);
-        }
-
-        // Guard against empty or invalid selectedDate values to prevent crashes
-        if (!selectedDate) {
-            setEmployees([]);
-            return;
-        }
-
-        // 2. Filter by Date / Month based on View Mode
         if (viewMode === 'daily') {
-            filtered = filtered.filter(record => {
+            const filtered = allAttendanceData.filter(record => {
                 if (!record.date) return false;
-                // Parse date in user's local timezone instead of UTC to avoid timezone boundary shifts
-                const d = new Date(record.date);
-                const year = d.getFullYear();
-                const month = String(d.getMonth() + 1).padStart(2, '0');
-                const day = String(d.getDate()).padStart(2, '0');
-                const recordDate = `${year}-${month}-${day}`;
+                const recordDate = new Date(record.date).toISOString().split('T')[0];
                 return recordDate === selectedDate;
             });
             setEmployees(filtered);
         } else {
-            const parts = selectedDate.split('-');
-            if (parts.length < 2) {
-                setEmployees([]);
-                return;
-            }
-            const [year, month] = parts;
-            filtered = filtered.filter(record => {
+            const [year, month] = selectedDate.split('-');
+            const filtered = allAttendanceData.filter(record => {
                 if (!record.date) return false;
                 const recordDate = new Date(record.date);
                 return recordDate.getFullYear() === parseInt(year) && 
@@ -112,7 +69,7 @@ const AttendancePage = () => {
             setEmployees(filtered);
             calculateMonthlyStats(filtered);
         }
-    }, [selectedDate, viewMode, allAttendanceData, selectedEmployee]);
+    }, [selectedDate, viewMode, allAttendanceData]);
 
     const calculateMonthlyStats = (records) => {
         const stats = {
@@ -130,7 +87,7 @@ const AttendancePage = () => {
             if (record.status === 'Present') stats.present++;
             else if (record.status === 'Absent') stats.absent++;
             else if (record.status === 'Late') stats.late++;
-            else if (record.status === 'leave' || record.status === 'On Leave') stats.leave++;
+            else if (record.status === 'leave') stats.leave++;
 
             const empId = record.employee?._id;
             if (empId) {
@@ -146,7 +103,7 @@ const AttendancePage = () => {
                 if (record.status === 'Present') stats.employees[empId].present++;
                 else if (record.status === 'Absent') stats.employees[empId].absent++;
                 else if (record.status === 'Late') stats.employees[empId].late++;
-                else if (record.status === 'leave' || record.status === 'On Leave') stats.employees[empId].leave++;
+                else if (record.status === 'leave') stats.employees[empId].leave++;
             }
         });
 
@@ -182,7 +139,6 @@ const AttendancePage = () => {
             Present: 'bg-green-100 text-green-700 border border-green-200',
             Absent: 'bg-red-100 text-red-700 border border-red-200',
             Late: 'bg-orange-100 text-orange-700 border border-orange-200',
-            'On Leave': 'bg-blue-100 text-blue-700 border border-blue-200',
             leave: 'bg-blue-100 text-blue-700 border border-blue-200'
         };
 
@@ -190,7 +146,6 @@ const AttendancePage = () => {
             Present: 'Present',
             Absent: 'Absent',
             Late: 'Late',
-            'On Leave': 'On Leave',
             leave: 'On Leave'
         };
 
@@ -232,7 +187,7 @@ const AttendancePage = () => {
     return (
         <div className="p-6 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
             {/* Header */}
-            <div className="mb-6 border-b border-gray-200 pb-4">
+            <div className="mb-6">
                 <h2 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-2">
                     <Users className="w-8 h-8 text-blue-600" />
                     Attendance Management
@@ -244,21 +199,13 @@ const AttendancePage = () => {
                 </p>
             </div>
 
-            {/* Monthly Attendance Graph */}
-            <AttendanceGraph 
-                selectedYear={selectedYear}
-                setSelectedYear={setSelectedYear}
-                selectedEmployee={selectedEmployee}
-                setSelectedEmployee={setSelectedEmployee}
-            />
-
             {/* Controls */}
             <div className="bg-white rounded-xl shadow-md p-5 mb-6 border border-gray-200">
                 <div className="flex flex-wrap gap-4 items-center">
                     {/* View Mode Toggle */}
                     <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
                         <button
-                            onClick={() => handleSetViewMode('daily')}
+                            onClick={() => setViewMode('daily')}
                             className={`px-4 py-2 rounded-lg font-medium transition-all ${
                                 viewMode === 'daily'
                                     ? 'bg-blue-600 text-white shadow-md'
@@ -269,7 +216,7 @@ const AttendancePage = () => {
                             Daily
                         </button>
                         <button
-                            onClick={() => handleSetViewMode('monthly')}
+                            onClick={() => setViewMode('monthly')}
                             className={`px-4 py-2 rounded-lg font-medium transition-all ${
                                 viewMode === 'monthly'
                                     ? 'bg-blue-600 text-white shadow-md'
@@ -287,7 +234,7 @@ const AttendancePage = () => {
                         <input
                             type={viewMode === 'daily' ? 'date' : 'month'}
                             value={selectedDate}
-                            max={viewMode === 'daily' ? new Date().toISOString().split('T')[0] : new Date().toISOString().split('T')[0].substring(0, 7)}
+                            max={new Date().toISOString().split('T')[0]}
                             onChange={(e) => setSelectedDate(e.target.value)}
                             className="px-3 py-1 border-0 bg-transparent focus:ring-2 focus:ring-blue-500 rounded"
                         />
@@ -349,7 +296,7 @@ const AttendancePage = () => {
                                     <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Check In</th>
                                     <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Check Out</th>
                                     <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Status</th>
-                                    {user.role !== "Developer" && <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Actions</th>}
+                                    <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
@@ -382,33 +329,31 @@ const AttendancePage = () => {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             {getStatusBadge(emp.status)}
                                         </td>
-                                        {user.role !== "Developer" && (
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                <div className="flex gap-2">
-                                                    <button
-                                                        onClick={() => handleDelete(emp._id, `${emp.employee?.firstName} ${emp.employee?.lastName}`)}
-                                                        disabled={deleteLoading === emp._id}
-                                                        className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1 ${
-                                                            deleteLoading === emp._id
-                                                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                                                : 'bg-red-100 text-red-700 hover:bg-red-200 hover:shadow-md'
-                                                        }`}
-                                                    >
-                                                        {deleteLoading === emp._id ? (
-                                                            <>
-                                                                <div className="animate-spin h-3 w-3 border-2 border-red-600 border-t-transparent rounded-full"></div>
-                                                                Deleting...
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <Trash2 className="w-4 h-4" />
-                                                                Delete
-                                                            </>
-                                                        )}
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        )}
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => handleDelete(emp._id, `${emp.employee?.firstName} ${emp.employee?.lastName}`)}
+                                                    disabled={deleteLoading === emp._id}
+                                                    className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1 ${
+                                                        deleteLoading === emp._id
+                                                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                                            : 'bg-red-100 text-red-700 hover:bg-red-200 hover:shadow-md'
+                                                    }`}
+                                                >
+                                                    {deleteLoading === emp._id ? (
+                                                        <>
+                                                            <div className="animate-spin h-3 w-3 border-2 border-red-600 border-t-transparent rounded-full"></div>
+                                                            Deleting...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Trash2 className="w-4 h-4" />
+                                                            Delete
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>

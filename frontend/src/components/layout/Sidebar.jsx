@@ -35,7 +35,6 @@ const Sidebar = ({ onClose }) => {
       { name: "Daily Task Sheet", path: "/dashboard/dev/daily-task-update" },
       { name: "Weekly Work Summary", path: "/dashboard/dev/weekly-summary" },
       { name: "Leave Form", path: "/dashboard/leave-form" },
-      { name: "Attendance Summary", path: "/dashboard/attendance" },
       { name: "Complaint Submission", path: "/dashboard/complaints" },
     ],
 

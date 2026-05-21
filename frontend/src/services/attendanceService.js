@@ -79,37 +79,4 @@ export const deleteAttendanceRecord = async (id) => {
             error: error.response?.data?.message || 'Failed to delete attendance record',
         };
     }
-}
-
-// get monthly attendance summary grouped by month
-export const getMonthlyAttendanceSummary = async (year, employeeId = '') => {
-   try {
-    const url = `/attendance/monthly-summary?year=${year}${employeeId ? `&employeeId=${employeeId}` : ''}`;
-    const response = await api.get(url);
-    return {
-        success: true,
-        data: response.data,
-    };
-   }catch (error) {
-    return {
-        success: false,
-        error: error.response?.data?.message || 'Failed to fetch monthly attendance summary',
-    };
-   }
-}
-
-// get personal attendance records (for regular developers)
-export const getMyAttendance = async () => {
-   try {
-    const response = await api.get("/attendance/myAttendance");
-    return {
-        success: true,
-        data: response.data,
-    };
-   }catch (error) {
-    return {
-        success: false,
-        error: error.response?.data?.message || 'Failed to fetch my attendance records',
-    };
-   }
-}
+}

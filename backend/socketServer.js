@@ -74,9 +74,12 @@ const initializeSocket = (httpServer) => {
         `User connected: ${socket.user.email} (${socket.user.role})`
       );
 
-      // Join user to their channels
+      // Join user to their channels (including notice channels)
       const userChannels = await Channel.find({
-        members: socket.user._id,
+        $or: [
+          { members: socket.user._id },
+          { type: "notice" }
+        ],
         isActive: true,
       });
 
@@ -116,7 +119,10 @@ const initializeSocket = (httpServer) => {
               .sort({ createdAt: -1 });
           } else {
             channels = await Channel.find({
-              members: socket.user._id,
+              $or: [
+                { members: socket.user._id },
+                { type: "notice" }
+              ],
               isActive: true,
             })
               .populate("createdBy", "firstName lastName role")
@@ -293,6 +299,7 @@ const initializeSocket = (httpServer) => {
             socket.user.role === "CEO" ||
             socket.user.role === "TL" ||
             socket.user.role === "PM" ||
+            channel.type === "notice" ||
             isMember;
 
           if (!canAccess) {

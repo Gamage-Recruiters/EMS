@@ -25,9 +25,12 @@ export const getChannels = async (req, res, next) => {
         .populate('members', 'firstName lastName email role profileImage')
         .sort({ createdAt: -1 });
     } else {
-      // Regular employees see only channels they're members of
+      // Regular employees see channels they're members of OR any notice channel
       channels = await Channel.find({
-        members: req.user._id,
+        $or: [
+          { members: req.user._id },
+          { type: 'notice' }
+        ],
         isActive: true,
       })
         .populate('createdBy', 'firstName lastName role')
@@ -264,6 +267,7 @@ export const getMessages = async (req, res, next) => {
       req.user.role === 'CEO' ||
       req.user.role === 'TL' ||
       req.user.role === 'PM' ||
+      channel.type === 'notice' ||
       isMember;
 
     if (!canAccess) {

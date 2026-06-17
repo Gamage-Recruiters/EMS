@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Attendance from "../models/Attendance.js";
 import Team from "../models/Team.js";
+import User from "../models/User.js";
 import AppError from "../utils/AppError.js";
 import { clearAvailabilityOnCheckout } from "./availabilityController.js";
 
@@ -210,6 +211,67 @@ export const getTodayAttendance = async (req, res, next) => {
 };
 
 /**
+ * @desc    Get attendance report for an employee by email
+ * @route   GET /api/attendance/report
+ * @access  Private/CEO
+ */
+export const getAttendanceReport = async (req, res, next) => {
+  try {
+    const { email, startDate, endDate } = req.query;
+
+    if (!email) {
+      return next(new AppError("Employee email is required", 400));
+    }
+
+    const employee = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!employee) {
+      return next(new AppError("Employee not found", 404));
+    }
+
+    const query = { employee: employee._id };
+    if (startDate || endDate) {
+      query.date = {};
+      if (startDate) query.date.$gte = new Date(startDate);
+      if (endDate) query.date.$lte = new Date(endDate);
+    }
+
+    const attendanceRecords = await Attendance.find(query)
+      .sort({ date: -1 })
+      .lean();
+
+    const summary = {
+      totalDays: attendanceRecords.length,
+      present: attendanceRecords.filter((record) => record.status === "Present").length,
+      late: attendanceRecords.filter((record) => record.status === "Late").length,
+      leave: attendanceRecords.filter((record) => record.status === "On Leave").length,
+      absent: attendanceRecords.filter((record) => record.status === "Absent").length,
+      totalWorkingHours: attendanceRecords.reduce(
+        (sum, record) => sum + (record.workingHours || 0),
+        0,
+      ),
+    };
+
+    res.status(200).json({
+      success: true,
+      data: {
+        employee: {
+          firstName: employee.firstName,
+          lastName: employee.lastName,
+          email: employee.email,
+          role: employee.role,
+          designation: employee.designation,
+          department: employee.department,
+        },
+        attendanceRecords,
+        summary,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * @desc    Delete attendance record (CEO only)
  * @route   DELETE /api/attendance/:id
  * @access  Private/CEO
@@ -280,5 +342,4 @@ export const getAttendanceById = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-}
 };

@@ -31,6 +31,7 @@ import TLDashboard from "./pages/dashboard/TLDashboard";
 
 // Common Pages
 import AttendancePage from "./pages/AttendancePage";
+import AttendanceReportPage from "./pages/AttendanceReportPage";
 import LeaveForm from "./pages/LeaveForm";
 import LeaveApproval from "./pages/LeaveApproval";
 
@@ -162,6 +163,14 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={["CEO"]}>
                 <TLPastProjects />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/ceo/attendance-report"
+            element={
+              <ProtectedRoute allowedRoles={["CEO"]}>
+                <AttendanceReportPage />
               </ProtectedRoute>
             }
           />

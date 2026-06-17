@@ -280,5 +280,4 @@ export const getAttendanceById = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-}
 };

@@ -61,16 +61,18 @@ export default function DailyTaskReviewPage() {
 
       // SEARCH: task + project + developer name
       if (filters.search) {
-        const devFirst = t.developer.firstName.toLowerCase();
-        const devLast = t.developer.lastName.toLowerCase();
-        const devFull = `${devFirst} ${devLast}`;
+        const devFirst = (t.developer?.firstName || "").toLowerCase();
+        const devLast = (t.developer?.lastName || "").toLowerCase();
+        const devFull = `${devFirst} ${devLast}`.trim();
+        const devEmail = (t.developer?.email || "").toLowerCase();
 
         const matches =
-          t.task.toLowerCase().includes(term) ||
-          t.project.toLowerCase().includes(term) ||
+          (t.task || "").toLowerCase().includes(term) ||
+          (t.project || "").toLowerCase().includes(term) ||
           devFirst.includes(term) ||
           devLast.includes(term) ||
-          devFull.includes(term);
+          devFull.includes(term) ||
+          devEmail.includes(term);
 
         if (!matches) return false;
       }

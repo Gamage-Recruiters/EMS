@@ -2,7 +2,7 @@ export default function ReviewFilters({ developers, filters, setFilters }) {
   return (
     <div className="flex flex-wrap gap-3 items-center">
       <input
-        placeholder="Search task or project or developer"
+        placeholder="Search by task, project, name, or email"
         className="border rounded px-3 py-2 text-sm"
         value={filters.search}
         onChange={(e) => setFilters({ ...filters, search: e.target.value })}

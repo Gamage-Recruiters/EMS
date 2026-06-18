@@ -65,6 +65,25 @@ export const getAllAttendance = async () => {
    }
 }
 
+export const getAttendanceReport = async (email, startDate, endDate) => {
+  try {
+    const params = { email };
+    if (startDate) params.startDate = startDate;
+    if (endDate) params.endDate = endDate;
+
+    const response = await api.get("/attendance/report", { params });
+    return {
+      success: response.data.success,
+      data: response.data.data,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data?.message || 'Failed to fetch attendance report',
+    };
+  }
+};
+
 // delete an attendance record by ID
 export const deleteAttendanceRecord = async (id) => {
     try {
@@ -79,4 +98,4 @@ export const deleteAttendanceRecord = async (id) => {
             error: error.response?.data?.message || 'Failed to delete attendance record',
         };
     }
-}
+}

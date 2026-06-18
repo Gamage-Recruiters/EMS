@@ -1,17 +1,29 @@
 import React from "react";
 import { FiBriefcase, FiCheckCircle } from "react-icons/fi";
 import { useOutletContext } from "react-router-dom";
+import { useAuth } from "../../../../context/AuthContext";
+
+const POSITION_OPTIONS = [
+  "Member",
+  "Team Lead",
+  "Project Manager",
+  "Assistance Team Lead",
+  "QA Lead",
+  "Maintenance Lead",
+  "UIUX Lead",
+  "Full Stack Lead",
+  "Admin Lead",
+];
 
 export default function JobDetails() {
   const {
     employee,
     setEmployee,
     isView,
-    isAdd,
-    saving,
-    onBack,
-    onCreate,
   } = useOutletContext();
+  const { user } = useAuth();
+  const isCEO = user?.role === "CEO";
+  const canEditJob = isCEO && !isView;
 
   return (
     <div className="w-full">
@@ -38,9 +50,9 @@ export default function JobDetails() {
               onChange={(e) =>
                 setEmployee((prev) => ({ ...prev, role: e.target.value }))
               }
-              disabled={isView}
+              disabled={!canEditJob}
               className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
+                !canEditJob ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
               }`}
             >
               <option value="">Select role</option>
@@ -56,20 +68,28 @@ export default function JobDetails() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Designation
+              Position / Designation
             </label>
-            <input
-              type="text"
+            <select
               value={employee.designation || ""}
               onChange={(e) =>
-                setEmployee((prev) => ({ ...prev, designation: e.target.value }))
+                setEmployee((prev) => ({
+                  ...prev,
+                  designation: e.target.value,
+                }))
               }
-              placeholder="e.g., Senior Developer"
-              disabled={isView}
+              disabled={!canEditJob}
               className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                isView ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
+                !canEditJob ? "bg-gray-50 cursor-not-allowed text-gray-600" : "bg-white"
               }`}
-            />
+            >
+              <option value="">Select a position</option>
+              {POSITION_OPTIONS.map((position) => (
+                <option key={position} value={position}>
+                  {position}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
@@ -89,6 +109,12 @@ export default function JobDetails() {
               }`}
             />
           </div>
+        </div>
+
+        <div className="text-sm text-gray-500 mt-3">
+          {isCEO
+            ? "As CEO, you can choose a predefined position or enter a custom designation."
+            : "Only the CEO may update role or position from employee details. Other fields remain viewable."}
         </div>
 
         {/* Joined Date */}
@@ -115,8 +141,8 @@ export default function JobDetails() {
 
         {/* Validation Info */}
         {employee.designation && employee.department && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
-            <FiCheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div className="bg-linear-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+            <FiCheckCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
             <p className="text-sm text-blue-900">
               <span className="font-semibold">Job details complete</span> —
               Employee role and department set

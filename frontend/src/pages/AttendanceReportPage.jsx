@@ -67,7 +67,8 @@ const generatePDF = (report) => {
   doc.setTextColor(100, 100, 100);
   const summary = report.summary;
   const summaryData = [
-    [`Total Days:`, `${summary.totalDays}`],
+    [`Total Working Days:`, `${summary.totalWorkingDays}`],
+    [`Total Records:`, `${summary.totalRecords}`],
     [`Present:`, `${summary.present}`],
     [`Late:`, `${summary.late}`],
     [`On Leave:`, `${summary.leave}`],
@@ -125,7 +126,6 @@ const generatePDF = (report) => {
   });
 
   // Footer
-  const finalY = doc.lastAutoTable.finalY + 15;
   doc.setFontSize(9);
   doc.setTextColor(150, 150, 150);
   doc.text(
@@ -265,8 +265,8 @@ export default function AttendanceReportPage() {
                 <p className="mt-2 text-lg font-semibold text-slate-900">{report.employee.firstName} {report.employee.lastName}</p>
               </div>
               <div className="rounded-3xl bg-slate-50 p-5 border border-slate-200">
-                <p className="text-sm text-slate-500">Total Days</p>
-                <p className="mt-2 text-lg font-semibold text-slate-900">{report.summary.totalDays}</p>
+                <p className="text-sm text-slate-500">Working Days</p>
+                <p className="mt-2 text-lg font-semibold text-slate-900">{report.summary.totalWorkingDays}</p>
               </div>
               <div className="rounded-3xl bg-slate-50 p-5 border border-slate-200">
                 <p className="text-sm text-slate-500">Present</p>
@@ -289,7 +289,7 @@ export default function AttendanceReportPage() {
               </div>
               <div className="rounded-3xl bg-slate-50 p-5 border border-slate-200">
                 <p className="text-sm text-slate-500">Total Hours</p>
-                <p className="mt-2 text-lg font-semibold text-slate-900">{report.summary.totalWorkingHours}</p>
+                <p className="mt-2 text-lg font-semibold text-slate-900">{Number(report.summary.totalWorkingHours).toFixed(2)}</p>
               </div>
             </div>
 

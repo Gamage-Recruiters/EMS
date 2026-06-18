@@ -229,25 +229,46 @@ export const getAttendanceReport = async (req, res, next) => {
     }
 
     const query = { employee: employee._id };
+    
     if (startDate || endDate) {
       query.date = {};
-      if (startDate) query.date.$gte = new Date(startDate);
-      if (endDate) query.date.$lte = new Date(endDate);
+      
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setUTCHours(0, 0, 0, 0);
+        query.date.$gte = start;
+      }
+      
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setUTCHours(23, 59, 59, 999);
+        query.date.$lte = end;
+      }
     }
 
     const attendanceRecords = await Attendance.find(query)
       .sort({ date: -1 })
       .lean();
 
+    // Calculate actual working days (days with any attendance record)
+    const workingDays = new Set(
+      attendanceRecords.map(record => 
+        new Date(record.date).toISOString().split('T')[0]
+      )
+    ).size;
+
     const summary = {
-      totalDays: attendanceRecords.length,
+      totalWorkingDays: workingDays,
+      totalRecords: attendanceRecords.length,
       present: attendanceRecords.filter((record) => record.status === "Present").length,
       late: attendanceRecords.filter((record) => record.status === "Late").length,
       leave: attendanceRecords.filter((record) => record.status === "On Leave").length,
       absent: attendanceRecords.filter((record) => record.status === "Absent").length,
-      totalWorkingHours: attendanceRecords.reduce(
-        (sum, record) => sum + (record.workingHours || 0),
-        0,
+      totalWorkingHours: parseFloat(
+        attendanceRecords.reduce(
+          (sum, record) => sum + (record.workingHours || 0),
+          0,
+        ).toFixed(2)
       ),
     };
 

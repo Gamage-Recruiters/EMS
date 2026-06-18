@@ -20,10 +20,6 @@ export default function JobDetails() {
     employee,
     setEmployee,
     isView,
-    isAdd,
-    saving,
-    onBack,
-    onCreate,
   } = useOutletContext();
   const { user } = useAuth();
   const isCEO = user?.role === "CEO";
@@ -145,8 +141,8 @@ export default function JobDetails() {
 
         {/* Validation Info */}
         {employee.designation && employee.department && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
-            <FiCheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div className="bg-linear-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+            <FiCheckCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
             <p className="text-sm text-blue-900">
               <span className="font-semibold">Job details complete</span> —
               Employee role and department set

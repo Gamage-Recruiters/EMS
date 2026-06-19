@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { FiCamera, FiUser } from "react-icons/fi";
 import { useOutletContext } from "react-router-dom";
+import { getBackendUploadUrl } from "../../../../api/env.js";
 
 export default function PersonalDetails() {
   const {

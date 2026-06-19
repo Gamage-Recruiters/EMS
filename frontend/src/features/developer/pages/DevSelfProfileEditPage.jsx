@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { FiAlertCircle, FiCheckCircle, FiSave } from "react-icons/fi";
+import { useAuth } from "../../../context/AuthContext";
 import { employeeService } from "../../../services/employeeService";
 
 const STEP_ROUTES = [
@@ -13,6 +14,7 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const mobileRegex = /^(?:\+94|94|0)?7\d{8}$/;
 
 export default function SelfProfileEditPage() {
+  const { updateUser } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -246,7 +248,18 @@ export default function SelfProfileEditPage() {
         formData.append("profileImage", employee.profileFile);
       }
 
-      await employeeService.updateProfile(formData);
+      const response = await employeeService.updateProfile(formData);
+      const responseData = response?.data || {};
+      const updatedUser = responseData.user || responseData.data || responseData;
+      const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+      updateUser({
+        ...currentUser,
+        ...updatedUser,
+        firstName: employee.firstName || currentUser.firstName || updatedUser.firstName,
+        lastName: employee.lastName || currentUser.lastName || updatedUser.lastName,
+        email: employee.email || currentUser.email || updatedUser.email,
+      });
 
       setInfoMsg(null);
       setSuccessMsg("Your profile was updated successfully.");

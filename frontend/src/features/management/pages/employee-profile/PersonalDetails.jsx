@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { FiCamera, FiUser } from "react-icons/fi";
 import { useOutletContext } from "react-router-dom";
+import { getBackendUploadUrl } from "../../../../api/env.js";
 
 export default function PersonalDetails() {
   const {
@@ -52,10 +53,7 @@ export default function PersonalDetails() {
     if (image.startsWith("data:") || image.startsWith("http://") || image.startsWith("https://")) {
       return image;
     }
-    // Otherwise assume it's a filename and construct the full backend URL
-    const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
-    const backendBase = apiBase.replace("/api", ""); // Remove /api to get http://localhost:5000
-    return `${backendBase}/uploads/${image}`;
+    return getBackendUploadUrl(image);
   };
 
   return (

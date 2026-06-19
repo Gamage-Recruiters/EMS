@@ -1,7 +1,7 @@
+import { getBackendUploadUrl } from "../../../api/env.js";
+
 export default function ImagePreviewModal({ image, onClose }) {
   if (!image) return null;
-
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
@@ -14,7 +14,7 @@ export default function ImagePreviewModal({ image, onClose }) {
         </button>
 
         <img
-          src={`${API_BASE_URL}/${image}`}
+          src={getBackendUploadUrl(image)}
           alt="Complaint"
           className="max-h-[70vh] mx-auto rounded"
         />

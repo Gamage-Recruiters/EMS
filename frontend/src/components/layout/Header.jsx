@@ -5,7 +5,7 @@ import {
   getMyAvailability,
 } from "../../services/availabilityService";
 import { useNavigate } from "react-router-dom";
-
+import { useAuth } from "../../context/AuthContext.jsx";
 
 const Header = ({ onMenuClick }) => {
   /* ================= DATE ================= */
@@ -20,11 +20,13 @@ const Header = ({ onMenuClick }) => {
   const navigate = useNavigate();
 
   /* ================= USER ================= */
-  const storedUser = localStorage.getItem("user");
-  const user = storedUser ? JSON.parse(storedUser) : null;
+  const { user, logout } = useAuth();
 
   const userName = user
-    ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim()
+    ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() ||
+      user.name ||
+      user.email ||
+      "User"
     : "User";
 
   const userInitials = userName
@@ -100,9 +102,8 @@ const Header = ({ onMenuClick }) => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("accessToken");
-    window.location.reload(); // simple reload, can replace with navigate if using react-router
+    logout();
+    window.location.reload();
   };
 
   const currentStatus = statuses.find((s) => s.label === status);

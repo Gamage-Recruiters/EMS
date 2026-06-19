@@ -13,6 +13,7 @@ import {
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import { employeeService } from "../services/employeeService";
+import { getBackendUploadUrl } from "../api/env.js";
 
 export default function UserProfile() {
   const { user: authUser } = useAuth();
@@ -118,9 +119,7 @@ export default function UserProfile() {
       return image;
     }
 
-    const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
-    const backendBase = apiBase.replace("/api", "");
-    return `${backendBase}/uploads/${image}`;
+    return getBackendUploadUrl(image);
   }, [profile?.profileImage]);
 
   if (loading) {

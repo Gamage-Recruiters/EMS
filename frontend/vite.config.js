@@ -4,7 +4,17 @@ import tailwindcss from "@tailwindcss/vite";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    {
+      name: "force-close",
+      closeBundle() {
+        // Force exit to prevent Vercel build timeout from hanging process
+        setTimeout(() => process.exit(0), 1500);
+      },
+    },
+  ],
   server: {
     port: 5173,
     host: true,

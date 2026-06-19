@@ -5,6 +5,17 @@ import { taskService } from "../../services/taskService";
 
 const STATUSES = ["To Do", "In Progress", "Done"];
 
+const formatDateSafe = (dateVal) => {
+  if (!dateVal) return "";
+  try {
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return "";
+    return d.toISOString().split("T")[0];
+  } catch (e) {
+    return "";
+  }
+};
+
 export default function TaskBoardPage() {
   const [allTasks, setAllTasks] = useState([]);
   const [columns, setColumns] = useState({
@@ -55,6 +66,11 @@ export default function TaskBoardPage() {
       setLoading(true);
       const response = await taskService.allTasks();
       let tasks = response.data?.data || response.data || [];
+      
+      if (!Array.isArray(tasks)) {
+        console.error("Expected tasks array, got:", typeof tasks);
+        tasks = [];
+      }
 
       // If logged user is DEVELOPER → only show their own tasks (T005 fix)
       const isDeveloper = String(role || "").toUpperCase() === "DEVELOPER";
@@ -93,8 +109,8 @@ export default function TaskBoardPage() {
           description: task.description || "",
           project: task.project?._id || null,
           projectName: task.project?.projectName || "No Project",
-          startDate: task.startDate ? new Date(task.startDate).toISOString().split("T")[0] : "",
-          dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : "",
+          startDate: formatDateSafe(task.startDate),
+          dueDate: formatDateSafe(task.dueDate),
           priority: task.priority || "MEDIUM",
           status: status,
           assignedByName: task.assignedBy?.firstName || task.assignedBy?.name || "",
@@ -141,8 +157,8 @@ export default function TaskBoardPage() {
           description: task.description || "",
           project: task.project?._id || null,
           projectName: task.project?.projectName || "No Project",
-          startDate: task.startDate ? new Date(task.startDate).toISOString().split("T")[0] : "",
-          dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : "",
+          startDate: formatDateSafe(task.startDate),
+          dueDate: formatDateSafe(task.dueDate),
           priority: task.priority || "MEDIUM",
           status: task.status || "To Do",
           assignedByName: task.assignedBy?.firstName || task.assignedBy?.name || "",

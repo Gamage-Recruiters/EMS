@@ -10,11 +10,27 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const syncUser = (userData) => {
+    if (!userData) {
+      localStorage.removeItem("user");
+      setUser(null);
+      return;
+    }
+
+    localStorage.setItem("user", JSON.stringify(userData));
+    setUser(userData);
+  };
+
   // Restore session
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error("Invalid stored user data", error);
+        localStorage.removeItem("user");
+      }
     }
     setLoading(false);
   }, []);
@@ -28,12 +44,10 @@ export const AuthProvider = ({ children }) => {
 
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
-      localStorage.setItem("user", JSON.stringify(userData));
+      syncUser(userData);
 
-      setUser(userData);
-
-       console.log("Logged in user:", userData);
-    console.log("User role:", userData.role);
+      console.log("Logged in user:", userData);
+      console.log("User role:", userData.role);
 
       toast.success("Login Successful");
       return true;
@@ -52,9 +66,7 @@ export const AuthProvider = ({ children }) => {
 
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
-      localStorage.setItem("user", JSON.stringify(userInfo));
-
-      setUser(userInfo);
+      syncUser(userInfo);
       toast.success("Registration Successful");
       return true;
     } catch (error) {
@@ -74,9 +86,7 @@ export const AuthProvider = ({ children }) => {
 
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
-      localStorage.setItem("user", JSON.stringify(userData));
-
-      setUser(userData);
+      syncUser(userData);
       toast.success("Google Login Successful");
       return true;
     } catch (error) {
@@ -92,9 +102,23 @@ export const AuthProvider = ({ children }) => {
     toast.success("Logged Out");
   };
 
+  const updateUser = (updatedData) => {
+    if (!updatedData) return;
+
+    setUser((prevUser) => {
+      const mergedUser = {
+        ...(prevUser || {}),
+        ...updatedData,
+      };
+
+      localStorage.setItem("user", JSON.stringify(mergedUser));
+      return mergedUser;
+    });
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, login, register, googleLogin, logout, loading }}
+      value={{ user, login, register, googleLogin, logout, updateUser, loading }}
     >
       {!loading && children}
     </AuthContext.Provider>

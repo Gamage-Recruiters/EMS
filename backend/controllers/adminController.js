@@ -104,6 +104,11 @@ export const updateUserByAdmin = async (req, res, next) => {
       return next(new AppError("User not found", 404));
     }
 
+    const actorRole = req.user.role;
+    if ((role !== undefined || designation !== undefined) && actorRole !== "CEO") {
+      return next(new AppError("Only CEO can update role or position", 403));
+    }
+
     // Update fields
     if (firstName !== undefined) user.firstName = firstName;
     if (lastName !== undefined) user.lastName = lastName;
